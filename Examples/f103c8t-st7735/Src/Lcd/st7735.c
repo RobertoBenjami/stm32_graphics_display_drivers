@@ -260,9 +260,9 @@ uint16_t st7735_GetLcdPixelHeight(void)
 
 //-----------------------------------------------------------------------------
 /**
-  * @brief  Get the ST7783 ID.
+  * @brief  Get the ST7735 ID.
   * @param  None
-  * @retval The ST7783 ID
+  * @retval The ST7735 ID
   */
 uint16_t st7735_ReadID(void)
 {
