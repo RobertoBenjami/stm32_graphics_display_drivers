@@ -1,0 +1,13 @@
+lcd_io_spi.c:197:6:LCD_IO_Delay	16	static
+lcd_io_spi.c:204:6:LCD_Delay	0	static
+lcd_io_spi.c:210:6:LCD_IO_Bl_OnOff	0	static
+lcd_io_spi.c:221:6:LCD_IO_Init	16	static
+lcd_io_spi.c:278:6:LCD_IO_WriteCmd8	8	static
+lcd_io_spi.c:288:6:LCD_IO_WriteData8	8	static
+lcd_io_spi.c:298:6:LCD_IO_WriteData16	8	static
+lcd_io_spi.c:310:6:LCD_IO_WriteDataFill16	24	static
+lcd_io_spi.c:332:6:LCD_IO_WriteMultipleData8	24	static
+lcd_io_spi.c:353:6:LCD_IO_WriteMultipleData16	24	static
+lcd_io_spi.c:384:6:LCD_IO_ReadMultipleData8	24	static
+lcd_io_spi.c:417:6:LCD_IO_ReadMultipleData16	24	static
+lcd_io_spi.c:443:6:LCD_IO_ReadMultipleData24to16	24	static

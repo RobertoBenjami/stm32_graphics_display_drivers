@@ -1,0 +1,12 @@
+appLcdSpeedTest.c:24:10:ClearTest	8	static
+appLcdSpeedTest.c:31:10:PixelTest	40	static
+appLcdSpeedTest.c:46:10:LineTest	56	static
+appLcdSpeedTest.c:65:10:FillRectTest	48	static
+appLcdSpeedTest.c:82:10:CharTest	40	static
+appLcdSpeedTest.c:118:10:CircleTest	48	static
+appLcdSpeedTest.c:145:10:FillCircleTest	48	static
+appLcdSpeedTest.c:172:10:ColorTest	48	static
+appLcdSpeedTest.c:202:10:BitmapTest	32	static
+appLcdSpeedTest.c:218:6:LcdReadPixelTest	40	static
+appLcdSpeedTest.c:231:6:LcdReadImageTest	24	static
+appLcdSpeedTest.c:242:6:mainApp	8	static

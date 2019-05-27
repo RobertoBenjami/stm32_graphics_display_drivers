@@ -1,0 +1,3 @@
+stm32f1xx_hal_gpio_ex.c:97:6:HAL_GPIOEx_ConfigEventout	0	static
+stm32f1xx_hal_gpio_ex.c:111:6:HAL_GPIOEx_EnableEventout	0	static
+stm32f1xx_hal_gpio_ex.c:120:6:HAL_GPIOEx_DisableEventout	0	static
