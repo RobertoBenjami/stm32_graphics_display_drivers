@@ -408,7 +408,6 @@ void st7783_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGBCode)
 {
   ST7783_LCDMUTEX_PUSH();
   ST7783_SETCURSOR(Xpos, Ypos);
-  // LCD_IO_WriteDataFill16(ST7783_RW_GRAM, RGBCode, 1);
   LCD_IO_WriteCmd(ST7783_RW_GRAM); LCD_IO_WriteData16(RGBCode);  // Write Data to GRAM (R22h)
   ST7783_LCDMUTEX_POP();
 }
