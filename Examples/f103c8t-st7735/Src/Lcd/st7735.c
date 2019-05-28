@@ -157,7 +157,7 @@ void    LCD_Delay (uint32_t delay);
 void    LCD_IO_Init(void);
 void    LCD_IO_Bl_OnOff(uint8_t Bl);
 
-void    LCD_IO_WriteCmd8(uint8_t Cmd);
+void    LCD_IO_WriteCmd(uint8_t Cmd);
 void    LCD_IO_WriteData8(uint8_t Data);
 void    LCD_IO_WriteData16(uint16_t Data);
 void    LCD_IO_WriteDataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size);
@@ -179,7 +179,7 @@ void st7735_Init(void)
   }
 
   LCD_Delay(1);
-  LCD_IO_WriteCmd8(ST7735_SWRESET);
+  LCD_IO_WriteCmd(ST7735_SWRESET);
   LCD_Delay(1);
 
   // positive gamma control
@@ -206,9 +206,9 @@ void st7735_Init(void)
   LCD_IO_WriteMultipleData8(0xE9, (uint8_t *)"\x00", 1);// Set Image Functio (Disable 24 bit data)
   LCD_IO_WriteMultipleData8(0xF7, (uint8_t *)"\xA9\x51\x2C\x82", 4);// Adjust Control (D7 stream, loose)
 
-  LCD_IO_WriteCmd8(ST7735_MADCTL); LCD_IO_WriteData8(ST7735_MAD_DATA_RIGHT_THEN_DOWN);
-  LCD_IO_WriteCmd8(ST7735_SLPOUT);    // Exit Sleep
-  LCD_IO_WriteCmd8(ST7735_DISPON);    // Display on
+  LCD_IO_WriteCmd(ST7735_MADCTL); LCD_IO_WriteData8(ST7735_MAD_DATA_RIGHT_THEN_DOWN);
+  LCD_IO_WriteCmd(ST7735_SLPOUT);    // Exit Sleep
+  LCD_IO_WriteCmd(ST7735_DISPON);    // Display on
 }
 
 //-----------------------------------------------------------------------------
@@ -219,7 +219,7 @@ void st7735_Init(void)
   */
 void st7735_DisplayOn(void)
 {
-  LCD_IO_WriteCmd8(ST7735_SLPOUT);    // Exit Sleep
+  LCD_IO_WriteCmd(ST7735_SLPOUT);    // Exit Sleep
   LCD_IO_Bl_OnOff(1);
 }
 
@@ -231,7 +231,7 @@ void st7735_DisplayOn(void)
   */
 void st7735_DisplayOff(void)
 {
-  LCD_IO_WriteCmd8(ST7735_SLPIN);    // Sleep
+  LCD_IO_WriteCmd(ST7735_SLPIN);    // Sleep
   LCD_IO_Bl_OnOff(0);
 }
 
@@ -296,7 +296,7 @@ void st7735_SetCursor(uint16_t Xpos, uint16_t Ypos)
 void st7735_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGBCode)
 {
   ST7735_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteCmd8(ST7735_RAMWR); LCD_IO_WriteData16(RGBCode);
+  LCD_IO_WriteCmd(ST7735_RAMWR); LCD_IO_WriteData16(RGBCode);
 }
 
 
@@ -326,8 +326,8 @@ uint16_t st7735_ReadPixel(uint16_t Xpos, uint16_t Ypos)
 void st7735_SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
   yStart = Ypos; yEnd = Ypos + Height - 1;
-  LCD_IO_WriteCmd8(ST7735_CASET); LCD_IO_WriteData16(Xpos); LCD_IO_WriteData16(Xpos + Width - 1);
-  LCD_IO_WriteCmd8(ST7735_PASET); LCD_IO_WriteData16(Ypos); LCD_IO_WriteData16(Ypos + Height - 1);
+  LCD_IO_WriteCmd(ST7735_CASET); LCD_IO_WriteData16(Xpos); LCD_IO_WriteData16(Xpos + Width - 1);
+  LCD_IO_WriteCmd(ST7735_PASET); LCD_IO_WriteData16(Ypos); LCD_IO_WriteData16(Ypos + Height - 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -341,8 +341,8 @@ void st7735_SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint1
   */
 void st7735_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length)
 {
-  LCD_IO_WriteCmd8(ST7735_CASET); LCD_IO_WriteData16(Xpos); LCD_IO_WriteData16(Xpos + Length - 1);
-  LCD_IO_WriteCmd8(ST7735_PASET), LCD_IO_WriteData16(Ypos); LCD_IO_WriteData16(Ypos);
+  LCD_IO_WriteCmd(ST7735_CASET); LCD_IO_WriteData16(Xpos); LCD_IO_WriteData16(Xpos + Length - 1);
+  LCD_IO_WriteCmd(ST7735_PASET), LCD_IO_WriteData16(Ypos); LCD_IO_WriteData16(Ypos);
   LCD_IO_WriteDataFill16(ST7735_RAMWR, RGBCode, Length);
 }
 
@@ -357,8 +357,8 @@ void st7735_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t L
   */
 void st7735_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length)
 {
-  LCD_IO_WriteCmd8(ST7735_CASET); LCD_IO_WriteData16(Xpos); LCD_IO_WriteData16(Xpos);
-  LCD_IO_WriteCmd8(ST7735_PASET); LCD_IO_WriteData16(Ypos); LCD_IO_WriteData16(Ypos + Length - 1);
+  LCD_IO_WriteCmd(ST7735_CASET); LCD_IO_WriteData16(Xpos); LCD_IO_WriteData16(Xpos);
+  LCD_IO_WriteCmd(ST7735_PASET); LCD_IO_WriteData16(Ypos); LCD_IO_WriteData16(Ypos + Length - 1);
   LCD_IO_WriteDataFill16(ST7735_RAMWR, RGBCode, Length);
 }
 
@@ -383,10 +383,10 @@ void st7735_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   size = (size - index)/2;
   pbmp += index;
 
-  LCD_IO_WriteCmd8(ST7735_MADCTL); LCD_IO_WriteData8(ST7735_MAD_DATA_RIGHT_THEN_UP);
-  LCD_IO_WriteCmd8(ST7735_PASET); LCD_IO_WriteData16(ST7735_MAX_Y - yEnd); LCD_IO_WriteData16(ST7735_MAX_Y - yStart);
+  LCD_IO_WriteCmd(ST7735_MADCTL); LCD_IO_WriteData8(ST7735_MAD_DATA_RIGHT_THEN_UP);
+  LCD_IO_WriteCmd(ST7735_PASET); LCD_IO_WriteData16(ST7735_MAX_Y - yEnd); LCD_IO_WriteData16(ST7735_MAX_Y - yStart);
   LCD_IO_WriteMultipleData16(ST7735_RAMWR, (uint16_t *)pbmp, size);
-  LCD_IO_WriteCmd8(ST7735_MADCTL); LCD_IO_WriteData8(ST7735_MAD_DATA_RIGHT_THEN_DOWN);
+  LCD_IO_WriteCmd(ST7735_MADCTL); LCD_IO_WriteData8(ST7735_MAD_DATA_RIGHT_THEN_DOWN);
 }
 
 //-----------------------------------------------------------------------------

@@ -17,7 +17,7 @@ void    LCD_Delay (uint32_t delay);
 void    LCD_IO_Init(void);
 void    LCD_IO_Bl_OnOff(uint8_t Bl);
 
-void    LCD_IO_WriteCmd8(uint8_t Cmd);
+void    LCD_IO_WriteCmd(uint8_t Cmd);
 void    LCD_IO_WriteData8(uint8_t Data);
 void    LCD_IO_WriteData16(uint16_t Data);
 void    LCD_IO_WriteDataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size);
@@ -274,7 +274,7 @@ void LCD_IO_Init(void)
 }
 
 //-----------------------------------------------------------------------------
-void LCD_IO_WriteCmd8(uint8_t Cmd)
+void LCD_IO_WriteCmd(uint8_t Cmd)
 {
   LCD_RS_CMD;
   LCD_CS_ON;
