@@ -37,4 +37,9 @@
 #define LCD_MOSI          B, 15
 // #define LCD_MISO          B, 14
 
+// Ha a kijelzö nem képes 16 bit/pixel adatokat szolgáltatni, akkor röptében konvertálni kell (pl. ST7735)
+// - 0: nem kell olvasáskor 24 bit/pixel-röl 16 bit/pixel-re konvertálni
+// - 1: olvasáskor 24 bit/pixel-röl 16 bit/pixel-re kell konvertálni
+#define LCD_READMULTIPLEDATA24TO16   1
+
 #endif // __LCD_IO_SPI_H

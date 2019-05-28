@@ -26,7 +26,6 @@ void    LCD_IO_WriteMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
 
 void    LCD_IO_ReadMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size);
 void    LCD_IO_ReadMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
-void    LCD_IO_ReadMultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
 
 //-----------------------------------------------------------------------------
 #define BITBAND_ACCESS(variable, bitnumber) *(volatile uint32_t*)(((uint32_t)&variable & 0xF0000000) + 0x2000000 + (((uint32_t)&variable & 0x000FFFFF) << 5) + (bitnumber << 2))
@@ -414,6 +413,7 @@ void LCD_IO_ReadMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
 }
 
 //-----------------------------------------------------------------------------
+#if  LCD_READMULTIPLEDATA24TO16 == 0
 void LCD_IO_ReadMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
 {
   uint32_t counter;
@@ -438,9 +438,11 @@ void LCD_IO_ReadMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
   LCD_CS_OFF;
   LCD_DATA_DIRWRITE;
 }
+#endif
 
 //-----------------------------------------------------------------------------
-void LCD_IO_ReadMultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
+#if  LCD_READMULTIPLEDATA24TO16 == 1
+void LCD_IO_ReadMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
 {
   uint32_t counter;
   uint8_t rgb888[3];
@@ -467,5 +469,6 @@ void LCD_IO_ReadMultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
   LCD_CS_OFF;
   LCD_DATA_DIRWRITE;
 }
+#endif
 
 #endif // #else LCD_SPI_MODE == 0

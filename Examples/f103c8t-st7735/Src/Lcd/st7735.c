@@ -166,7 +166,6 @@ void    LCD_IO_WriteMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
 
 void    LCD_IO_ReadMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size);
 void    LCD_IO_ReadMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
-void    LCD_IO_ReadMultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
 
 //-----------------------------------------------------------------------------
 void st7735_Init(void)
@@ -311,7 +310,7 @@ uint16_t st7735_ReadPixel(uint16_t Xpos, uint16_t Ypos)
 {
   uint16_t ret;
   ST7735_SETCURSOR(Xpos, Ypos);
-  LCD_IO_ReadMultipleData24to16(ST7735_RAMRD, &ret, 1);
+  LCD_IO_ReadMultipleData16(ST7735_RAMRD, &ret, 1);
   return(ret);
 }
 
@@ -428,6 +427,6 @@ void st7735_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t 
 
   size = (Xsize * Ysize);
   st7735_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
-  LCD_IO_ReadMultipleData24to16(ST7735_RAMRD, (uint16_t *)pData, size);
+  LCD_IO_ReadMultipleData16(ST7735_RAMRD, (uint16_t *)pData, size);
 }
 #endif
