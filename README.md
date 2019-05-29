@@ -6,6 +6,7 @@ Layer chart:
 Example:
 - LcdSpeedtest (truestudio, st7735, spi_io)
 - LcdSpeedtest (truestudio, st7783, gpio_io)
+- LcdSpeedtest (truestudio, ili9325, gpio_io)
 
 LCD I/O driver:
 - stm32f1: spi_io
@@ -14,3 +15,4 @@ LCD I/O driver:
 LCD driver:
 - st7735
 - st7783
+- ili9325
