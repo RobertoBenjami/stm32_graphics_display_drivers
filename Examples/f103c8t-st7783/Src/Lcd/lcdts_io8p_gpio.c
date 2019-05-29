@@ -391,7 +391,6 @@ void LCD_IO_WriteDataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
 
   for (counter = Size; counter != 0; counter--)
   {
-    /* Need to invert bytes for LCD*/
     LCD_DATA_WRITE(Data >> 8);
     LCD_IO_Delay(LCD_IO_RW_DELAY);
     LCD_DATA_WRITE(Data);
@@ -410,7 +409,6 @@ void LCD_IO_WriteMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
 
   for (counter = Size; counter != 0; counter--)
   {
-    /* Need to invert bytes for LCD*/
     LCD_DATA_WRITE(*pData >> 8);
     LCD_IO_Delay(LCD_IO_RW_DELAY);
     LCD_DATA_WRITE(*pData);
@@ -430,7 +428,6 @@ void LCD_IO_WriteMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
 
   for (counter = Size; counter != 0; counter--)
   {
-    /* Need to invert bytes for LCD*/
     LCD_DATA_WRITE(*pData >> 8);
     LCD_IO_Delay(LCD_IO_RW_DELAY);
     LCD_DATA_WRITE(*pData);
@@ -483,9 +480,12 @@ void LCD_IO_ReadMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
 
   LCD_DATA_DIRREAD;
 
+  // Dummy data
+  LCD_DATA_READ(dh);
+  LCD_DATA_READ(dl);
+
   for (counter = Size; counter != 0; counter--)
   {
-    /* Need to invert bytes for LCD*/
     LCD_DATA_READ(dh);
     LCD_DATA_READ(dl);
     *pData = (dh << 8) | dl;

@@ -56,7 +56,7 @@ A kijelzön belül a következö lábak vannak párhuzamositva
 // megj:
 // - kezdö értéknek érdemes 10 illetve 500-bol elindulni, aztán lehet csökkenteni a sebesség növelése érdekében
 //   (az értékek függnek a processzor orajelétöl és az LCD kijelzö sebességétöl is)
-#define LCD_IO_RW_DELAY   0
+#define LCD_IO_RW_DELAY   2
 #define TS_AD_DELAY     500
 
 //=============================================================================
