@@ -1,10 +1,11 @@
-/* 8 bites párhuzamos LCD/TOUCH GPIO driver STM32F1-re
-5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
+/*
+ * 8 bites párhuzamos LCD/TOUCH GPIO driver STM32F1-re
+ * 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
 
-Figyelem: mivel azonos lábakon van az Lcd ás a Touchscreen,
-ezért ezek ki kell zárni az Lcd és a Touchscreen egyidejü használatát!
-Tábbszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások megelözéséröl! */
-
+ * Figyelem: mivel azonos lábakon van az Lcd ás a Touchscreen,
+ * ezért ezek ki kell zárni az Lcd és a Touchscreen egyidejü használatát!
+ * Tábbszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások megelözéséröl!
+ */
 #ifndef __LCDTS_IO8P_GPIO_H
 #define __LCDTS_IO8P_GPIO_H
 
@@ -56,7 +57,7 @@ A kijelzön belül a következö lábak vannak párhuzamositva
 // megj:
 // - kezdö értéknek érdemes 10 illetve 500-bol elindulni, aztán lehet csökkenteni a sebesség növelése érdekében
 //   (az értékek függnek a processzor orajelétöl és az LCD kijelzö sebességétöl is)
-#define LCD_IO_RW_DELAY   2
+#define LCD_IO_RW_DELAY   1
 #define TS_AD_DELAY     500
 
 //=============================================================================

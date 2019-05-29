@@ -1,16 +1,19 @@
-/* 8 bites párhuzamos LCD/TOUCH GPIO driver STM32F4-re
-5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb
+/*
+ * 8 bites párhuzamos LCD/TOUCH GPIO driver STM32F1-re
+ * 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
 
-Figyelem: mivel azonos lábakon van az Lcd ás a Touchscreen,
-ezért ezek ki kell zárni az Lcd és a Touchscreen egyidejü használatát!
-Tábbszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások megelözéséröl!
+ * Figyelem: mivel azonos lábakon van az Lcd ás a Touchscreen,
+ * ezért ezek ki kell zárni az Lcd és a Touchscreen egyidejü használatát!
+ * Tábbszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások megelözéséröl!
+ */
 
-Készitö: Roberto Benjami
-verzio:  2019.05
+/* Készitö: Roberto Benjami
+   verzio:  2019.05
 
-Megj:
-Minden függvány az adatlábak irányát WRITE üzemmodban hagyja, igy nem kell minden irási
-müveletkor állitgatni */
+   Megj:
+   Minden függvány az adatlábak irányát WRITE üzemmodban hagyja, igy nem kell minden irási
+   müveletkor állitgatni
+*/
 
 // CS láb vezérlési stratégia
 // - 0: CS láb minden irás/olvasás müvelet során állitva van (igy a touchscreen olvasásakor nem szükséges lekapcsolni
@@ -256,10 +259,22 @@ uint8_t data;
 
 #if LCD_CMD_SIZE == 8
 #define  LCD_CMD_WRITE(cmd) {LCD_RS_CMD; LCD_DATA_WRITE(cmd); LCD_RS_DATA; }
+#define  LCD_DUMMY_READ {         \
+  GPIOX_ODR(LCD_RD) = 0;          \
+  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
+  GPIOX_ODR(LCD_RD) = 1;          }
 #endif
 
 #if LCD_CMD_SIZE == 16
 #define  LCD_CMD_WRITE(cmd) {LCD_RS_CMD; LCD_DATA_WRITE(0); LCD_DATA_WRITE(cmd); LCD_RS_DATA; }
+#define  LCD_DUMMY_READ {         \
+  GPIOX_ODR(LCD_RD) = 0;          \
+  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
+  GPIOX_ODR(LCD_RD) = 1;          \
+  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
+  GPIOX_ODR(LCD_RD) = 0;          \
+  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
+  GPIOX_ODR(LCD_RD) = 1;          }
 #endif
 
 #if TS_ADC == 1
@@ -358,27 +373,26 @@ void LCD_IO_Init(void)
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd(uint8_t Cmd)
 {
-  LCD_CS_ON;                            // CS = 0
+  LCD_CS_ON;
   LCD_CMD_WRITE(Cmd);
-  LCD_CS_OFF;                           // CS = 1
+  LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteData8(uint8_t Data)
 {
-  LCD_CS_ON;                            // CS = 0
+  LCD_CS_ON;
   LCD_DATA_WRITE(Data);
-  LCD_CS_OFF;                           // CS = 1
+  LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteData16(uint16_t Data)
 {
-  LCD_CS_ON;                            // CS = 0
+  LCD_CS_ON;
   LCD_DATA_WRITE((uint8_t)(Data >> 8));
-  LCD_IO_Delay(LCD_IO_RW_DELAY);
   LCD_DATA_WRITE((uint8_t)Data);
-  LCD_CS_OFF;                           // CS = 1
+  LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
@@ -386,17 +400,16 @@ void LCD_IO_WriteDataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
 {
   uint32_t counter;
 
-  LCD_CS_ON;                            // CS = 0
+  LCD_CS_ON;
   LCD_CMD_WRITE(Cmd);
 
   for (counter = Size; counter != 0; counter--)
   {
     LCD_DATA_WRITE(Data >> 8);
-    LCD_IO_Delay(LCD_IO_RW_DELAY);
     LCD_DATA_WRITE(Data);
   }
 
-  LCD_CS_OFF;                           // CS = 1
+  LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
@@ -404,18 +417,16 @@ void LCD_IO_WriteMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
 {
   uint32_t counter;
 
-  LCD_CS_ON;                            // CS = 0
+  LCD_CS_ON;
   LCD_CMD_WRITE(Cmd);
 
   for (counter = Size; counter != 0; counter--)
   {
-    LCD_DATA_WRITE(*pData >> 8);
-    LCD_IO_Delay(LCD_IO_RW_DELAY);
     LCD_DATA_WRITE(*pData);
     pData ++;
   }
 
-  LCD_CS_OFF;                           // CS = 1
+  LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
@@ -423,18 +434,17 @@ void LCD_IO_WriteMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
 {
   uint32_t counter;
 
-  LCD_CS_ON;                            // CS = 0
+  LCD_CS_ON;
   LCD_CMD_WRITE(Cmd);
 
   for (counter = Size; counter != 0; counter--)
   {
     LCD_DATA_WRITE(*pData >> 8);
-    LCD_IO_Delay(LCD_IO_RW_DELAY);
     LCD_DATA_WRITE(*pData);
     pData ++;
   }
 
-  LCD_CS_OFF;                           // CS = 1
+  LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
@@ -447,22 +457,13 @@ void LCD_IO_ReadMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
   LCD_CMD_WRITE(Cmd);
 
   LCD_DATA_DIRREAD;
+  LCD_DUMMY_READ;
 
-  if(Size == 1)
+  for (counter = Size; counter != 0; counter--)
   {
     LCD_DATA_READ(d);
     *pData = d;
-  }
-  else
-  {
-    LCD_DATA_READ(d);    // Dummy data
-
-    for (counter = Size; counter != 0; counter--)
-    {
-      LCD_DATA_READ(d);
-      *pData = d;
-      pData++;
-    }
+    pData++;
   }
 
   LCD_CS_OFF;
@@ -479,10 +480,7 @@ void LCD_IO_ReadMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
   LCD_CMD_WRITE(Cmd);
 
   LCD_DATA_DIRREAD;
-
-  // Dummy data
-  LCD_DATA_READ(dh);
-  LCD_DATA_READ(dl);
+  LCD_DUMMY_READ;
 
   for (counter = Size; counter != 0; counter--)
   {
