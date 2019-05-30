@@ -16,3 +16,6 @@ LCD driver:
 - st7735
 - st7783
 - ili9325
+- ili9328
+- ili9488
+- hx8347g
