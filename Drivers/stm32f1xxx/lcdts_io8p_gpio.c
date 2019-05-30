@@ -309,7 +309,6 @@ void LCD_Delay(uint32_t Delay)
 void LCD_IO_Bl_OnOff(uint8_t Bl)
 {
   #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12)
-//  #ifdef LCD_BL
   if(Bl)
     GPIOX_ODR(LCD_BL) = LCD_BLON;
   else
