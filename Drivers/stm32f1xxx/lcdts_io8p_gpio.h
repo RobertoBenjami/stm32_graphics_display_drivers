@@ -10,20 +10,14 @@
 #define __LCDTS_IO8P_GPIO_H
 
 //=============================================================================
-// Lcd parancs hossz
-// - 8: mindegyik LCD parancsot 8 bitesként küldi az LCD-re
-// - 16: mindegyik LCD parancsot 16 bitesként (két bájtban) küldi az LCD-re
-#define LCD_CMD_SIZE      8
-
-//=============================================================================
-// Lcd vezérlö lábak hozzárendelése
+// Lcd vezérlö lábak hozzárendelése (A..M, 0..15)
 #define LCD_CS            B, 5
 #define LCD_RS            A, 0
 #define LCD_WR            A, 1
 #define LCD_RD            B, 1
 #define LCD_RST           B, 0
 
-// Lcd adat lábak hozzárendelése
+// Lcd adat lábak hozzárendelése (A..M, 0..15)
 #define LCD_D0            B, 8
 #define LCD_D1            B, 9
 #define LCD_D2            B, 10
@@ -34,7 +28,7 @@
 #define LCD_D7            B, 15
 
 // Háttérvilágitás vezérlés (opcionális, láb hozzárendelés és aktiv állapot)
-#define LCD_BL            C, 13
+#define LCD_BL            X, 0
 #define LCD_BLON          0
 
 /*-----------------------------------------------------------------------------
@@ -45,26 +39,29 @@ A kijelzön belül a következö lábak vannak párhuzamositva
  - TS_YM <- LCD_D7
  - TS_YP <- LCD_WR */
 
-// ADC konverter száma (értéke lehet 1, 2, 3, vagy 0 ha nem használjuk)
-// (ha nullát választunk, akkor az analog touchscreen driver nem lesz használva)
+/* ADC konverter száma (értéke lehet 1, 2, 3, vagy 0 ha nem használjuk)
+   - 0: analog touchscreen driver nem lesz használva
+   - 1..3: a használni kivánt A/D konverter száma
+*/
 #define TS_ADC            0
 
 // Itt kell megadni, hogy melyik csatornát kiválasztva lehet az adott lábat az AD bemenetére kapcsolni
 #define TS_XM_ADCCH       0
 #define TS_YP_ADCCH       1
 
-// nsec nagyságrendü várakozás az LCD irási és az olvasási impulzusnál és a touchscreen AD átalakitonál
-// megj:
-// - kezdö értéknek érdemes 10 illetve 500-bol elindulni, aztán lehet csökkenteni a sebesség növelése érdekében
-//   (az értékek függnek a processzor orajelétöl és az LCD kijelzö sebességétöl is)
+/* nsec nagyságrendü várakozás az LCD irási és az olvasási impulzusnál és a touchscreen AD átalakitonál
+   - kezdö értéknek érdemes 10 illetve 500-bol elindulni, aztán lehet csökkenteni a sebesség növelése érdekében
+     (az értékek függnek a processzor orajelétöl és az LCD kijelzö sebességétöl is)
+*/
 #define LCD_IO_RW_DELAY   1
 #define TS_AD_DELAY     500
 
 //=============================================================================
-// I/O csoport optimalizáció, hogy ne bitenként történjenek a GPIO mûveletek:
-// Megj: ha az adat lábakat egy porton belül 0..7, vagy 8..15 lábakra definiáljuk
-//       automatikusan optimalizálva fognak történni a GPIO mûveletek akkor is, ha
-//       itt nem definiáljuk az optimalizált müködéshez szükséges eljárásokat
+/* I/O csoport optimalizáció, hogy ne bitenként történjenek a GPIO mûveletek:
+   Megj: ha az adat lábakat egy porton belül 0..7, vagy 8..15 lábakra definiáljuk
+         automatikusan optimalizálva fognak történni a GPIO mûveletek akkor is, ha
+         itt nem definiáljuk az optimalizált müködéshez szükséges eljárásokat
+*/
 
 // 5 vezérlöláb kimenetre állítása (mivel csak egyszer hajtódik végre, ez nem kritikus)
 // #define LCD_CTR_DIRWRITE  GPIOA->CRL = (GPIOA->CRL & 0xFFFFFF00) | 0x00000033; GPIOB->CRL = (GPIOB->CRL & 0xFF0FFF00) | 0x00300033;

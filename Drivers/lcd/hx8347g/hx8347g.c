@@ -208,7 +208,11 @@ LCD_DrvTypeDef  *lcd_drv = &hx8347g_drv;
 #define HX8347G_ENTRY_DATA_RIGHT_THEN_DOWN   HX8347G_ENTRY_COLORMODE | HX8347G_ENTRY_X_RIGHT | HX8347G_ENTRY_Y_UP   | HX8347G_ENTRY_VERTICAL
 #define HX8347G_ENTRY_DATA_RIGHT_THEN_UP     HX8347G_ENTRY_COLORMODE | HX8347G_ENTRY_X_LEFT  | HX8347G_ENTRY_Y_UP   | HX8347G_ENTRY_VERTICAL
 #endif
-#define HX8347G_SETCURSOR(x, y) {hx8347g_WriteRegPair(HX8347G_HOR_START_AD, x); hx8347g_WriteRegPair(HX8347G_HOR_END_AD, x); hx8347g_WriteRegPair(HX8347G_VER_START_AD, y); hx8347g_WriteRegPair(HX8347G_VER_END_AD, y);}
+
+#define HX8347G_SETCURSOR(x, y)              {hx8347g_WriteRegPair(HX8347G_HOR_START_AD, x); \
+                                              hx8347g_WriteRegPair(HX8347G_HOR_END_AD, x);   \
+                                              hx8347g_WriteRegPair(HX8347G_VER_START_AD, y); \
+                                              hx8347g_WriteRegPair(HX8347G_VER_END_AD, y);   }
 
 #define HX8347G_LCD_INITIALIZED    0x01
 #define HX8347G_IO_INITIALIZED     0x02
@@ -276,15 +280,18 @@ void     LCD_Delay (uint32_t delay);
 void     LCD_IO_Init(void);
 void     LCD_IO_Bl_OnOff(uint8_t Bl);
 
-void     LCD_IO_WriteCmd(uint8_t Cmd);
+void     LCD_IO_WriteCmd8(uint8_t Cmd);
 void     LCD_IO_WriteData8(uint8_t Data);
 void     LCD_IO_WriteData16(uint16_t Data);
-void     LCD_IO_WriteDataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size);
-void     LCD_IO_WriteMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size);
-void     LCD_IO_WriteMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
 
-void     LCD_IO_ReadMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size);
-void     LCD_IO_ReadMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
+void     LCD_IO_WriteCmd8DataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size);
+void     LCD_IO_WriteCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
+
+void     LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize);
+void     LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
+void     LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
+
+
 
 /* Link function for Touchscreen */
 uint8_t   TS_IO_DetectToch(void);
@@ -293,19 +300,11 @@ uint16_t  TS_IO_GetY(void);
 uint16_t  TS_IO_GetZ1(void);
 uint16_t  TS_IO_GetZ2(void);
 
-//-----------------------------------------------------------------------------
-#define   hx8347g_WriteCmd(Cmd)                   LCD_IO_WriteCmd8(Cmd)
-#define   hx8347g_WriteReg(Cmd, Data)             {LCD_IO_WriteCmd8(Cmd); LCD_IO_WriteData8(Data);}
-#define   hx8347g_WriteReg16(Cmd, Data)           {LCD_IO_WriteCmd8(Cmd); LCD_IO_WriteData16(Data);}
-#define   hx8347g_WriteFill16(Data, Size)         LCD_IO_WriteDataFill16(Data, Size);
-#define   hx8347g_WriteBitmap(pData, Size)        LCD_IO_WriteMultipleData16((uint16_t *) pData, Size);
-#define   hx8347g_ReadBitmap(pData, Size)         LCD_IO_ReadMultipleData16((uint16_t *) pData, Size);
-
 void hx8347g_WriteRegPair(uint8_t CmdPair, uint16_t Data)
 {
-  LCD_IO_WriteCmd(CmdPair);
+  LCD_IO_WriteCmd8(CmdPair);
   LCD_IO_WriteData8(Data >> 8);
-  LCD_IO_WriteCmd(CmdPair + 1);
+  LCD_IO_WriteCmd8(CmdPair + 1);
   LCD_IO_WriteData8(Data);
 }
 
@@ -319,50 +318,50 @@ void hx8347g_Init(void)
       LCD_IO_Init();
     Is_hx8347g_Initialized |= HX8347G_IO_INITIALIZED;
 
-    LCD_IO_WriteCmd(0xF3); LCD_IO_WriteData8(0x08);
+    LCD_IO_WriteCmd8(0xF3); LCD_IO_WriteData8(0x08);
 
     LCD_Delay(5);
 
-    LCD_IO_WriteCmd(HX8347G_CYCLE_CTRL2); LCD_IO_WriteData8(0x89);
-    LCD_IO_WriteCmd(HX8347G_FRAMERATE_CTRL1); LCD_IO_WriteData8(0x8F);
-    LCD_IO_WriteCmd(HX8347G_FRAMERATE_CTRL3); LCD_IO_WriteData8(0x02);
-    LCD_IO_WriteCmd(0xE2); LCD_IO_WriteData8(0x00);
-    LCD_IO_WriteCmd(HX8347G_PWR_SAVING1); LCD_IO_WriteData8(0x01);
-    LCD_IO_WriteCmd(HX8347G_PWR_SAVING2); LCD_IO_WriteData8(0x10);
-    LCD_IO_WriteCmd(HX8347G_PWR_SAVING3); LCD_IO_WriteData8(0x01);
-    LCD_IO_WriteCmd(HX8347G_PWR_SAVING4); LCD_IO_WriteData8(0x10);
-    LCD_IO_WriteCmd(HX8347G_SRC_OP_CTRL_NORM); LCD_IO_WriteData8(0x70);
-    LCD_IO_WriteCmd(0xF2); LCD_IO_WriteData8(0x00);
+    LCD_IO_WriteCmd8(HX8347G_CYCLE_CTRL2); LCD_IO_WriteData8(0x89);
+    LCD_IO_WriteCmd8(HX8347G_FRAMERATE_CTRL1); LCD_IO_WriteData8(0x8F);
+    LCD_IO_WriteCmd8(HX8347G_FRAMERATE_CTRL3); LCD_IO_WriteData8(0x02);
+    LCD_IO_WriteCmd8(0xE2); LCD_IO_WriteData8(0x00);
+    LCD_IO_WriteCmd8(HX8347G_PWR_SAVING1); LCD_IO_WriteData8(0x01);
+    LCD_IO_WriteCmd8(HX8347G_PWR_SAVING2); LCD_IO_WriteData8(0x10);
+    LCD_IO_WriteCmd8(HX8347G_PWR_SAVING3); LCD_IO_WriteData8(0x01);
+    LCD_IO_WriteCmd8(HX8347G_PWR_SAVING4); LCD_IO_WriteData8(0x10);
+    LCD_IO_WriteCmd8(HX8347G_SRC_OP_CTRL_NORM); LCD_IO_WriteData8(0x70);
+    LCD_IO_WriteCmd8(0xF2); LCD_IO_WriteData8(0x00);
 
     hx8347g_WriteRegPair(HX8347G_PWR_CTRL_INT, 0x0020);
     hx8347g_WriteRegPair(HX8347G_SRC_CTRL_INT, 0x3CC8);
-    LCD_IO_WriteCmd(HX8347G_SRC_OP_CTRL_IDLE); LCD_IO_WriteData8(0x38);
-    LCD_IO_WriteCmd(0xF1); LCD_IO_WriteData8(0x01);
+    LCD_IO_WriteCmd8(HX8347G_SRC_OP_CTRL_IDLE); LCD_IO_WriteData8(0x38);
+    LCD_IO_WriteCmd8(0xF1); LCD_IO_WriteData8(0x01);
 
     // skip gamma, do later
-    LCD_IO_WriteCmd(HX8347G_PWR_CTRL2); LCD_IO_WriteData8(0x1A);
-    LCD_IO_WriteCmd(HX8347G_PWR_CTRL1); LCD_IO_WriteData8(0x02);
-    LCD_IO_WriteCmd(HX8347G_VCOM_CTRL2); LCD_IO_WriteData8(0x61);
-    LCD_IO_WriteCmd(HX8347G_VCOM_CTRL3); LCD_IO_WriteData8(0x5C);
+    LCD_IO_WriteCmd8(HX8347G_PWR_CTRL2); LCD_IO_WriteData8(0x1A);
+    LCD_IO_WriteCmd8(HX8347G_PWR_CTRL1); LCD_IO_WriteData8(0x02);
+    LCD_IO_WriteCmd8(HX8347G_VCOM_CTRL2); LCD_IO_WriteData8(0x61);
+    LCD_IO_WriteCmd8(HX8347G_VCOM_CTRL3); LCD_IO_WriteData8(0x5C);
 
-    LCD_IO_WriteCmd(HX8347G_OSC_CTRL2); LCD_IO_WriteData8(0x36);
-    LCD_IO_WriteCmd(HX8347G_OSC_CTRL2); LCD_IO_WriteData8(0x01);
-    LCD_IO_WriteCmd(HX8347G_PWR_CTRL6); LCD_IO_WriteData8(0x88);
+    LCD_IO_WriteCmd8(HX8347G_OSC_CTRL2); LCD_IO_WriteData8(0x36);
+    LCD_IO_WriteCmd8(HX8347G_OSC_CTRL2); LCD_IO_WriteData8(0x01);
+    LCD_IO_WriteCmd8(HX8347G_PWR_CTRL6); LCD_IO_WriteData8(0x88);
     LCD_Delay(5);
-    LCD_IO_WriteCmd(HX8347G_PWR_CTRL6); LCD_IO_WriteData8(0x80);
+    LCD_IO_WriteCmd8(HX8347G_PWR_CTRL6); LCD_IO_WriteData8(0x80);
     LCD_Delay(5);
-    LCD_IO_WriteCmd(HX8347G_PWR_CTRL6); LCD_IO_WriteData8(0x90);
+    LCD_IO_WriteCmd8(HX8347G_PWR_CTRL6); LCD_IO_WriteData8(0x90);
     LCD_Delay(5);
-    LCD_IO_WriteCmd(HX8347G_PWR_CTRL6); LCD_IO_WriteData8(0xD4);
+    LCD_IO_WriteCmd8(HX8347G_PWR_CTRL6); LCD_IO_WriteData8(0xD4);
     LCD_Delay(5);
-    LCD_IO_WriteCmd(HX8347G_COLMOD); LCD_IO_WriteData8(0x55); // 16bit/pixel
+    LCD_IO_WriteCmd8(HX8347G_COLMOD); LCD_IO_WriteData8(0x55); // 16bit/pixel
 
-    LCD_IO_WriteCmd(HX8347G_PANEL_CHAR); LCD_IO_WriteData8(0x09);
-    LCD_IO_WriteCmd(HX8347G_DISP_CTRL3); LCD_IO_WriteData8(0x38);
+    LCD_IO_WriteCmd8(HX8347G_PANEL_CHAR); LCD_IO_WriteData8(0x09);
+    LCD_IO_WriteCmd8(HX8347G_DISP_CTRL3); LCD_IO_WriteData8(0x38);
     LCD_Delay(40);
-    LCD_IO_WriteCmd(HX8347G_DISP_CTRL3); LCD_IO_WriteData8(0x3C);
+    LCD_IO_WriteCmd8(HX8347G_DISP_CTRL3); LCD_IO_WriteData8(0x3C);
 
-    LCD_IO_WriteCmd(HX8347G_ENTRY_MOD); LCD_IO_WriteData8(HX8347G_ENTRY_DATA_RIGHT_THEN_DOWN);
+    LCD_IO_WriteCmd8(HX8347G_ENTRY_MOD); LCD_IO_WriteData8(HX8347G_ENTRY_DATA_RIGHT_THEN_DOWN);
   }
 }
 
@@ -426,7 +425,7 @@ uint16_t hx8347g_ReadID(void)
   {
     hx8347g_Init();
   }
-  LCD_IO_ReadMultipleData8(HX8347G_ID_AD, (uint8_t *)&ret, 2);
+  LCD_IO_ReadCmd8MultipleData8(HX8347G_ID_AD, (uint8_t *)&ret, 2, 1);
   HX8347G_LCDMUTEX_POP();
   return ret;
 }
@@ -457,7 +456,7 @@ void hx8347g_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGBCode)
 {
   HX8347G_LCDMUTEX_PUSH();
   HX8347G_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteCmd(HX8347G_RW_GRAM); LCD_IO_WriteData16(RGBCode);
+  LCD_IO_WriteCmd8(HX8347G_RW_GRAM); LCD_IO_WriteData16(RGBCode);
   HX8347G_LCDMUTEX_POP();
 }
 
@@ -472,7 +471,7 @@ uint16_t hx8347g_ReadPixel(uint16_t Xpos, uint16_t Ypos)
   uint16_t ret;
   HX8347G_LCDMUTEX_PUSH();
   HX8347G_SETCURSOR(Xpos, Ypos);
-  LCD_IO_ReadMultipleData16(HX8347G_RW_GRAM, &ret, 1);
+  LCD_IO_ReadCmd8MultipleData24to16(HX8347G_RW_GRAM, &ret, 1, 1);
   HX8347G_LCDMUTEX_POP();
   return ret;
 }
@@ -513,7 +512,7 @@ void hx8347g_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t 
   hx8347g_WriteRegPair(HX8347G_HOR_END_AD, Xpos + Length - 1);
   hx8347g_WriteRegPair(HX8347G_VER_START_AD, Ypos);
   hx8347g_WriteRegPair(HX8347G_VER_END_AD, Ypos);
-  LCD_IO_WriteDataFill16(HX8347G_RW_GRAM, RGBCode, Length);
+  LCD_IO_WriteCmd8DataFill16(HX8347G_RW_GRAM, RGBCode, Length);
   HX8347G_LCDMUTEX_POP();
 }
 
@@ -533,7 +532,7 @@ void hx8347g_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t 
   hx8347g_WriteRegPair(HX8347G_HOR_END_AD, Xpos);
   hx8347g_WriteRegPair(HX8347G_VER_START_AD, Ypos);
   hx8347g_WriteRegPair(HX8347G_VER_END_AD, Ypos + Length - 1);
-  LCD_IO_WriteDataFill16(HX8347G_RW_GRAM, RGBCode, Length);
+  LCD_IO_WriteCmd8DataFill16(HX8347G_RW_GRAM, RGBCode, Length);
   HX8347G_LCDMUTEX_POP();
 }
 
@@ -560,11 +559,11 @@ void hx8347g_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   pbmp += index;
 
   HX8347G_LCDMUTEX_PUSH();
-  LCD_IO_WriteCmd(HX8347G_ENTRY_MOD); LCD_IO_WriteData8(HX8347G_ENTRY_DATA_RIGHT_THEN_UP);
+  LCD_IO_WriteCmd8(HX8347G_ENTRY_MOD); LCD_IO_WriteData8(HX8347G_ENTRY_DATA_RIGHT_THEN_UP);
   hx8347g_WriteRegPair(HX8347G_VER_START_AD, HX8347G_MAX_Y - yEnd);
   hx8347g_WriteRegPair(HX8347G_VER_END_AD, HX8347G_MAX_Y - yStart);
-  LCD_IO_WriteMultipleData16(HX8347G_RW_GRAM, (uint16_t *)pbmp, size);
-  LCD_IO_WriteCmd(HX8347G_ENTRY_MOD); LCD_IO_WriteData8(HX8347G_ENTRY_DATA_RIGHT_THEN_DOWN);
+  LCD_IO_WriteCmd8MultipleData16(HX8347G_RW_GRAM, (uint16_t *)pbmp, size);
+  LCD_IO_WriteCmd8(HX8347G_ENTRY_MOD); LCD_IO_WriteData8(HX8347G_ENTRY_DATA_RIGHT_THEN_DOWN);
   HX8347G_LCDMUTEX_POP();
 }
 
@@ -587,7 +586,7 @@ void hx8347g_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
 
   HX8347G_LCDMUTEX_PUSH();
   hx8347g_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
-  LCD_IO_WriteMultipleData16(HX8347G_RW_GRAM, (uint16_t *)pdata, size);
+  LCD_IO_WriteCmd8MultipleData16(HX8347G_RW_GRAM, (uint16_t *)pdata, size);
   HX8347G_LCDMUTEX_POP();
 }
 
@@ -610,7 +609,7 @@ void hx8347g_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
 
   HX8347G_LCDMUTEX_PUSH();
   hx8347g_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
-  LCD_IO_ReadMultipleData16(HX8347G_RW_GRAM, (uint16_t *)pdata, size);
+  LCD_IO_ReadCmd8MultipleData24to16(HX8347G_RW_GRAM, (uint16_t *)pdata, size, 1);
   HX8347G_LCDMUTEX_POP();
 }
 

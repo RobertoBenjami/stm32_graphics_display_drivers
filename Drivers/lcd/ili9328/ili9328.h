@@ -1,5 +1,5 @@
-#ifndef __ILI9325_H
-#define __ILI9325_H
+#ifndef __ILI9328_H
+#define __ILI9328_H
 
 #ifdef __cplusplus
  extern "C" {
@@ -14,7 +14,7 @@
    - 0: nincs védelem az LCD és a touchscreen egyidejüségének kizárására
    - 1: van védelem az LCD és a touchscreen egyidejüségének kizárására
 */
-#define  ILI9325_MULTITASK_MUTEX   0
+#define  ILI9328_MULTITASK_MUTEX   0
 
 /* Orientácio:
    - 0: 240x320 Reset gomb felül (portrait)
@@ -22,17 +22,17 @@
    - 2: 240x320 Reset gomb alul (portrait)
    - 3: 320x240 Reset gomb jobb oldalt (landscape)
 */
-#define  ILI9325_ORIENTATION       1
+#define  ILI9328_ORIENTATION       1
 
 /* Color mode
    - 0: RGB565 (R:bit15..11, G:bit10..5, B:bit4..0)
    - 1: BRG565 (B:bit15..11, G:bit10..5, R:bit4..0)
 */
-#define  ILI9325_COLORMODE         0
+#define  ILI9328_COLORMODE         0
 
-// ILI9325 Size (fizikai felbontás, az alapértelmezett orientáciora vonatkoztatva)
-#define  ILI9325_LCD_PIXEL_WIDTH   240
-#define  ILI9325_LCD_PIXEL_HEIGHT  320
+// ILI9328 Size (fizikai felbontás, az alapértelmezett orientáciora vonatkoztatva)
+#define  ILI9328_LCD_PIXEL_WIDTH   240
+#define  ILI9328_LCD_PIXEL_HEIGHT  320
 
 /* LCD driver structure */
 extern   LCD_DrvTypeDef   *lcd_drv;
@@ -42,4 +42,4 @@ extern   TS_DrvTypeDef    *ts_drv;
 }
 #endif
 
-#endif /* __ILI9325_H */
+#endif /* __ILI9328_H */

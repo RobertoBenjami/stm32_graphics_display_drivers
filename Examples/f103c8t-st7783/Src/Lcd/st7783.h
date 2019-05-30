@@ -25,8 +25,8 @@
 #define  ST7783_ORIENTATION       1
 
 /* Color mode
-   - 0: RGB565
-   - 1: BRG565
+   - 0: RGB565 (R:bit15..11, G:bit10..5, B:bit4..0)
+   - 1: BRG565 (B:bit15..11, G:bit10..5, R:bit4..0)
 */
 #define  ST7783_COLORMODE         0
 

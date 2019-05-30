@@ -15,10 +15,11 @@
    müveletkor állitgatni
 */
 
-// CS láb vezérlési stratégia
-// - 0: CS láb minden irás/olvasás müvelet során állitva van (igy a touchscreen olvasásakor nem szükséges lekapcsolni
-// - 1: CS láb folyamatosan 0-ba van állitva (a touchscreen olvasásakor ezért le kell kapcsolni)
-#define  LCD_CS_MODE          1
+/* CS láb vezérlési stratégia
+   - 0: CS láb minden irás/olvasás müvelet során állitva van (igy a touchscreen olvasásakor nem szükséges lekapcsolni
+   - 1: CS láb folyamatosan 0-ba van állitva (a touchscreen olvasásakor ezért le kell kapcsolni)
+*/
+#define  LCD_CS_MODE          0
 
 // ADC sample time (0: 1.5cycles, 1: 7.5c, 2:13.5c, 3:28.5c, 4:41.5c, 5:55.5c, 6:71.5c, 7:239.5cycles)
 #define  TS_SAMPLETIME        3
@@ -37,15 +38,24 @@ void     LCD_Delay (uint32_t delay);
 void     LCD_IO_Init(void);
 void     LCD_IO_Bl_OnOff(uint8_t Bl);
 
-void     LCD_IO_WriteCmd(uint8_t Cmd);
+void     LCD_IO_WriteCmd8(uint8_t Cmd);
+void     LCD_IO_WriteCmd16(uint16_t Cmd);
 void     LCD_IO_WriteData8(uint8_t Data);
 void     LCD_IO_WriteData16(uint16_t Data);
-void     LCD_IO_WriteDataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size);
-void     LCD_IO_WriteMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size);
-void     LCD_IO_WriteMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
 
-void     LCD_IO_ReadMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size);
-void     LCD_IO_ReadMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
+void     LCD_IO_WriteCmd8DataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size);
+void     LCD_IO_WriteCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size);
+void     LCD_IO_WriteCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
+void     LCD_IO_WriteCmd16DataFill16(uint16_t Cmd, uint16_t Data, uint32_t Size);
+void     LCD_IO_WriteCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size);
+void     LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size);
+
+void     LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize);
+void     LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
+void     LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
+void     LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize);
+void     LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
+void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
 
 /* Link function for Touchscreen */
 uint8_t  TS_IO_DetectToch(void);
@@ -257,25 +267,13 @@ uint8_t data;
 #endif
 #endif
 
-#if LCD_CMD_SIZE == 8
-#define  LCD_CMD_WRITE(cmd) {LCD_RS_CMD; LCD_DATA_WRITE(cmd); LCD_RS_DATA; }
 #define  LCD_DUMMY_READ {         \
   GPIOX_ODR(LCD_RD) = 0;          \
   LCD_IO_Delay(LCD_IO_RW_DELAY);  \
   GPIOX_ODR(LCD_RD) = 1;          }
-#endif
 
-#if LCD_CMD_SIZE == 16
-#define  LCD_CMD_WRITE(cmd) {LCD_RS_CMD; LCD_DATA_WRITE(0); LCD_DATA_WRITE(cmd); LCD_RS_DATA; }
-#define  LCD_DUMMY_READ {         \
-  GPIOX_ODR(LCD_RD) = 0;          \
-  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
-  GPIOX_ODR(LCD_RD) = 1;          \
-  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
-  GPIOX_ODR(LCD_RD) = 0;          \
-  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
-  GPIOX_ODR(LCD_RD) = 1;          }
-#endif
+#define  LCD_CMD8_WRITE(cmd)  {LCD_RS_CMD; LCD_DATA_WRITE(cmd); LCD_RS_DATA; }
+#define  LCD_CMD16_WRITE(cmd) {LCD_RS_CMD; LCD_DATA_WRITE(cmd >> 8); LCD_DATA_WRITE(cmd); LCD_RS_DATA; }
 
 #if TS_ADC == 1
 #define  ADCX  ADC1
@@ -310,7 +308,8 @@ void LCD_Delay(uint32_t Delay)
 //-----------------------------------------------------------------------------
 void LCD_IO_Bl_OnOff(uint8_t Bl)
 {
-  #ifdef LCD_BL
+  #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12)
+//  #ifdef LCD_BL
   if(Bl)
     GPIOX_ODR(LCD_BL) = LCD_BLON;
   else
@@ -371,10 +370,18 @@ void LCD_IO_Init(void)
 }
 
 //-----------------------------------------------------------------------------
-void LCD_IO_WriteCmd(uint8_t Cmd)
+void LCD_IO_WriteCmd8(uint8_t Cmd)
 {
   LCD_CS_ON;
-  LCD_CMD_WRITE(Cmd);
+  LCD_CMD8_WRITE(Cmd);
+  LCD_CS_OFF;
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_WriteCmd16(uint16_t Cmd)
+{
+  LCD_CS_ON;
+  LCD_CMD16_WRITE(Cmd);
   LCD_CS_OFF;
 }
 
@@ -390,18 +397,18 @@ void LCD_IO_WriteData8(uint8_t Data)
 void LCD_IO_WriteData16(uint16_t Data)
 {
   LCD_CS_ON;
-  LCD_DATA_WRITE((uint8_t)(Data >> 8));
-  LCD_DATA_WRITE((uint8_t)Data);
+  LCD_DATA_WRITE(Data >> 8);
+  LCD_DATA_WRITE(Data);
   LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
-void LCD_IO_WriteDataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
+void LCD_IO_WriteCmd8DataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
 {
   uint32_t counter;
 
   LCD_CS_ON;
-  LCD_CMD_WRITE(Cmd);
+  LCD_CMD8_WRITE(Cmd);
 
   for (counter = Size; counter != 0; counter--)
   {
@@ -413,12 +420,12 @@ void LCD_IO_WriteDataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
 }
 
 //-----------------------------------------------------------------------------
-void LCD_IO_WriteMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
+void LCD_IO_WriteCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
 {
   uint32_t counter;
 
   LCD_CS_ON;
-  LCD_CMD_WRITE(Cmd);
+  LCD_CMD8_WRITE(Cmd);
 
   for (counter = Size; counter != 0; counter--)
   {
@@ -430,12 +437,12 @@ void LCD_IO_WriteMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
 }
 
 //-----------------------------------------------------------------------------
-void LCD_IO_WriteMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
+void LCD_IO_WriteCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
 {
   uint32_t counter;
 
   LCD_CS_ON;
-  LCD_CMD_WRITE(Cmd);
+  LCD_CMD8_WRITE(Cmd);
 
   for (counter = Size; counter != 0; counter--)
   {
@@ -448,16 +455,72 @@ void LCD_IO_WriteMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
 }
 
 //-----------------------------------------------------------------------------
-void LCD_IO_ReadMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
+void LCD_IO_WriteCmd16DataFill16(uint16_t Cmd, uint16_t Data, uint32_t Size)
+{
+  uint32_t counter;
+
+  LCD_CS_ON;
+  LCD_CMD16_WRITE(Cmd);
+
+  for (counter = Size; counter != 0; counter--)
+  {
+    LCD_DATA_WRITE(Data >> 8);
+    LCD_DATA_WRITE(Data);
+  }
+
+  LCD_CS_OFF;
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_WriteCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size)
+{
+  uint32_t counter;
+
+  LCD_CS_ON;
+  LCD_CMD16_WRITE(Cmd);
+
+  for (counter = Size; counter != 0; counter--)
+  {
+    LCD_DATA_WRITE(*pData);
+    pData ++;
+  }
+
+  LCD_CS_OFF;
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size)
+{
+  uint32_t counter;
+
+  LCD_CS_ON;
+  LCD_CMD16_WRITE(Cmd);
+
+  for (counter = Size; counter != 0; counter--)
+  {
+    LCD_DATA_WRITE(*pData >> 8);
+    LCD_DATA_WRITE(*pData);
+    pData ++;
+  }
+
+  LCD_CS_OFF;
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize)
 {
   uint32_t counter;
   uint8_t  d;
 
   LCD_CS_ON;
-  LCD_CMD_WRITE(Cmd);
+  LCD_CMD8_WRITE(Cmd);
 
   LCD_DATA_DIRREAD;
-  LCD_DUMMY_READ;
+
+  for (counter = DummySize; counter != 0; counter--)
+  {
+    LCD_DUMMY_READ;
+  }
 
   for (counter = Size; counter != 0; counter--)
   {
@@ -471,22 +534,136 @@ void LCD_IO_ReadMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
 }
 
 //-----------------------------------------------------------------------------
-void LCD_IO_ReadMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
+void LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
 {
   uint32_t counter;
   uint8_t  dl, dh;
 
   LCD_CS_ON;
-  LCD_CMD_WRITE(Cmd);
+  LCD_CMD8_WRITE(Cmd);
 
   LCD_DATA_DIRREAD;
-  LCD_DUMMY_READ;
+
+  for (counter = DummySize; counter != 0; counter--)
+  {
+    LCD_DUMMY_READ;
+  }
 
   for (counter = Size; counter != 0; counter--)
   {
     LCD_DATA_READ(dh);
     LCD_DATA_READ(dl);
     *pData = (dh << 8) | dl;
+    pData++;
+  }
+  LCD_CS_OFF;
+  LCD_DATA_DIRWRITE;
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
+{
+  uint32_t counter;
+  uint8_t  rgb888[3];
+
+  LCD_CS_ON;
+  LCD_CMD8_WRITE(Cmd);
+
+  LCD_DATA_DIRREAD;
+
+  for (counter = DummySize; counter != 0; counter--)
+  {
+    LCD_DUMMY_READ;
+  }
+
+  for (counter = Size; counter != 0; counter--)
+  {
+    LCD_DATA_READ(rgb888[0]);
+    LCD_DATA_READ(rgb888[1]);
+    LCD_DATA_READ(rgb888[2]);
+    *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    pData++;
+  }
+  LCD_CS_OFF;
+  LCD_DATA_DIRWRITE;
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize)
+{
+  uint32_t counter;
+  uint8_t  d;
+
+  LCD_CS_ON;
+  LCD_CMD16_WRITE(Cmd);
+
+  LCD_DATA_DIRREAD;
+
+  for (counter = DummySize; counter != 0; counter--)
+  {
+    LCD_DUMMY_READ;
+  }
+
+  for (counter = Size; counter != 0; counter--)
+  {
+    LCD_DATA_READ(d);
+    *pData = d;
+    pData++;
+  }
+
+  LCD_CS_OFF;
+  LCD_DATA_DIRWRITE;
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
+{
+  uint32_t counter;
+  uint8_t  dl, dh;
+
+  LCD_CS_ON;
+  LCD_CMD16_WRITE(Cmd);
+
+  LCD_DATA_DIRREAD;
+
+  for (counter = DummySize; counter != 0; counter--)
+  {
+    LCD_DUMMY_READ;
+  }
+
+  for (counter = Size; counter != 0; counter--)
+  {
+    LCD_DATA_READ(dh);
+    LCD_DATA_READ(dl);
+    *pData = (dh << 8) | dl;
+    pData++;
+  }
+  LCD_CS_OFF;
+  LCD_DATA_DIRWRITE;
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
+{
+  uint32_t counter;
+  uint8_t  rgb888[3];
+
+  LCD_CS_ON;
+  LCD_CMD16_WRITE(Cmd);
+
+  LCD_DATA_DIRREAD;
+
+  for (counter = DummySize; counter != 0; counter--)
+  {
+    LCD_DUMMY_READ;
+  }
+
+  for (counter = Size; counter != 0; counter--)
+  {
+    LCD_DATA_READ(rgb888[0]);
+    LCD_DATA_READ(rgb888[1]);
+    LCD_DATA_READ(rgb888[2]);
+    *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     pData++;
   }
   LCD_CS_OFF;

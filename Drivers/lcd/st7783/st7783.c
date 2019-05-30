@@ -124,28 +124,28 @@ LCD_DrvTypeDef  *lcd_drv = &st7783_drv;
 #define ST7783_ENTRY_DATA_DOWN_THEN_RIGHT   ST7783_ENTRY_COLORMODE | ST7783_ENTRY_X_RIGHT | ST7783_ENTRY_Y_DOWN | ST7783_ENTRY_VERTICAL
 #define ST7783_DRIV_OUT_CTRL_DATA           0x0100
 #define ST7783_GATE_SCAN_CTRL1_DATA         0xA700
-#define ST7783_SETCURSOR(x, y)              {LCD_IO_WriteCmd(ST7783_GRAM_HOR_AD); LCD_IO_WriteData16(x); LCD_IO_WriteCmd(ST7783_GRAM_VER_AD); LCD_IO_WriteData16(y);}
+#define ST7783_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(ST7783_GRAM_HOR_AD); LCD_IO_WriteData16(x); LCD_IO_WriteCmd16(ST7783_GRAM_VER_AD); LCD_IO_WriteData16(y);}
 #elif (ST7783_ORIENTATION == 1)
 #define ST7783_ENTRY_DATA_RIGHT_THEN_UP     ST7783_ENTRY_COLORMODE | ST7783_ENTRY_X_LEFT  | ST7783_ENTRY_Y_DOWN | ST7783_ENTRY_VERTICAL
 #define ST7783_ENTRY_DATA_RIGHT_THEN_DOWN   ST7783_ENTRY_COLORMODE | ST7783_ENTRY_X_RIGHT | ST7783_ENTRY_Y_DOWN | ST7783_ENTRY_VERTICAL
 #define ST7783_ENTRY_DATA_DOWN_THEN_RIGHT   ST7783_ENTRY_COLORMODE | ST7783_ENTRY_X_RIGHT | ST7783_ENTRY_Y_DOWN
 #define ST7783_DRIV_OUT_CTRL_DATA           0x0000
 #define ST7783_GATE_SCAN_CTRL1_DATA         0xA700
-#define ST7783_SETCURSOR(x, y)              {LCD_IO_WriteCmd(ST7783_GRAM_HOR_AD); LCD_IO_WriteData16(y); LCD_IO_WriteCmd(ST7783_GRAM_VER_AD); LCD_IO_WriteData16(x);}
+#define ST7783_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(ST7783_GRAM_HOR_AD); LCD_IO_WriteData16(y); LCD_IO_WriteCmd16(ST7783_GRAM_VER_AD); LCD_IO_WriteData16(x);}
 #elif (ST7783_ORIENTATION == 2)
 #define ST7783_ENTRY_DATA_RIGHT_THEN_UP     ST7783_ENTRY_COLORMODE | ST7783_ENTRY_X_RIGHT | ST7783_ENTRY_Y_UP
 #define ST7783_ENTRY_DATA_RIGHT_THEN_DOWN   ST7783_ENTRY_COLORMODE | ST7783_ENTRY_X_RIGHT | ST7783_ENTRY_Y_DOWN
 #define ST7783_ENTRY_DATA_DOWN_THEN_RIGHT   ST7783_ENTRY_COLORMODE | ST7783_ENTRY_X_RIGHT | ST7783_ENTRY_Y_DOWN | ST7783_ENTRY_VERTICAL
 #define ST7783_DRIV_OUT_CTRL_DATA           0x0000
 #define ST7783_GATE_SCAN_CTRL1_DATA         0x2700
-#define ST7783_SETCURSOR(x, y)              {LCD_IO_WriteCmd(ST7783_GRAM_HOR_AD); LCD_IO_WriteData16(x); LCD_IO_WriteCmd(ST7783_GRAM_VER_AD); LCD_IO_WriteData16(y);}
+#define ST7783_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(ST7783_GRAM_HOR_AD); LCD_IO_WriteData16(x); LCD_IO_WriteCmd16(ST7783_GRAM_VER_AD); LCD_IO_WriteData16(y);}
 #else
 #define ST7783_ENTRY_DATA_RIGHT_THEN_UP     ST7783_ENTRY_COLORMODE | ST7783_ENTRY_X_LEFT  | ST7783_ENTRY_Y_DOWN | ST7783_ENTRY_VERTICAL
 #define ST7783_ENTRY_DATA_RIGHT_THEN_DOWN   ST7783_ENTRY_COLORMODE | ST7783_ENTRY_X_RIGHT | ST7783_ENTRY_Y_DOWN | ST7783_ENTRY_VERTICAL
 #define ST7783_ENTRY_DATA_DOWN_THEN_RIGHT   ST7783_ENTRY_COLORMODE | ST7783_ENTRY_X_RIGHT | ST7783_ENTRY_Y_DOWN
 #define ST7783_DRIV_OUT_CTRL_DATA           0x0100
 #define ST7783_GATE_SCAN_CTRL1_DATA         0x2700
-#define ST7783_SETCURSOR(x, y)              {LCD_IO_WriteCmd(ST7783_GRAM_HOR_AD); LCD_IO_WriteData16(y); LCD_IO_WriteCmd(ST7783_GRAM_VER_AD); LCD_IO_WriteData16(x);}
+#define ST7783_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(ST7783_GRAM_HOR_AD); LCD_IO_WriteData16(y); LCD_IO_WriteCmd16(ST7783_GRAM_VER_AD); LCD_IO_WriteData16(x);}
 #endif
 
 #define ST7783_LCD_INITIALIZED    0x0001
@@ -211,16 +211,14 @@ uint16_t tx, ty;
 void     LCD_Delay (uint32_t delay);
 void     LCD_IO_Init(void);
 void     LCD_IO_Bl_OnOff(uint8_t Bl);
-
-void     LCD_IO_WriteCmd(uint8_t Cmd);
+void     LCD_IO_WriteCmd16(uint16_t Cmd);
 void     LCD_IO_WriteData8(uint8_t Data);
 void     LCD_IO_WriteData16(uint16_t Data);
-void     LCD_IO_WriteDataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size);
-void     LCD_IO_WriteMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size);
-void     LCD_IO_WriteMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
-
-void     LCD_IO_ReadMultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size);
-void     LCD_IO_ReadMultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
+void     LCD_IO_WriteCmd16DataFill16(uint16_t Cmd, uint16_t Data, uint32_t Size);
+void     LCD_IO_WriteCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size);
+void     LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size);
+void     LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize);
+void     LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
 
 /* Link function for Touchscreen */
 uint8_t  TS_IO_DetectToch(void);
@@ -239,60 +237,60 @@ void st7783_Init(void)
       LCD_IO_Init();
     Is_st7783_Initialized |= ST7783_IO_INITIALIZED;
 
-    LCD_IO_WriteCmd(0xF3); LCD_IO_WriteData16(0x0008);
+    LCD_IO_WriteCmd16(0xF3); LCD_IO_WriteData16(0x0008);
 
     LCD_Delay(5);
 
-    LCD_IO_WriteCmd(ST7783_DRIV_OUT_CTRL); LCD_IO_WriteData16(ST7783_DRIV_OUT_CTRL_DATA);
-    LCD_IO_WriteCmd(ST7783_DRIV_WAV_CTRL); LCD_IO_WriteData16(0x0700);
-    LCD_IO_WriteCmd(ST7783_ENTRY_MOD); LCD_IO_WriteData16(ST7783_ENTRY_DATA_RIGHT_THEN_DOWN);
-    LCD_IO_WriteCmd(ST7783_DISP_CTRL2); LCD_IO_WriteData16(0x0302);
-    LCD_IO_WriteCmd(ST7783_DISP_CTRL3); LCD_IO_WriteData16(0x0000);
+    LCD_IO_WriteCmd16(ST7783_DRIV_OUT_CTRL); LCD_IO_WriteData16(ST7783_DRIV_OUT_CTRL_DATA);
+    LCD_IO_WriteCmd16(ST7783_DRIV_WAV_CTRL); LCD_IO_WriteData16(0x0700);
+    LCD_IO_WriteCmd16(ST7783_ENTRY_MOD); LCD_IO_WriteData16(ST7783_ENTRY_DATA_RIGHT_THEN_DOWN);
+    LCD_IO_WriteCmd16(ST7783_DISP_CTRL2); LCD_IO_WriteData16(0x0302);
+    LCD_IO_WriteCmd16(ST7783_DISP_CTRL3); LCD_IO_WriteData16(0x0000);
     /*POWER CONTROL REGISTER INITIAL*/
-    LCD_IO_WriteCmd(ST7783_POW_CTRL1); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd(ST7783_POW_CTRL2); LCD_IO_WriteData16(0x0007);
-    LCD_IO_WriteCmd(ST7783_POW_CTRL3); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd(ST7783_POW_CTRL4); LCD_IO_WriteData16(0x0000);
+    LCD_IO_WriteCmd16(ST7783_POW_CTRL1); LCD_IO_WriteData16(0x0000);
+    LCD_IO_WriteCmd16(ST7783_POW_CTRL2); LCD_IO_WriteData16(0x0007);
+    LCD_IO_WriteCmd16(ST7783_POW_CTRL3); LCD_IO_WriteData16(0x0000);
+    LCD_IO_WriteCmd16(ST7783_POW_CTRL4); LCD_IO_WriteData16(0x0000);
     LCD_Delay(5);
     /*POWER SUPPPLY STARTUP 1 SETTING*/
-    LCD_IO_WriteCmd(ST7783_POW_CTRL1); LCD_IO_WriteData16(0x14B0);
+    LCD_IO_WriteCmd16(ST7783_POW_CTRL1); LCD_IO_WriteData16(0x14B0);
     LCD_Delay(5);
-    LCD_IO_WriteCmd(ST7783_POW_CTRL2); LCD_IO_WriteData16(0x0007);
+    LCD_IO_WriteCmd16(ST7783_POW_CTRL2); LCD_IO_WriteData16(0x0007);
     LCD_Delay(5);
 
     /*POWER SUPPLY STARTUP 2 SETTING*/
-    LCD_IO_WriteCmd(ST7783_POW_CTRL3); LCD_IO_WriteData16(0x008E);
-    LCD_IO_WriteCmd(ST7783_POW_CTRL4); LCD_IO_WriteData16(0x0C00);
-    LCD_IO_WriteCmd(ST7783_POW_CTRL7); LCD_IO_WriteData16(0x0015);
+    LCD_IO_WriteCmd16(ST7783_POW_CTRL3); LCD_IO_WriteData16(0x008E);
+    LCD_IO_WriteCmd16(ST7783_POW_CTRL4); LCD_IO_WriteData16(0x0C00);
+    LCD_IO_WriteCmd16(ST7783_POW_CTRL7); LCD_IO_WriteData16(0x0015);
     LCD_Delay(5);
 
     /****GAMMA CLUSTER SETTING****/
-    LCD_IO_WriteCmd(ST7783_GAMMA_CTRL1); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd(ST7783_GAMMA_CTRL2); LCD_IO_WriteData16(0x0107);
-    LCD_IO_WriteCmd(ST7783_GAMMA_CTRL3); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd(ST7783_GAMMA_CTRL4); LCD_IO_WriteData16(0x0203);
-    LCD_IO_WriteCmd(ST7783_GAMMA_CTRL5); LCD_IO_WriteData16(0x0402);
-    LCD_IO_WriteCmd(ST7783_GAMMA_CTRL6); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd(ST7783_GAMMA_CTRL7); LCD_IO_WriteData16(0x0207);
-    LCD_IO_WriteCmd(ST7783_GAMMA_CTRL8); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd(ST7783_GAMMA_CTRL9); LCD_IO_WriteData16(0x0203);
-    LCD_IO_WriteCmd(ST7783_GAMMA_CTRL10); LCD_IO_WriteData16(0x0403);
+    LCD_IO_WriteCmd16(ST7783_GAMMA_CTRL1); LCD_IO_WriteData16(0x0000);
+    LCD_IO_WriteCmd16(ST7783_GAMMA_CTRL2); LCD_IO_WriteData16(0x0107);
+    LCD_IO_WriteCmd16(ST7783_GAMMA_CTRL3); LCD_IO_WriteData16(0x0000);
+    LCD_IO_WriteCmd16(ST7783_GAMMA_CTRL4); LCD_IO_WriteData16(0x0203);
+    LCD_IO_WriteCmd16(ST7783_GAMMA_CTRL5); LCD_IO_WriteData16(0x0402);
+    LCD_IO_WriteCmd16(ST7783_GAMMA_CTRL6); LCD_IO_WriteData16(0x0000);
+    LCD_IO_WriteCmd16(ST7783_GAMMA_CTRL7); LCD_IO_WriteData16(0x0207);
+    LCD_IO_WriteCmd16(ST7783_GAMMA_CTRL8); LCD_IO_WriteData16(0x0000);
+    LCD_IO_WriteCmd16(ST7783_GAMMA_CTRL9); LCD_IO_WriteData16(0x0203);
+    LCD_IO_WriteCmd16(ST7783_GAMMA_CTRL10); LCD_IO_WriteData16(0x0403);
 
     //-DISPLAY WINDOWS 240*320-
-    LCD_IO_WriteCmd(ST7783_HOR_START_AD); LCD_IO_WriteData16(0);
-    LCD_IO_WriteCmd(ST7783_HOR_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_WIDTH - 1);
-    LCD_IO_WriteCmd(ST7783_VER_START_AD); LCD_IO_WriteData16(0);
-    LCD_IO_WriteCmd(ST7783_VER_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_HEIGHT - 1);
+    LCD_IO_WriteCmd16(ST7783_HOR_START_AD); LCD_IO_WriteData16(0);
+    LCD_IO_WriteCmd16(ST7783_HOR_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_WIDTH - 1);
+    LCD_IO_WriteCmd16(ST7783_VER_START_AD); LCD_IO_WriteData16(0);
+    LCD_IO_WriteCmd16(ST7783_VER_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_HEIGHT - 1);
 
     //----FRAME RATE SETTING-----
-    LCD_IO_WriteCmd(ST7783_GATE_SCAN_CTRL1); LCD_IO_WriteData16(ST7783_GATE_SCAN_CTRL1_DATA);
-    LCD_IO_WriteCmd(ST7783_GATE_SCAN_CTRL2); LCD_IO_WriteData16(0x0001);
-    LCD_IO_WriteCmd(ST7783_PANEL_IF_CTRL1); LCD_IO_WriteData16(0x0029); /* RTNI setting */
+    LCD_IO_WriteCmd16(ST7783_GATE_SCAN_CTRL1); LCD_IO_WriteData16(ST7783_GATE_SCAN_CTRL1_DATA);
+    LCD_IO_WriteCmd16(ST7783_GATE_SCAN_CTRL2); LCD_IO_WriteData16(0x0001);
+    LCD_IO_WriteCmd16(ST7783_PANEL_IF_CTRL1); LCD_IO_WriteData16(0x0029); /* RTNI setting */
     LCD_Delay(5);
 
     //------DISPLAY ON------
-    LCD_IO_WriteCmd(ST7783_FRM_RATE_COL_CTRL); LCD_IO_WriteData16(0x000E); // 110Hz, hogy ne vibráljon
-    LCD_IO_WriteCmd(ST7783_DISP_CTRL1); LCD_IO_WriteData16(0x0133);
+    LCD_IO_WriteCmd16(ST7783_FRM_RATE_COL_CTRL); LCD_IO_WriteData16(0x000E); // 110Hz, hogy ne vibráljon
+    LCD_IO_WriteCmd16(ST7783_DISP_CTRL1); LCD_IO_WriteData16(0x0133);
   }
 }
 
@@ -307,7 +305,7 @@ void st7783_DisplayOn(void)
   ST7783_LCDMUTEX_PUSH();
 
   /* Power On sequence -------------------------------------------------------*/
-  LCD_IO_WriteCmd(ST7783_POW_CTRL1); LCD_IO_WriteData16(0x14B0);
+  LCD_IO_WriteCmd16(ST7783_POW_CTRL1); LCD_IO_WriteData16(0x14B0);
   LCD_IO_Bl_OnOff(1);
 
   ST7783_LCDMUTEX_POP();
@@ -324,7 +322,7 @@ void st7783_DisplayOff(void)
   ST7783_LCDMUTEX_PUSH();
 
   /* Power Off sequence ------------------------------------------------------*/
-  LCD_IO_WriteCmd(ST7783_POW_CTRL1); LCD_IO_WriteData16(0x0002);
+  LCD_IO_WriteCmd16(ST7783_POW_CTRL1); LCD_IO_WriteData16(0x0002);
   LCD_IO_Bl_OnOff(0);
 
   ST7783_LCDMUTEX_POP();
@@ -376,7 +374,7 @@ uint16_t st7783_ReadID(void)
   {
     st7783_Init();
   }
-  LCD_IO_ReadMultipleData16(0x00, &ret, 1);
+  LCD_IO_ReadCmd16MultipleData16(0x00, &ret, 1, 2);
 
   ST7783_LCDMUTEX_POP();
   return ret;
@@ -408,7 +406,7 @@ void st7783_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGBCode)
 {
   ST7783_LCDMUTEX_PUSH();
   ST7783_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteCmd(ST7783_RW_GRAM); LCD_IO_WriteData16(RGBCode);  // Write Data to GRAM (R22h)
+  LCD_IO_WriteCmd16(ST7783_RW_GRAM); LCD_IO_WriteData16(RGBCode);  // Write Data to GRAM (R22h)
   ST7783_LCDMUTEX_POP();
 }
 
@@ -423,7 +421,7 @@ uint16_t st7783_ReadPixel(uint16_t Xpos, uint16_t Ypos)
   uint16_t ret;
   ST7783_LCDMUTEX_PUSH();
   ST7783_SETCURSOR(Xpos, Ypos);
-  LCD_IO_ReadMultipleData16(ST7783_RW_GRAM, &ret, 1);
+  LCD_IO_ReadCmd16MultipleData16(ST7783_RW_GRAM, &ret, 1, 2);
   ST7783_LCDMUTEX_POP();
   return(ret);
 }
@@ -442,15 +440,15 @@ void st7783_SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint1
   ST7783_LCDMUTEX_PUSH();
 
   #if (ST7783_ORIENTATION == 0) || (ST7783_ORIENTATION == 2)
-  LCD_IO_WriteCmd(ST7783_HOR_START_AD); LCD_IO_WriteData16(Xpos);
-  LCD_IO_WriteCmd(ST7783_HOR_END_AD); LCD_IO_WriteData16(Xpos + Width - 1);
-  LCD_IO_WriteCmd(ST7783_VER_START_AD); LCD_IO_WriteData16(Ypos);
-  LCD_IO_WriteCmd(ST7783_VER_END_AD); LCD_IO_WriteData16(Ypos + Height - 1);
+  LCD_IO_WriteCmd16(ST7783_HOR_START_AD); LCD_IO_WriteData16(Xpos);
+  LCD_IO_WriteCmd16(ST7783_HOR_END_AD); LCD_IO_WriteData16(Xpos + Width - 1);
+  LCD_IO_WriteCmd16(ST7783_VER_START_AD); LCD_IO_WriteData16(Ypos);
+  LCD_IO_WriteCmd16(ST7783_VER_END_AD); LCD_IO_WriteData16(Ypos + Height - 1);
   #elif (ST7783_ORIENTATION == 1) || (ST7783_ORIENTATION == 3)
-  LCD_IO_WriteCmd(ST7783_HOR_START_AD); LCD_IO_WriteData16(Ypos);
-  LCD_IO_WriteCmd(ST7783_HOR_END_AD); LCD_IO_WriteData16(Ypos + Height - 1);
-  LCD_IO_WriteCmd(ST7783_VER_START_AD); LCD_IO_WriteData16(Xpos);
-  LCD_IO_WriteCmd(ST7783_VER_END_AD); LCD_IO_WriteData16(Xpos + Width - 1);
+  LCD_IO_WriteCmd16(ST7783_HOR_START_AD); LCD_IO_WriteData16(Ypos);
+  LCD_IO_WriteCmd16(ST7783_HOR_END_AD); LCD_IO_WriteData16(Ypos + Height - 1);
+  LCD_IO_WriteCmd16(ST7783_VER_START_AD); LCD_IO_WriteData16(Xpos);
+  LCD_IO_WriteCmd16(ST7783_VER_END_AD); LCD_IO_WriteData16(Xpos + Width - 1);
   #endif
 
   ST7783_LCDMUTEX_POP();
@@ -469,7 +467,7 @@ void st7783_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t L
 {
   ST7783_LCDMUTEX_PUSH();
   ST7783_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteDataFill16(ST7783_RW_GRAM, RGBCode, Length);
+  LCD_IO_WriteCmd16DataFill16(ST7783_RW_GRAM, RGBCode, Length);
   ST7783_LCDMUTEX_POP();
 }
 
@@ -485,10 +483,10 @@ void st7783_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t L
 void st7783_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length)
 {
   ST7783_LCDMUTEX_PUSH();
-  LCD_IO_WriteCmd(ST7783_ENTRY_MOD); LCD_IO_WriteData16(ST7783_ENTRY_DATA_DOWN_THEN_RIGHT);
+  LCD_IO_WriteCmd16(ST7783_ENTRY_MOD); LCD_IO_WriteData16(ST7783_ENTRY_DATA_DOWN_THEN_RIGHT);
   ST7783_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteDataFill16(ST7783_RW_GRAM, RGBCode, Length);
-  LCD_IO_WriteCmd(ST7783_ENTRY_MOD); LCD_IO_WriteData16(ST7783_ENTRY_DATA_RIGHT_THEN_DOWN);
+  LCD_IO_WriteCmd16DataFill16(ST7783_RW_GRAM, RGBCode, Length);
+  LCD_IO_WriteCmd16(ST7783_ENTRY_MOD); LCD_IO_WriteData16(ST7783_ENTRY_DATA_RIGHT_THEN_DOWN);
   ST7783_LCDMUTEX_POP();
 }
 
@@ -517,15 +515,15 @@ void st7783_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   size = (size - index)/2;
   pbmp += index;
 
-  LCD_IO_WriteCmd(ST7783_ENTRY_MOD); LCD_IO_WriteData16(ST7783_ENTRY_DATA_RIGHT_THEN_UP);
+  LCD_IO_WriteCmd16(ST7783_ENTRY_MOD); LCD_IO_WriteData16(ST7783_ENTRY_DATA_RIGHT_THEN_UP);
   ST7783_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteMultipleData16(ST7783_RW_GRAM, (uint16_t *)pbmp, size);
-  LCD_IO_WriteCmd(ST7783_ENTRY_MOD); LCD_IO_WriteData16(ST7783_ENTRY_DATA_RIGHT_THEN_DOWN);
+  LCD_IO_WriteCmd16MultipleData16(ST7783_RW_GRAM, (uint16_t *)pbmp, size);
+  LCD_IO_WriteCmd16(ST7783_ENTRY_MOD); LCD_IO_WriteData16(ST7783_ENTRY_DATA_RIGHT_THEN_DOWN);
 
-  LCD_IO_WriteCmd(ST7783_HOR_START_AD); LCD_IO_WriteData16(0);
-  LCD_IO_WriteCmd(ST7783_HOR_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_WIDTH - 1);
-  LCD_IO_WriteCmd(ST7783_VER_START_AD); LCD_IO_WriteData16(0);
-  LCD_IO_WriteCmd(ST7783_VER_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_HEIGHT - 1);
+  LCD_IO_WriteCmd16(ST7783_HOR_START_AD); LCD_IO_WriteData16(0);
+  LCD_IO_WriteCmd16(ST7783_HOR_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_WIDTH - 1);
+  LCD_IO_WriteCmd16(ST7783_VER_START_AD); LCD_IO_WriteData16(0);
+  LCD_IO_WriteCmd16(ST7783_VER_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_HEIGHT - 1);
 
   ST7783_LCDMUTEX_POP();
 }
@@ -546,12 +544,12 @@ void st7783_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t 
   ST7783_LCDMUTEX_PUSH();
   st7783_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ST7783_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteMultipleData16(ST7783_RW_GRAM, (uint16_t *)pdata, Xsize * Ysize);
+  LCD_IO_WriteCmd16MultipleData16(ST7783_RW_GRAM, (uint16_t *)pdata, Xsize * Ysize);
 
-  LCD_IO_WriteCmd(ST7783_HOR_START_AD); LCD_IO_WriteData16(0);
-  LCD_IO_WriteCmd(ST7783_HOR_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_WIDTH - 1);
-  LCD_IO_WriteCmd(ST7783_VER_START_AD); LCD_IO_WriteData16(0);
-  LCD_IO_WriteCmd(ST7783_VER_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_HEIGHT - 1);
+  LCD_IO_WriteCmd16(ST7783_HOR_START_AD); LCD_IO_WriteData16(0);
+  LCD_IO_WriteCmd16(ST7783_HOR_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_WIDTH - 1);
+  LCD_IO_WriteCmd16(ST7783_VER_START_AD); LCD_IO_WriteData16(0);
+  LCD_IO_WriteCmd16(ST7783_VER_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_HEIGHT - 1);
   ST7783_LCDMUTEX_POP();
 }
 
@@ -571,12 +569,12 @@ void st7783_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t 
   ST7783_LCDMUTEX_PUSH();
   st7783_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ST7783_SETCURSOR(Xpos, Ypos);
-  LCD_IO_ReadMultipleData16(ST7783_RW_GRAM, (uint16_t *)pdata, Xsize * Ysize);
+  LCD_IO_ReadCmd16MultipleData16(ST7783_RW_GRAM, (uint16_t *)pdata, Xsize * Ysize, 2);
 
-  LCD_IO_WriteCmd(ST7783_HOR_START_AD); LCD_IO_WriteData16(0);
-  LCD_IO_WriteCmd(ST7783_HOR_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_WIDTH - 1);
-  LCD_IO_WriteCmd(ST7783_VER_START_AD); LCD_IO_WriteData16( 0);
-  LCD_IO_WriteCmd(ST7783_VER_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_HEIGHT - 1);
+  LCD_IO_WriteCmd16(ST7783_HOR_START_AD); LCD_IO_WriteData16(0);
+  LCD_IO_WriteCmd16(ST7783_HOR_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_WIDTH - 1);
+  LCD_IO_WriteCmd16(ST7783_VER_START_AD); LCD_IO_WriteData16( 0);
+  LCD_IO_WriteCmd16(ST7783_VER_END_AD); LCD_IO_WriteData16(ST7783_LCD_PIXEL_HEIGHT - 1);
   ST7783_LCDMUTEX_POP();
 }
   

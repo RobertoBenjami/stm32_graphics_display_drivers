@@ -25,8 +25,8 @@
 #define  ILI9488_ORIENTATION       1
 
 /* Color mode
-   - 0: RGB565 (R:bit15..bit11, G:bit10..bit5, B:bit4..bit0)
-   - 1: BGR565 (B:bit15..bit11, G:bit10..bit5, R:bit4..bit0)
+   - 0: RGB565 (R:bit15..11, G:bit10..5, B:bit4..0)
+   - 1: BRG565 (B:bit15..11, G:bit10..5, R:bit4..0)
 */
 #define  ILI9488_COLORMODE         0
 
