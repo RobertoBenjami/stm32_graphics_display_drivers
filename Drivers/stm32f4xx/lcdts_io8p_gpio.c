@@ -1,5 +1,5 @@
 /*
- * 8 bites párhuzamos LCD/TOUCH GPIO driver STM32F1-re
+ * 8 bites párhuzamos LCD/TOUCH GPIO driver STM32F4-re
  * 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
 
  * Figyelem: mivel azonos lábakon van az Lcd ás a Touchscreen,
@@ -21,8 +21,8 @@
 */
 #define  LCD_CS_MODE          0
 
-// ADC sample time (0: 1.5cycles, 1: 7.5c, 2:13.5c, 3:28.5c, 4:41.5c, 5:55.5c, 6:71.5c, 7:239.5cycles)
-#define  TS_SAMPLETIME        3
+// ADC sample time (0:3cycles, 1:15c, 2:28c, 3:55c, 4:84c, 5:112c, 6:144c, 7:480cycles)
+#define  TS_SAMPLETIME        2
 
 // A kijelzön belül a következö lábak vannak párhuzamositva:
 #define  TS_XP                LCD_D6
