@@ -9,6 +9,7 @@ Example:
 LCD I/O driver:
 - stm32f1: spi_io
 - stm32f1: gpio_io (8bit paralell)
+- stm32f4: gpio_io (8bit paralell)
 
 LCD driver:
 - st7735
