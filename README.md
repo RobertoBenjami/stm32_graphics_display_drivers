@@ -4,9 +4,7 @@ Layer chart:
 - Lcd_drv.pdf
 
 Example:
-- LcdSpeedtest (truestudio, st7735, spi_io)
-- LcdSpeedtest (truestudio, st7783, gpio_io)
-- LcdSpeedtest (truestudio, ili9325, gpio_io)
+- LcdSpeedtest stm32f103c8t (truestudio)
 
 LCD I/O driver:
 - stm32f1: spi_io
