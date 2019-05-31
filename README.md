@@ -5,6 +5,7 @@ Layer chart:
 
 Example:
 - LcdSpeedtest stm32f103c8t (truestudio)
+- LcdSpeedtest stm32f407vet (truestudio)
 
 LCD I/O driver:
 - stm32f1: spi_io
