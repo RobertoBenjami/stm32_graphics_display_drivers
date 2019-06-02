@@ -46,7 +46,7 @@ How to use?
    - add USER CODE BEGIN Includes: #include "stm32f1xx_hal.h" or #include "stm32f4xx_hal.h"
    - add 2 new folder for Src folder (App, Lcd)
    - copy files from App/... to App
-   - copy 5 files from Drivers to Lcd (lcd.h, ts.h, bmp.h, stm32_adafruit_lcd.h, stm32_adafruit_lcd.c)
+   - copy 7 files from Drivers to Lcd (lcd.h, ts.h, bmp.h, stm32_adafruit_lcd.h / c, stm32_adafruit_ts.h / c)
    - copy Fonts folder to Lcd folder
    - copy io driver to Lcd folder (lcd_io_spi.h / c or lcdts_io8p_gpio.h / c or lcdts_io8p_fsmc.h / c)
    - copy lcd driver to Lcd folder (st7735.h / c or ili9325.h /c or...)
