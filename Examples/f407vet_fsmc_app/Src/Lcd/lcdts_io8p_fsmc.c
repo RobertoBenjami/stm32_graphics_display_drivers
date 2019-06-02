@@ -127,7 +127,7 @@ uint16_t TS_IO_GetZ2(void);
 #define LCD_TS_ON             GPIOX_MODER(MODE_OUT, LCD_CS)
 #define LCD_TS_OFF            GPIOX_MODER(MODE_ALTER, LCD_CS)
 
-#define LCD_ADDR_DATA         (LCD_ADDR_CMD + (1 << LCD_REGSELECT_BIT))
+#define LCD_ADDR_DATA         (LCD_ADDR_BASE + (1 << LCD_REGSELECT_BIT))
 
 #if TS_ADC == 1
 #define  RCC_APB2ENR_ADCXEN  RCC_APB2ENR_ADC1EN
@@ -142,6 +142,23 @@ uint16_t TS_IO_GetZ2(void);
 #if TS_ADC == 3
 #define  RCC_APB2ENR_ADCXEN  RCC_APB2ENR_ADC3EN
 #define  ADCX  ADC3
+#endif
+
+#ifndef  TS_XM_AN
+#define  TS_XM_AN  TS_XM
+#endif
+
+#ifndef  TS_YP_AN
+#define  TS_YP_AN  TS_YP
+#endif
+
+/* Ha a touchscreen AD átalakito lábai különböznek RS és WR lábaktol, és párhuzamositva vannak azokkal
+   (ez azért szükséges, mert az FSMC ezen lábai nem választhatoak ki AD átalakito bemeneteknek) */
+#ifdef   ADCX
+#if (GPIOX_PORTNUM(TS_XM) != GPIOX_PORTNUM(TS_XM_AN)) || (GPIOX_PIN(TS_XM) != GPIOX_PIN(TS_XM_AN)) || \
+    (GPIOX_PORTNUM(TS_YP) != GPIOX_PORTNUM(TS_YP_AN)) || (GPIOX_PIN(TS_YP) != GPIOX_PIN(TS_YP_AN))
+#define  TS_AD_PIN_PARALELL
+#endif
 #endif
 
 //-----------------------------------------------------------------------------
@@ -222,13 +239,13 @@ void LCD_IO_Init(void)
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd8(uint8_t Cmd)
 {
-  *(uint8_t *)LCD_ADDR_CMD = Cmd;
+  *(uint8_t *)LCD_ADDR_BASE = Cmd;
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd16(uint16_t Cmd)
 {
-  *(volatile uint16_t *)LCD_ADDR_CMD = __REVSH(Cmd);
+  *(volatile uint16_t *)LCD_ADDR_BASE = __REVSH(Cmd);
 }
 
 //-----------------------------------------------------------------------------
@@ -248,7 +265,7 @@ void LCD_IO_WriteCmd8DataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
 {
   uint32_t counter;
   uint16_t d = __REVSH(Data);
-  *(volatile uint8_t *)LCD_ADDR_CMD = Cmd;
+  *(volatile uint8_t *)LCD_ADDR_BASE = Cmd;
   for (counter = Size; counter != 0; counter--)
   {
     *(volatile uint16_t *)LCD_ADDR_DATA = d;
@@ -259,7 +276,7 @@ void LCD_IO_WriteCmd8DataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
 void LCD_IO_WriteCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
 {
   uint32_t counter;
-  *(volatile uint8_t *)LCD_ADDR_CMD = Cmd;
+  *(volatile uint8_t *)LCD_ADDR_BASE = Cmd;
   for (counter = Size; counter != 0; counter--)
   {
     *(volatile uint8_t *)LCD_ADDR_DATA =*pData;
@@ -271,7 +288,7 @@ void LCD_IO_WriteCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
 void LCD_IO_WriteCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
 {
   uint32_t counter;
-  *(volatile uint8_t *)LCD_ADDR_CMD = Cmd;
+  *(volatile uint8_t *)LCD_ADDR_BASE = Cmd;
   for (counter = Size; counter != 0; counter--)
   {
     *(volatile uint16_t *)LCD_ADDR_DATA = __REVSH(*(uint16_t *)pData);
@@ -284,7 +301,7 @@ void LCD_IO_WriteCmd16DataFill16(uint16_t Cmd, uint16_t Data, uint32_t Size)
 {
   uint32_t counter;
   uint16_t d = __REVSH(Data);
-  *(volatile uint16_t *)LCD_ADDR_CMD = __REVSH(Cmd);
+  *(volatile uint16_t *)LCD_ADDR_BASE = __REVSH(Cmd);
   for (counter = Size; counter != 0; counter--)
   {
     *(volatile uint16_t *)LCD_ADDR_DATA = d;
@@ -295,7 +312,7 @@ void LCD_IO_WriteCmd16DataFill16(uint16_t Cmd, uint16_t Data, uint32_t Size)
 void LCD_IO_WriteCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size)
 {
   uint32_t counter;
-  *(volatile uint16_t *)LCD_ADDR_CMD = __REVSH(Cmd);
+  *(volatile uint16_t *)LCD_ADDR_BASE = __REVSH(Cmd);
   for (counter = Size; counter != 0; counter--)
   {
     *(volatile uint8_t *)LCD_ADDR_DATA =*pData;
@@ -307,7 +324,7 @@ void LCD_IO_WriteCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size)
 void LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size)
 {
   uint32_t counter;
-  *(volatile uint16_t *)LCD_ADDR_CMD = __REVSH(Cmd);
+  *(volatile uint16_t *)LCD_ADDR_BASE = __REVSH(Cmd);
   for (counter = Size; counter != 0; counter--)
   {
     *(volatile uint16_t *)LCD_ADDR_DATA = __REVSH(*pData);
@@ -319,7 +336,7 @@ void LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Siz
 void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize)
 {
   uint32_t counter;
-  *(volatile uint8_t *)LCD_ADDR_CMD = Cmd;
+  *(volatile uint8_t *)LCD_ADDR_BASE = Cmd;
   for (counter = DummySize; counter != 0; counter--)
     *pData = *(volatile uint8_t *)LCD_ADDR_DATA;
   for (counter = Size; counter != 0; counter--)
@@ -333,7 +350,7 @@ void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, ui
 void LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
 {
   uint32_t counter;
-  *(volatile uint8_t *)LCD_ADDR_CMD = Cmd;
+  *(volatile uint8_t *)LCD_ADDR_BASE = Cmd;
   for (counter = DummySize; counter != 0; counter--)
     *pData = *(volatile uint8_t *)LCD_ADDR_DATA;
   for (counter = Size; counter != 0; counter--)
@@ -349,7 +366,7 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
   uint32_t counter;
   uint8_t  rgb888[3];
 
-  *(volatile uint8_t *)LCD_ADDR_CMD = Cmd;
+  *(volatile uint8_t *)LCD_ADDR_BASE = Cmd;
   for (counter = DummySize; counter != 0; counter--)
     rgb888[0] = *(volatile uint8_t*)LCD_ADDR_DATA;
   for (counter = Size; counter != 0; counter--)
@@ -366,7 +383,7 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
 void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize)
 {
   uint32_t counter;
-  *(volatile uint16_t *)LCD_ADDR_CMD = __REVSH(Cmd);
+  *(volatile uint16_t *)LCD_ADDR_BASE = __REVSH(Cmd);
   for (counter = DummySize; counter != 0; counter--)
     *pData = *(volatile uint8_t *)LCD_ADDR_DATA;
   for (counter = Size; counter != 0; counter--)
@@ -380,7 +397,7 @@ void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, 
 void LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
 {
   uint32_t counter;
-  *(volatile uint16_t *)LCD_ADDR_CMD = __REVSH(Cmd);
+  *(volatile uint16_t *)LCD_ADDR_BASE = __REVSH(Cmd);
   for (counter = DummySize; counter != 0; counter--)
     *pData = *(volatile uint8_t *)LCD_ADDR_DATA;
   for (counter = Size; counter != 0; counter--)
@@ -395,7 +412,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
 {
   uint32_t counter;
   uint8_t  rgb888[3];
-  *(volatile uint16_t *)LCD_ADDR_CMD = __REVSH(Cmd);
+  *(volatile uint16_t *)LCD_ADDR_BASE = __REVSH(Cmd);
   for (counter = DummySize; counter != 0; counter--)
   {
     rgb888[0] = *(volatile uint8_t*)LCD_ADDR_DATA;

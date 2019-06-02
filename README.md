@@ -22,6 +22,13 @@ LCD driver:
 - ili9488
 - hx8347g
 
+App:
+- LcdSpeedTest: Lcd speed test 
+  (printf: the result, i use the SWO pin for ST-LINK Serial Wire Viewer (SWV))
+- TouchCalib: Touchscreen calibration program 
+  (printf: the result, i use the SWO pin for ST-LINK Serial Wire Viewer (SWV))
+- Paint: Arduino paint clone
+
 How to use?
 1. Create project for Cubemex
    - setting the RCC (Crystal/ceramic resonator)
@@ -43,7 +50,7 @@ How to use?
    - copy Fonts folder to Lcd folder
    - copy io driver to Lcd folder (lcd_io_spi.h / c or lcdts_io8p_gpio.h / c or lcdts_io8p_fsmc.h / c)
    - copy lcd driver to Lcd folder (st7735.h / c or ili9325.h /c or...)
-   - setting the confifuration the io driver header file (pin settings)
+   - setting the configuration the io driver header file (pin settings)
    - add include path : Src/Lcd
    - comple ...
    

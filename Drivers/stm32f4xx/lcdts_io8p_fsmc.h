@@ -22,7 +22,7 @@ Többszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások mege
 #define LCD_BLON          0
 
 // Memoria cimek hozzárendelése
-#define LCD_ADDR_CMD      0x60000000
+#define LCD_ADDR_BASE     0x60000000
 #define LCD_REGSELECT_BIT 18
 
 /*=============================================================================
