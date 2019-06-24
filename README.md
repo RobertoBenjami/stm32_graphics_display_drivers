@@ -3,24 +3,28 @@
 Layer chart:
 - Lcd_drv.pdf
 
-Example:
-- LcdSpeedtest stm32f103c8t (cubemx, truestudio)
-- LcdSpeedtest stm32f407vet (cubemx, truestudio)
-- LcdSpeedtest stm32f407vet fsmc (cubemx, truestudio)
+Example (please unzip the app you like):
+- stm32f103c8t (HAL applications, cubemx, truestudio)
+- stm32f103c8t (HAL-FreeRtos applications, cubemx, truestudio)
+- stm32f407vet (HAL-applications, cubemx, truestudio)
+- stm32f407vet (HAL-FreeRtos applications, cubemx, truestudio)
+- stm32f407vet (HAL applications, FSMC, cubemx, truestudio)
+- stm32f407vet (HAL-FreeRtos applications, FSMC, cubemx, truestudio)
 
 LCD I/O driver:
-- stm32f1: spi_io
-- stm32f1: gpio_io (8bit paralell)
-- stm32f4: gpio_io (8bit paralell)
-- stm32f4: fsmc_io (8bit paralell)
+- stm32f1: spi_io (software SPI, hardware SPI, hardware SPI with DMA)
+- stm32f1: gpio_io (8bit paralell with analog resistive touchscreen)
+- stm32f4: spi_io (software SPI, hardware SPI, hardware SPI with DMA)
+- stm32f4: gpio_io (8bit paralell with analog resistive touchscreen)
+- stm32f4: fsmc_io (8bit paralell with analog resistive touchscreen + FSMC or FSMC with DMA)
 
 LCD driver:
-- st7735
-- st7783
-- ili9325
-- ili9328
-- ili9488
-- hx8347g
+- st7735  (SPI mode tested)
+- st7783  (8bit paralell mode tested)
+- ili9325 (8bit paralell mode tested)
+- ili9328 (8bit paralell mode tested)
+- ili9488 (8bit paralell mode tested)
+- hx8347g (8bit paralell mode tested)
 
 App:
 - LcdSpeedTest: Lcd speed test 
@@ -29,7 +33,7 @@ App:
   (printf: the result, i use the SWO pin for ST-LINK Serial Wire Viewer (SWV))
 - Paint: Arduino paint clone
 
-How to use?
+How to use starting from zero?
 1. Create project for Cubemex
    - setting the RCC (Crystal/ceramic resonator)
    - setting the debug (SYS / serial wire or trace assyn sw)

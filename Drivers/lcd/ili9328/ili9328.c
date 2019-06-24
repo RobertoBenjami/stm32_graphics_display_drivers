@@ -3,6 +3,29 @@
 #include "ts.h"
 #include "ili9328.h"
 
+#if LCD_REVERSE16 == 0
+#define  RC(a)   a
+#define  RD(a)   a
+#if ILI9328_COLORMODE == 0
+// RGB 5-6-5 <-> BGR 5-6-5 (vörös - kék összetevök felcserélése)
+#define RGB565TOBGR565(rgb16)  rgb16 = (rgb16 & 0b11111100000) | (rgb16 << 11) | (rgb16 >> 11)
+#else
+#define RGB565TOBGR565(rgb16)
+#endif
+#endif
+
+/* Konstans szám bájtjainak cseréje, változó bájtjainak cseréje */
+#if LCD_REVERSE16 == 1
+#define  RC(a)   ((((a) & 0xFF) << 8) | (((a) & 0xFF00) >> 8))
+#define  RD(a)   __REVSH(a)
+#if ILI9328_COLORMODE == 0
+// RGB 5-6-5 <-> BGR 5-6-5 (vörös - kék összetevök felcserélése)
+#define RGB565TOBGR565(rgb16)  rgb16 = (rgb16 & 0b1110000000000111) | ((rgb16 & 0b0000000011111000) << 5) | ((rgb16 & 0b0001111100000000) >> 5)
+#else
+#define RGB565TOBGR565(rgb16)
+#endif
+#endif
+
 void     ili9328_Init(void);
 uint16_t ili9328_ReadID(void);
 void     ili9328_DisplayOn(void);
@@ -18,6 +41,7 @@ uint16_t ili9328_GetLcdPixelHeight(void);
 void     ili9328_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
 void     ili9328_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata);
 void     ili9328_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata);
+void     ili9328_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t RGBCode);
 
 // Touchscreen
 void     ili9328_ts_Init(uint16_t DeviceAddr);
@@ -41,6 +65,7 @@ LCD_DrvTypeDef   ili9328_drv =
   ili9328_DrawBitmap,
   ili9328_DrawRGBImage,
   #ifdef   LCD_DRVTYPE_V1_1
+  ili9328_FillRect,
   ili9328_ReadRGBImage,
   #endif
 };
@@ -113,10 +138,8 @@ LCD_DrvTypeDef  *lcd_drv = &ili9328_drv;
 
 #if ILI9328_COLORMODE == 0
 // RGB 5-6-5 <-> BGR 5-6-5 (vörös - kék összetevök felcserélése)
-#define RGB565TOBGR565(rgb16)  rgb16 = (rgb16 & 0b11111100000) | (rgb16 << 11) | (rgb16 >> 11)
 #define ILI9328_ENTRY_COLORMODE    ILI9328_ENTRY_RGB
 #else
-#define RGB565TOBGR565(rgb16)
 #define ILI9328_ENTRY_COLORMODE    ILI9328_ENTRY_BGR
 #endif
 
@@ -127,28 +150,28 @@ LCD_DrvTypeDef  *lcd_drv = &ili9328_drv;
 #define ILI9328_ENTRY_DATA_DOWN_THEN_RIGHT   ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_RIGHT | ILI9328_ENTRY_Y_DOWN | ILI9328_ENTRY_VERTICAL
 #define ILI9328_DRIV_OUT_CTRL_DATA           0x0100
 #define ILI9328_GATE_SCAN_CTRL1_DATA         0xA700
-#define ILI9328_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(ILI9328_GRAM_HOR_AD); LCD_IO_WriteData16(x); LCD_IO_WriteCmd16(ILI9328_GRAM_VER_AD); LCD_IO_WriteData16(y);}
+#define ILI9328_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(RC(ILI9328_GRAM_HOR_AD)); LCD_IO_WriteData16(RD(x)); LCD_IO_WriteCmd16(RC(ILI9328_GRAM_VER_AD)); LCD_IO_WriteData16(RD(y));}
 #elif (ILI9328_ORIENTATION == 1)
 #define ILI9328_ENTRY_DATA_RIGHT_THEN_UP     ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_LEFT  | ILI9328_ENTRY_Y_DOWN | ILI9328_ENTRY_VERTICAL
 #define ILI9328_ENTRY_DATA_RIGHT_THEN_DOWN   ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_RIGHT | ILI9328_ENTRY_Y_DOWN | ILI9328_ENTRY_VERTICAL
 #define ILI9328_ENTRY_DATA_DOWN_THEN_RIGHT   ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_RIGHT | ILI9328_ENTRY_Y_DOWN
 #define ILI9328_DRIV_OUT_CTRL_DATA           0x0000
 #define ILI9328_GATE_SCAN_CTRL1_DATA         0xA700
-#define ILI9328_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(ILI9328_GRAM_HOR_AD); LCD_IO_WriteData16(y); LCD_IO_WriteCmd16(ILI9328_GRAM_VER_AD); LCD_IO_WriteData16(x);}
+#define ILI9328_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(RC(ILI9328_GRAM_HOR_AD)); LCD_IO_WriteData16(RD(y)); LCD_IO_WriteCmd16(RC(ILI9328_GRAM_VER_AD)); LCD_IO_WriteData16(RD(x));}
 #elif (ILI9328_ORIENTATION == 2)
 #define ILI9328_ENTRY_DATA_RIGHT_THEN_UP     ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_RIGHT | ILI9328_ENTRY_Y_UP
 #define ILI9328_ENTRY_DATA_RIGHT_THEN_DOWN   ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_RIGHT | ILI9328_ENTRY_Y_DOWN
 #define ILI9328_ENTRY_DATA_DOWN_THEN_RIGHT   ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_RIGHT | ILI9328_ENTRY_Y_DOWN | ILI9328_ENTRY_VERTICAL
 #define ILI9328_DRIV_OUT_CTRL_DATA           0x0000
 #define ILI9328_GATE_SCAN_CTRL1_DATA         0x2700
-#define ILI9328_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(ILI9328_GRAM_HOR_AD); LCD_IO_WriteData16(x); LCD_IO_WriteCmd16(ILI9328_GRAM_VER_AD); LCD_IO_WriteData16(y);}
+#define ILI9328_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(RC(ILI9328_GRAM_HOR_AD)); LCD_IO_WriteData16(RD(x)); LCD_IO_WriteCmd16(RC(ILI9328_GRAM_VER_AD)); LCD_IO_WriteData16(RD(y));}
 #else
 #define ILI9328_ENTRY_DATA_RIGHT_THEN_UP     ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_LEFT  | ILI9328_ENTRY_Y_DOWN | ILI9328_ENTRY_VERTICAL
 #define ILI9328_ENTRY_DATA_RIGHT_THEN_DOWN   ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_RIGHT | ILI9328_ENTRY_Y_DOWN | ILI9328_ENTRY_VERTICAL
 #define ILI9328_ENTRY_DATA_DOWN_THEN_RIGHT   ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_RIGHT | ILI9328_ENTRY_Y_DOWN
 #define ILI9328_DRIV_OUT_CTRL_DATA           0x0100
 #define ILI9328_GATE_SCAN_CTRL1_DATA         0x2700
-#define ILI9328_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(ILI9328_GRAM_HOR_AD); LCD_IO_WriteData16(y); LCD_IO_WriteCmd16(ILI9328_GRAM_VER_AD); LCD_IO_WriteData16(x);}
+#define ILI9328_SETCURSOR(x, y)              {LCD_IO_WriteCmd16(RC(ILI9328_GRAM_HOR_AD)); LCD_IO_WriteData16(RD(y)); LCD_IO_WriteCmd16(RC(ILI9328_GRAM_VER_AD)); LCD_IO_WriteData16(RD(x));}
 #endif
 
 #define ILI9328_LCD_INITIALIZED    0x01
@@ -257,53 +280,53 @@ void ili9328_Init(void)
 
     LCD_Delay(5);
 
-    LCD_IO_WriteCmd16(ILI9328_DRIV_OUT_CTRL); LCD_IO_WriteData16(ILI9328_DRIV_OUT_CTRL_DATA);
-    LCD_IO_WriteCmd16(ILI9328_DRIV_WAV_CTRL); LCD_IO_WriteData16(0x0700);
-    LCD_IO_WriteCmd16(ILI9328_ENTRY_MOD); LCD_IO_WriteData16(ILI9328_ENTRY_DATA_RIGHT_THEN_DOWN);
-    LCD_IO_WriteCmd16(ILI9328_DISP_CTRL2); LCD_IO_WriteData16(0x0302);
-    LCD_IO_WriteCmd16(ILI9328_DISP_CTRL3); LCD_IO_WriteData16(0x0000);
+    LCD_IO_WriteCmd16(RC(ILI9328_DRIV_OUT_CTRL)); LCD_IO_WriteData16(RC(ILI9328_DRIV_OUT_CTRL_DATA));
+    LCD_IO_WriteCmd16(RC(ILI9328_DRIV_WAV_CTRL)); LCD_IO_WriteData16(RC(0x0700));
+    LCD_IO_WriteCmd16(RC(ILI9328_ENTRY_MOD)); LCD_IO_WriteData16(RC(ILI9328_ENTRY_DATA_RIGHT_THEN_DOWN));
+    LCD_IO_WriteCmd16(RC(ILI9328_DISP_CTRL2)); LCD_IO_WriteData16(RC(0x0302));
+    LCD_IO_WriteCmd16(RC(ILI9328_DISP_CTRL3)); LCD_IO_WriteData16(RC(0x0000));
     /*POWER CONTROL REGISTER INITIAL*/
-    LCD_IO_WriteCmd16(ILI9328_POW_CTRL1); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd16(ILI9328_POW_CTRL2); LCD_IO_WriteData16(0x0007);
-    LCD_IO_WriteCmd16(ILI9328_POW_CTRL3); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd16(ILI9328_POW_CTRL4); LCD_IO_WriteData16(0x0000);
+    LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL1)); LCD_IO_WriteData16(RC(0x0000));
+    LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL2)); LCD_IO_WriteData16(RC(0x0007));
+    LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL3)); LCD_IO_WriteData16(RC(0x0000));
+    LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL4)); LCD_IO_WriteData16(RC(0x0000));
     LCD_Delay(5);
     /*POWER SUPPPLY STARTUP 1 SETTING*/
-    LCD_IO_WriteCmd16(ILI9328_POW_CTRL1); LCD_IO_WriteData16(0x14B0);
+    LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL1)); LCD_IO_WriteData16(RC(0x14B0));
     LCD_Delay(5);
-    LCD_IO_WriteCmd16(ILI9328_POW_CTRL2); LCD_IO_WriteData16(0x0007);
+    LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL2)); LCD_IO_WriteData16(RC(0x0007));
     LCD_Delay(5);
     /*POWER SUPPLY STARTUP 2 SETTING*/
-    LCD_IO_WriteCmd16(ILI9328_POW_CTRL3); LCD_IO_WriteData16(0x008E);
-    LCD_IO_WriteCmd16(ILI9328_POW_CTRL4); LCD_IO_WriteData16(0x0C00);
-    LCD_IO_WriteCmd16(ILI9328_POW_CTRL7); LCD_IO_WriteData16(0x0015);
+    LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL3)); LCD_IO_WriteData16(RC(0x008E));
+    LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL4)); LCD_IO_WriteData16(RC(0x0C00));
+    LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL7)); LCD_IO_WriteData16(RC(0x0015));
 
     LCD_Delay(5);
     /****GAMMA CLUSTER SETTING****/
-    LCD_IO_WriteCmd16(ILI9328_GAMMA_CTRL1); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd16(ILI9328_GAMMA_CTRL2); LCD_IO_WriteData16(0x0107);
-    LCD_IO_WriteCmd16(ILI9328_GAMMA_CTRL3); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd16(ILI9328_GAMMA_CTRL4); LCD_IO_WriteData16(0x0203);
-    LCD_IO_WriteCmd16(ILI9328_GAMMA_CTRL5); LCD_IO_WriteData16(0x0402);
-    LCD_IO_WriteCmd16(ILI9328_GAMMA_CTRL6); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd16(ILI9328_GAMMA_CTRL7); LCD_IO_WriteData16(0x0207);
-    LCD_IO_WriteCmd16(ILI9328_GAMMA_CTRL8); LCD_IO_WriteData16(0x0000);
-    LCD_IO_WriteCmd16(ILI9328_GAMMA_CTRL9); LCD_IO_WriteData16(0x0203);
-    LCD_IO_WriteCmd16(ILI9328_GAMMA_CTRL10); LCD_IO_WriteData16(0x0403);
+    LCD_IO_WriteCmd16(RC(ILI9328_GAMMA_CTRL1)); LCD_IO_WriteData16(RC(0x0000));
+    LCD_IO_WriteCmd16(RC(ILI9328_GAMMA_CTRL2)); LCD_IO_WriteData16(RC(0x0107));
+    LCD_IO_WriteCmd16(RC(ILI9328_GAMMA_CTRL3)); LCD_IO_WriteData16(RC(0x0000));
+    LCD_IO_WriteCmd16(RC(ILI9328_GAMMA_CTRL4)); LCD_IO_WriteData16(RC(0x0203));
+    LCD_IO_WriteCmd16(RC(ILI9328_GAMMA_CTRL5)); LCD_IO_WriteData16(RC(0x0402));
+    LCD_IO_WriteCmd16(RC(ILI9328_GAMMA_CTRL6)); LCD_IO_WriteData16(RC(0x0000));
+    LCD_IO_WriteCmd16(RC(ILI9328_GAMMA_CTRL7)); LCD_IO_WriteData16(RC(0x0207));
+    LCD_IO_WriteCmd16(RC(ILI9328_GAMMA_CTRL8)); LCD_IO_WriteData16(RC(0x0000));
+    LCD_IO_WriteCmd16(RC(ILI9328_GAMMA_CTRL9)); LCD_IO_WriteData16(RC(0x0203));
+    LCD_IO_WriteCmd16(RC(ILI9328_GAMMA_CTRL10)); LCD_IO_WriteData16(RC(0x0403));
     //-DISPLAY WINDOWS 240*320-
-    LCD_IO_WriteCmd16(ILI9328_HOR_START_AD); LCD_IO_WriteData16(0);
-    LCD_IO_WriteCmd16(ILI9328_HOR_END_AD); LCD_IO_WriteData16(ILI9328_LCD_PIXEL_WIDTH - 1);  // 240 - 1
-    LCD_IO_WriteCmd16(ILI9328_VER_START_AD); LCD_IO_WriteData16(0);
-    LCD_IO_WriteCmd16(ILI9328_VER_END_AD); LCD_IO_WriteData16(ILI9328_LCD_PIXEL_HEIGHT - 1); // 320 - 1
+    LCD_IO_WriteCmd16(RC(ILI9328_HOR_START_AD)); LCD_IO_WriteData16(RC(0));
+    LCD_IO_WriteCmd16(RC(ILI9328_HOR_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_WIDTH - 1));  // 240 - 1
+    LCD_IO_WriteCmd16(RC(ILI9328_VER_START_AD)); LCD_IO_WriteData16(RC(0));
+    LCD_IO_WriteCmd16(RC(ILI9328_VER_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_HEIGHT - 1)); // 320 - 1
     //----FRAME RATE SETTING-----
-    LCD_IO_WriteCmd16(ILI9328_GATE_SCAN_CTRL1); LCD_IO_WriteData16(ILI9328_GATE_SCAN_CTRL1_DATA);
-    LCD_IO_WriteCmd16(ILI9328_GATE_SCAN_CTRL2); LCD_IO_WriteData16(0x0001);
-    LCD_IO_WriteCmd16(ILI9328_PANEL_IF_CTRL1); LCD_IO_WriteData16(0x0029); /* RTNI setting */
+    LCD_IO_WriteCmd16(RC(ILI9328_GATE_SCAN_CTRL1)); LCD_IO_WriteData16(RC(ILI9328_GATE_SCAN_CTRL1_DATA));
+    LCD_IO_WriteCmd16(RC(ILI9328_GATE_SCAN_CTRL2)); LCD_IO_WriteData16(RC(0x0001));
+    LCD_IO_WriteCmd16(RC(ILI9328_PANEL_IF_CTRL1)); LCD_IO_WriteData16(RC(0x0029)); /* RTNI setting */
     LCD_Delay(5);
 
     //------DISPLAY ON------
-    LCD_IO_WriteCmd16(ILI9328_FRM_RATE_COL_CTRL); LCD_IO_WriteData16(0x000E); // 110Hz, hogy ne vibráljon
-    LCD_IO_WriteCmd16(ILI9328_DISP_CTRL1); LCD_IO_WriteData16(0x0133);
+    LCD_IO_WriteCmd16(RC(ILI9328_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibráljon
+    LCD_IO_WriteCmd16(RC(ILI9328_DISP_CTRL1)); LCD_IO_WriteData16(RC(0x0133));
   }
 }
 
@@ -318,23 +341,23 @@ void ili9328_DisplayOn(void)
   ILI9328_LCDMUTEX_PUSH();
 
   /* Power On sequence -------------------------------------------------------*/
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL1); LCD_IO_WriteData16(0x0000); /* SAP, BT[3:0], AP, DSTB, SLP, STB */
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL2); LCD_IO_WriteData16(0x0000); /* DC1[2:0], DC0[2:0], VC[2:0] */
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL3); LCD_IO_WriteData16(0x0000); /* VREG1OUT voltage */
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL4); LCD_IO_WriteData16(0x0000); /* VDV[4:0] for VCOM amplitude*/
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL1)); LCD_IO_WriteData16(RC(0x0000)); /* SAP, BT[3:0], AP, DSTB, SLP, STB */
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL2)); LCD_IO_WriteData16(RC(0x0000)); /* DC1[2:0], DC0[2:0], VC[2:0] */
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL3)); LCD_IO_WriteData16(RC(0x0000)); /* VREG1OUT voltage */
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL4)); LCD_IO_WriteData16(RC(0x0000)); /* VDV[4:0] for VCOM amplitude*/
   LCD_Delay(5);
 
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL1); LCD_IO_WriteData16(0x14B0);
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL2); LCD_IO_WriteData16(0x0007);
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL1)); LCD_IO_WriteData16(RC(0x14B0));
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL2)); LCD_IO_WriteData16(RC(0x0007));
 
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL3); LCD_IO_WriteData16(0x008E); /* VREG1OUT voltage */
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL3)); LCD_IO_WriteData16(RC(0x008E)); /* VREG1OUT voltage */
 
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL4); LCD_IO_WriteData16(0x0C00);
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL7); LCD_IO_WriteData16(0x0015);
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL4)); LCD_IO_WriteData16(RC(0x0C00));
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL7)); LCD_IO_WriteData16(RC(0x0015));
 
   /* Display On */
-  LCD_IO_WriteCmd16(ILI9328_FRM_RATE_COL_CTRL); LCD_IO_WriteData16(0x000E); // 110Hz, hogy ne vibráljon
-  LCD_IO_WriteCmd16(ILI9328_DISP_CTRL1); LCD_IO_WriteData16(0x0133); /* display ON */
+  LCD_IO_WriteCmd16(RC(ILI9328_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibráljon
+  LCD_IO_WriteCmd16(RC(ILI9328_DISP_CTRL1)); LCD_IO_WriteData16(RC(0x0133)); /* display ON */
 
   LCD_IO_Bl_OnOff(1);
 
@@ -352,15 +375,15 @@ void ili9328_DisplayOff(void)
   ILI9328_LCDMUTEX_PUSH();
 
   /* Power Off sequence ------------------------------------------------------*/
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL1); LCD_IO_WriteData16(0x0000); /* SAP, BT[3:0], AP, DSTB, SLP, STB */
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL2); LCD_IO_WriteData16(0x0000); /* DC1[2:0], DC0[2:0], VC[2:0] */
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL3); LCD_IO_WriteData16(0x0000); /* VREG1OUT voltage */
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL4); LCD_IO_WriteData16(0x0000); /* VDV[4:0] for VCOM amplitude*/
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL1)); LCD_IO_WriteData16(RC(0x0000)); /* SAP, BT[3:0], AP, DSTB, SLP, STB */
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL2)); LCD_IO_WriteData16(RC(0x0000)); /* DC1[2:0], DC0[2:0], VC[2:0] */
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL3)); LCD_IO_WriteData16(RC(0x0000)); /* VREG1OUT voltage */
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL4)); LCD_IO_WriteData16(RC(0x0000)); /* VDV[4:0] for VCOM amplitude*/
 
-  LCD_IO_WriteCmd16(ILI9328_POW_CTRL7); LCD_IO_WriteData16(0x0000); /* VCM[4:0] for VCOMH */
+  LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL7)); LCD_IO_WriteData16(RC(0x0000)); /* VCM[4:0] for VCOMH */
   
   /* Display Off */
-  LCD_IO_WriteCmd16(ILI9328_DISP_CTRL1); LCD_IO_WriteData16(0x0);
+  LCD_IO_WriteCmd16(RC(ILI9328_DISP_CTRL1)); LCD_IO_WriteData16(RC(0x0));
 
   LCD_IO_Bl_OnOff(0);
 
@@ -411,9 +434,9 @@ uint16_t ili9328_ReadID(void)
   {
     ili9328_Init();
   }
-  LCD_IO_ReadCmd16MultipleData16(0x00, &ret, 1, 2);
+  LCD_IO_ReadCmd16MultipleData16(RC(0x00), &ret, 1, 2);
   ILI9328_LCDMUTEX_POP();
-  return ret;
+  return __REVSH(RD(ret));
 }
 
 //-----------------------------------------------------------------------------
@@ -442,7 +465,7 @@ void ili9328_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGBCode)
 {
   ILI9328_LCDMUTEX_PUSH();
   ILI9328_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteCmd16(ILI9328_RW_GRAM); LCD_IO_WriteData16(RGBCode);  // Write Data to GRAM (R22h)
+  LCD_IO_WriteCmd16(RC(ILI9328_RW_GRAM)); LCD_IO_WriteData16(RGBCode);  // Write Data to GRAM (R22h)
   ILI9328_LCDMUTEX_POP();
 }
 
@@ -457,7 +480,7 @@ uint16_t ili9328_ReadPixel(uint16_t Xpos, uint16_t Ypos)
   uint16_t ret;
   ILI9328_LCDMUTEX_PUSH();
   ILI9328_SETCURSOR(Xpos, Ypos);
-  LCD_IO_ReadCmd16MultipleData16(ILI9328_RW_GRAM, &ret, 1, 2);
+  LCD_IO_ReadCmd16MultipleData16(RC(ILI9328_RW_GRAM), &ret, 1, 1);
   RGB565TOBGR565(ret);
   ILI9328_LCDMUTEX_POP();
   return ret;
@@ -477,15 +500,15 @@ void ili9328_SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint
   ILI9328_LCDMUTEX_PUSH();
 
   #if (ILI9328_ORIENTATION == 0) || (ILI9328_ORIENTATION == 2)
-  LCD_IO_WriteCmd16(ILI9328_HOR_START_AD); LCD_IO_WriteData16(Xpos);
-  LCD_IO_WriteCmd16(ILI9328_HOR_END_AD); LCD_IO_WriteData16(Xpos + Width - 1);
-  LCD_IO_WriteCmd16(ILI9328_VER_START_AD); LCD_IO_WriteData16(Ypos);
-  LCD_IO_WriteCmd16(ILI9328_VER_END_AD); LCD_IO_WriteData16(Ypos + Height - 1);
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_START_AD)); LCD_IO_WriteData16(RD(Xpos));
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_END_AD)); LCD_IO_WriteData16(RD(Xpos + Width - 1));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_START_AD)); LCD_IO_WriteData16(RD(Ypos));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_END_AD)); LCD_IO_WriteData16(RD(Ypos + Height - 1));
   #elif (ILI9328_ORIENTATION == 1) || (ILI9328_ORIENTATION == 3)
-  LCD_IO_WriteCmd16(ILI9328_HOR_START_AD); LCD_IO_WriteData16(Ypos);
-  LCD_IO_WriteCmd16(ILI9328_HOR_END_AD); LCD_IO_WriteData16(Ypos + Height - 1);
-  LCD_IO_WriteCmd16(ILI9328_VER_START_AD); LCD_IO_WriteData16(Xpos);
-  LCD_IO_WriteCmd16(ILI9328_VER_END_AD); LCD_IO_WriteData16(Xpos + Width - 1);
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_START_AD)); LCD_IO_WriteData16(RD(Ypos));
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_END_AD)); LCD_IO_WriteData16(RD(Ypos + Height - 1));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_START_AD)); LCD_IO_WriteData16(RD(Xpos));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_END_AD)); LCD_IO_WriteData16(RD(Xpos + Width - 1));
   #endif
 
   ILI9328_LCDMUTEX_POP();
@@ -504,7 +527,7 @@ void ili9328_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t 
 {
   ILI9328_LCDMUTEX_PUSH();
   ILI9328_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteCmd16DataFill16(ILI9328_RW_GRAM, RGBCode, Length);
+  LCD_IO_WriteCmd16DataFill16(RC(ILI9328_RW_GRAM), RGBCode, Length);
   ILI9328_LCDMUTEX_POP();
 }
 
@@ -520,10 +543,33 @@ void ili9328_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t 
 void ili9328_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length)
 {
   ILI9328_LCDMUTEX_PUSH();
-  LCD_IO_WriteCmd16(ILI9328_ENTRY_MOD); LCD_IO_WriteData16(ILI9328_ENTRY_DATA_DOWN_THEN_RIGHT);
+  LCD_IO_WriteCmd16(RC(ILI9328_ENTRY_MOD)); LCD_IO_WriteData16(RC(ILI9328_ENTRY_DATA_DOWN_THEN_RIGHT));
   ILI9328_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteCmd16DataFill16(ILI9328_RW_GRAM, RGBCode, Length);
-  LCD_IO_WriteCmd16(ILI9328_ENTRY_MOD); LCD_IO_WriteData16(ILI9328_ENTRY_DATA_RIGHT_THEN_DOWN);
+  LCD_IO_WriteCmd16DataFill16(RC(ILI9328_RW_GRAM), RGBCode, Length);
+  LCD_IO_WriteCmd16(RC(ILI9328_ENTRY_MOD)); LCD_IO_WriteData16(RC(ILI9328_ENTRY_DATA_RIGHT_THEN_DOWN));
+  ILI9328_LCDMUTEX_POP();
+}
+
+//-----------------------------------------------------------------------------
+/**
+  * @brief  Draw Filled rectangle
+  * @param  Xpos:     specifies the X position.
+  * @param  Ypos:     specifies the Y position.
+  * @param  Xsize:    specifies the X size
+  * @param  Ysize:    specifies the Y size
+  * @param  RGBCode:  specifies the RGB color
+  * @retval None
+  */
+void ili9328_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t RGBCode)
+{
+  ILI9328_LCDMUTEX_PUSH();
+  ili9328_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
+  ILI9328_SETCURSOR(Xpos, Ypos);
+  LCD_IO_WriteCmd16DataFill16(RC(ILI9328_RW_GRAM), RGBCode, Xsize * Ysize);
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_START_AD)); LCD_IO_WriteData16(RC(0));
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_WIDTH - 1));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_START_AD)); LCD_IO_WriteData16(RC(0));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_HEIGHT - 1));
   ILI9328_LCDMUTEX_POP();
 }
 
@@ -550,15 +596,15 @@ void ili9328_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   pbmp += index;
 
   ILI9328_LCDMUTEX_PUSH();
-  LCD_IO_WriteCmd16(ILI9328_ENTRY_MOD); LCD_IO_WriteData16(ILI9328_ENTRY_DATA_RIGHT_THEN_UP);
+  LCD_IO_WriteCmd16(RC(ILI9328_ENTRY_MOD)); LCD_IO_WriteData16(RC(ILI9328_ENTRY_DATA_RIGHT_THEN_UP));
   ILI9328_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteCmd16MultipleData16(ILI9328_RW_GRAM, (uint16_t *)pbmp, size);
-  LCD_IO_WriteCmd16(ILI9328_ENTRY_MOD); LCD_IO_WriteData16(ILI9328_ENTRY_DATA_RIGHT_THEN_DOWN);
+  LCD_IO_WriteCmd16MultipleData16(RC(ILI9328_RW_GRAM), (uint16_t *)pbmp, size);
+  LCD_IO_WriteCmd16(RC(ILI9328_ENTRY_MOD)); LCD_IO_WriteData16(RC(ILI9328_ENTRY_DATA_RIGHT_THEN_DOWN));
 
-  LCD_IO_WriteCmd16(ILI9328_HOR_START_AD); LCD_IO_WriteData16(0);
-  LCD_IO_WriteCmd16(ILI9328_HOR_END_AD); LCD_IO_WriteData16(ILI9328_LCD_PIXEL_WIDTH - 1);
-  LCD_IO_WriteCmd16(ILI9328_VER_START_AD); LCD_IO_WriteData16(0);
-  LCD_IO_WriteCmd16(ILI9328_VER_END_AD); LCD_IO_WriteData16(ILI9328_LCD_PIXEL_HEIGHT - 1);
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_START_AD)); LCD_IO_WriteData16(RC(0));
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_WIDTH - 1));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_START_AD)); LCD_IO_WriteData16(RC(0));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_HEIGHT - 1));
 
   ILI9328_LCDMUTEX_POP();
 }
@@ -579,12 +625,12 @@ void ili9328_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   ILI9328_LCDMUTEX_PUSH();
   ili9328_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ILI9328_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteCmd16MultipleData16(ILI9328_RW_GRAM, (uint16_t *)pdata, Xsize * Ysize);
+  LCD_IO_WriteCmd16MultipleData16(RC(ILI9328_RW_GRAM), (uint16_t *)pdata, Xsize * Ysize);
 
-  LCD_IO_WriteCmd16(ILI9328_HOR_START_AD); LCD_IO_WriteData16(0);
-  LCD_IO_WriteCmd16(ILI9328_HOR_END_AD); LCD_IO_WriteData16(ILI9328_LCD_PIXEL_WIDTH - 1);
-  LCD_IO_WriteCmd16(ILI9328_VER_START_AD); LCD_IO_WriteData16(0);
-  LCD_IO_WriteCmd16(ILI9328_VER_END_AD); LCD_IO_WriteData16(ILI9328_LCD_PIXEL_HEIGHT - 1);
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_START_AD)); LCD_IO_WriteData16(RC(0));
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_WIDTH - 1));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_START_AD)); LCD_IO_WriteData16(RC(0));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_HEIGHT - 1));
   ILI9328_LCDMUTEX_POP();
 }
 
@@ -605,11 +651,11 @@ void ili9328_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   #if 0
   ili9328_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ILI9328_SETCURSOR(Xpos, Ypos);
-  LCD_IO_ReadCmd16MultipleData16(ILI9328_RW_GRAM, (uint16_t *)pdata, Xsize * Ysize, 2);
-  LCD_IO_WriteCmd16(ILI9328_HOR_START_AD); LCD_IO_WriteData16(0);
-  LCD_IO_WriteCmd16(ILI9328_HOR_END_AD); LCD_IO_WriteData16(ILI9328_LCD_PIXEL_WIDTH - 1);
-  LCD_IO_WriteCmd16(ILI9328_VER_START_AD); LCD_IO_WriteData16(0);
-  LCD_IO_WriteCmd16(ILI9328_VER_END_AD); LCD_IO_WriteData16(ILI9328_LCD_PIXEL_HEIGHT - 1);
+  LCD_IO_ReadCmd16MultipleData16(RC(ILI9328_RW_GRAM), (uint16_t *)pdata, Xsize * Ysize, 2);
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_START_AD)); LCD_IO_WriteData16(RC(0));
+  LCD_IO_WriteCmd16(RC(ILI9328_HOR_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_WIDTH - 1));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_START_AD)); LCD_IO_WriteData16(RC(0));
+  LCD_IO_WriteCmd16(RC(ILI9328_VER_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_HEIGHT - 1));
   #else
   for(uint16_t yp = Ypos; yp < Ypos + Ysize; yp++)
     for(uint16_t xp = Xpos; xp < Xpos + Xsize; xp++)

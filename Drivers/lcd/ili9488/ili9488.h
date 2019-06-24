@@ -22,7 +22,7 @@
    - 2: 320x480 micro-sd kártya gomb alul (portrait)
    - 3: 480x320 micro-sd kártya jobb oldalt (landscape)
 */
-#define  ILI9488_ORIENTATION       1
+#define  ILI9488_ORIENTATION       3
 
 /* Color mode
    - 0: RGB565 (R:bit15..11, G:bit10..5, B:bit4..0)

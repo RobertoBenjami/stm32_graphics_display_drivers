@@ -162,7 +162,7 @@ uint8_t BSP_LCD_Init(void)
   lcd_drv->Init();
   
   /* Clear the LCD screen */
-  BSP_LCD_Clear(LCD_COLOR_WHITE);
+  BSP_LCD_Clear(0x5AA5 /*LCD_COLOR_WHITE*/);
   
   /* Initialize the font */
   BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
@@ -258,7 +258,11 @@ sFONT *BSP_LCD_GetFont(void)
   * @retval None
   */
 void BSP_LCD_Clear(uint16_t Color)
-{ 
+{
+  #ifdef   LCD_DRVTYPE_V1_1
+  lcd_drv->FillRect(0, 0, BSP_LCD_GetXSize(), BSP_LCD_GetYSize(), Color);
+  #else
+
   uint32_t counter = 0;
   uint32_t color_backup = DrawProp.TextColor; 
   DrawProp.TextColor = Color;
@@ -269,6 +273,7 @@ void BSP_LCD_Clear(uint16_t Color)
   }
   DrawProp.TextColor = color_backup; 
   BSP_LCD_SetTextColor(DrawProp.TextColor);
+  #endif
 }
 
 /**
@@ -686,12 +691,16 @@ void BSP_LCD_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pBmp)
   */
 void BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
+  #ifdef LCD_DRVTYPE_V1_1
+  lcd_drv->FillRect(Xpos, Ypos, Width, Height, DrawProp.TextColor);
+  #else
   BSP_LCD_SetTextColor(DrawProp.TextColor);
   do
   {
     BSP_LCD_DrawHLine(Xpos, Ypos++, Width);    
   }
   while(Height--);
+  #endif
 }
 
 /**

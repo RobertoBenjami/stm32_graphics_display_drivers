@@ -11,8 +11,11 @@
 #define RGB888TORGB565(r, g, b)  ((r & 0b11111000) << 8 | (g & 0b11111100) << 3 | b >> 3)
 #define RGB888TOBGR565(r, g, b)  (r >> 3 | (g & 0b11111100) << 3 | (b & 0b11111000) << 8)
 
-
+#ifdef osCMSIS
+void StartDefaultTask(void const * argument)
+#else
 void mainApp(void)
+#endif
 {
   TS_StateTypeDef ts;
   uint16_t boxsize;

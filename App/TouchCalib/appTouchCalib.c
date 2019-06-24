@@ -20,6 +20,14 @@
 extern   TS_DrvTypeDef     *ts_drv;
 extern   int32_t            ts_cindex[7];
 
+#ifdef  osCMSIS
+#define Delay(t)              osDelay(t)
+#define GetTime()             osKernelSysTick()
+#else
+#define Delay(t)              HAL_Delay(t)
+#define GetTime()             HAL_GetTick()
+#endif
+
 //-----------------------------------------------------------------------------
 void touchcalib_drawBox(int32_t x, int32_t y, uint16_t cl)
 {
@@ -50,25 +58,25 @@ void touchcalib(void)
 
   touchcalib_drawBox(dx0, dy0, LCD_COLOR_YELLOW);
   while(!ts_drv->DetectTouch(0))
-    HAL_Delay(50);
+    Delay(50);
   ts_drv->GetXY(0, &x, &y);
   tx0 = x; ty0 = y;
   while(ts_drv->DetectTouch(0))
-  HAL_Delay(CALIBDELAY);
+  Delay(CALIBDELAY);
   touchcalib_drawBox(dx0, dy0, LCD_COLOR_GRAY);
 
   touchcalib_drawBox(dx1, dy1, LCD_COLOR_YELLOW);
   while(!ts_drv->DetectTouch(0))
-  HAL_Delay(50);
+  Delay(50);
   ts_drv->GetXY(0, &x, &y);
   tx1 = x; ty1 = y;
   while(ts_drv->DetectTouch(0))
-  HAL_Delay(CALIBDELAY);
+  Delay(CALIBDELAY);
   touchcalib_drawBox(dx1, dy1, LCD_COLOR_GRAY);
 
   touchcalib_drawBox(dx2, dy2, LCD_COLOR_YELLOW);
   while(!ts_drv->DetectTouch(0))
-    HAL_Delay(50);
+    Delay(50);
   ts_drv->GetXY(0, &x, &y);
   tx2 = x; ty2 = y;
 
@@ -113,11 +121,11 @@ void touchcalib(void)
   osDelay(1000);
 
   while(!ts_drv->DetectTouch(0))
-    HAL_Delay(50);
+    Delay(50);
   while(ts_drv->DetectTouch(0))
-    HAL_Delay(50);
+    Delay(50);
   #else
-  HAL_Delay(1000);
+  Delay(1000);
   #endif
 }
 
@@ -127,17 +135,28 @@ void touchcalib(void)
 void cindexgen(int32_t dx0, int32_t dy0, int32_t dx1, int32_t dy1, int32_t dx2, int32_t dy2,
                int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2)
 {
+  Delay(10);
   printf("int32_t  ts_cindex[] = {%d, ", (int)((tx0-tx2)*(ty1-ty2) - (tx1-tx2)*(ty0-ty2)));
+  Delay(10);
   printf("%d, ", (int)((dx0-dx2)*(ty1-ty2) - (dx1-dx2)*(ty0-ty2)));
+  Delay(10);
   printf("%d, ", (int)((tx0-tx2)*(dx1-dx2) - (dx0-dx2)*(tx1-tx2)));
+  Delay(10);
   printf("%d, ", (int)(ty0*(tx2*dx1 - tx1*dx2) + ty1*(tx0*dx2 - tx2*dx0) + ty2*(tx1*dx0 - tx0*dx1)));
+  Delay(10);
   printf("%d, ", (int)((dy0-dy2)*(ty1-ty2) - (dy1-dy2)*(ty0-ty2)));
+  Delay(10);
   printf("%d, ", (int)((tx0-tx2)*(dy1-dy2) - (dy0-dy2)*(tx1-tx2)));
+  Delay(10);
   printf("%d};\r\n", (int)(ty0*(tx2*dy1 - tx1*dy2) + ty1*(tx0*dy2 - tx2*dy0) + ty2*(tx1*dy0 - tx0*dy1)));
 }
 
 //-----------------------------------------------------------------------------
+#ifdef osCMSIS
+void StartDefaultTask(void const * argument)
+#else
 void mainApp(void)
+#endif
 {
   uint16_t x, y;
   int32_t tx0, ty0, tx1, ty1, tx2, ty2;
@@ -163,7 +182,7 @@ void mainApp(void)
 
   touchcalib_drawBox(dx0, dy0, LCD_COLOR_YELLOW);
   while(!ts_drv->DetectTouch(0))
-    HAL_Delay(50);
+    Delay(50);
   ts_drv->GetXY(0, &x, &y);
   tx0 = x; ty0 = y;
   while(ts_drv->DetectTouch(0))
@@ -172,7 +191,7 @@ void mainApp(void)
 
   touchcalib_drawBox(dx1, dy1, LCD_COLOR_YELLOW);
   while(!ts_drv->DetectTouch(0))
-  HAL_Delay(50);
+    Delay(50);
   ts_drv->GetXY(0, &x, &y);
   tx1 = x; ty1 = y;
   while(ts_drv->DetectTouch(0))
@@ -181,7 +200,7 @@ void mainApp(void)
 
   touchcalib_drawBox(dx2, dy2, LCD_COLOR_YELLOW);
   while(!ts_drv->DetectTouch(0))
-    HAL_Delay(50);
+    Delay(50);
   ts_drv->GetXY(0, &x, &y);
   tx2 = x; ty2 = y;
   while(ts_drv->DetectTouch(0))
@@ -192,21 +211,21 @@ void mainApp(void)
             dx1, dy1,
             dx2, dy2,
             tx0, ty0, tx1, ty1, tx2, ty2);
-  HAL_Delay(150);
+  Delay(150);
 
   printf("#elif (LCD_ORIENTATION == 1)\r\n");
   cindexgen(dy0, BSP_LCD_GetXSize() - 1 - dx0,
             dy1, BSP_LCD_GetXSize() - 1 - dx1,
             dy2, BSP_LCD_GetXSize() - 1 - dx2,
             tx0, ty0, tx1, ty1, tx2, ty2);
-  HAL_Delay(150);
+  Delay(150);
 
   printf("#elif (LCD_ORIENTATION == 2)\r\n");
   cindexgen(BSP_LCD_GetXSize() - 1 - dx0, BSP_LCD_GetYSize() - 1 - dy0,
             BSP_LCD_GetXSize() - 1 - dx1, BSP_LCD_GetYSize() - 1 - dy1,
             BSP_LCD_GetXSize() - 1 - dx2, BSP_LCD_GetYSize() - 1 - dy2,
             tx0, ty0, tx1, ty1, tx2, ty2);
-  HAL_Delay(150);
+  Delay(150);
 
   printf("#elif (LCD_ORIENTATION == 3)\r\n");
   cindexgen(BSP_LCD_GetYSize() - 1 - dy0, dx0,

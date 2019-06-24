@@ -1,0 +1,10 @@
+main.c:288:13:MX_GPIO_Init	24	static
+main.c:384:13:cbTimer	0	static
+main.c:353:13:StartDefaultTask	8	static
+main.c:372:13:StartLopriority	8	static
+main.c:399:6:HAL_TIM_PeriodElapsedCallback	8	static
+main.c:418:6:_Error_Handler	0	static
+main.c:254:13:MX_RTC_Init	8	static
+main.c:302:13:MX_FSMC_Init	40	static
+main.c:190:6:SystemClock_Config	104	static
+main.c:96:5:main	56	static

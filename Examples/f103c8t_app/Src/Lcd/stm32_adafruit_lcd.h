@@ -115,18 +115,26 @@ typedef enum
 #define LCD_ERROR      0x01
 #define LCD_TIMEOUT    0x02
 
+#if LCD_REVERSE == 0
+#define  RC(a)   a
+#endif
+#if LCD_REVERSE == 1
+#define  RC(a)   ((((a) & 0xFF) << 8) | (((a) & 0xFF00) >> 8))
+#endif
+
 /** 
   * @brief  LCD color  
   */
-#define LCD_COLOR_BLACK         0x0000
-#define LCD_COLOR_GRAY          0xF7DE
-#define LCD_COLOR_BLUE          0x001F
-#define LCD_COLOR_RED           0xF800
-#define LCD_COLOR_GREEN         0x07E0
-#define LCD_COLOR_CYAN          0x07FF
-#define LCD_COLOR_MAGENTA       0xF81F
-#define LCD_COLOR_YELLOW        0xFFE0
-#define LCD_COLOR_WHITE         0xFFFF
+#define LCD_COLOR_BLACK         RC(0x0000)
+#define LCD_COLOR_GRAY          RC(0xF7DE)
+#define LCD_COLOR_BLUE          RC(0x001F)
+#define LCD_COLOR_RED           RC(0xF800)
+#define LCD_COLOR_GREEN         RC(0x07E0)
+#define LCD_COLOR_CYAN          RC(0x07FF)
+#define LCD_COLOR_MAGENTA       RC(0xF81F)
+#define LCD_COLOR_YELLOW        RC(0xFFE0)
+#define LCD_COLOR_WHITE         RC(0xFFFF)
+#define LCD_COLOR(r, g, b)      RC((r & 0b11111000) << 8 | (g & 0b11111100) << 3 | (b & 0b11111000) >> 3)
 
 /** 
   * @brief LCD default font 

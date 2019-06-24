@@ -22,7 +22,7 @@ extern "C" {
    - 2: 240x320 Reset gomb alul (portrait)
    - 3: 320x240 Reset gomb jobb oldalt (landscape)
 */
-#define  HX8347G_ORIENTATION       1
+#define  HX8347G_ORIENTATION       3
 
 /* Color mode
    - 0: RGB565 (R:bit15..11, G:bit10..5, B:bit4..0)

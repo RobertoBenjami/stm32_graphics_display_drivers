@@ -1,0 +1,8 @@
+stm32f4xx_it.c:54:6:NMI_Handler	0	static
+stm32f4xx_it.c:67:6:HardFault_Handler	0	static
+stm32f4xx_it.c:85:6:MemManage_Handler	0	static
+stm32f4xx_it.c:103:6:BusFault_Handler	0	static
+stm32f4xx_it.c:121:6:UsageFault_Handler	0	static
+stm32f4xx_it.c:139:6:DebugMon_Handler	0	static
+stm32f4xx_it.c:152:6:SysTick_Handler	8	static
+stm32f4xx_it.c:173:6:TIM6_DAC_IRQHandler	8	static
