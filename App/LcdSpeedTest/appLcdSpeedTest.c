@@ -13,6 +13,8 @@
 
 /* Tesztfoto */
 #define rombitmap  beer_60x100_16
+#define ROMBITMAP_WIDTH  60
+#define ROMBITMAP_HEIGHT 100
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -77,7 +79,7 @@ void cbTimer(void const * argument);
 #endif
 
 extern const BITMAPSTRUCT rombitmap;
-uint16_t bitmap[60 * 100];
+uint16_t bitmap[ROMBITMAP_WIDTH * ROMBITMAP_HEIGHT];
 
 //-----------------------------------------------------------------------------
 uint32_t ClearTest(void)
