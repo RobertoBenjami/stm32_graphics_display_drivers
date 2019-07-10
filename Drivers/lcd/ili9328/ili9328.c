@@ -1,16 +1,20 @@
 #include "main.h"
 #include "lcd.h"
-#include "ts.h"
 #include "ili9328.h"
+
+#if  ILI9328_TOUCH == 1
+#include "ts.h"
+#endif
 
 #if LCD_REVERSE16 == 0
 #define  RC(a)   a
 #define  RD(a)   a
+#define  RDN(a)  __REVSH(a)
 #if ILI9328_COLORMODE == 0
 // RGB 5-6-5 <-> BGR 5-6-5 (vörös - kék összetevök felcserélése)
-#define RGB565TOBGR565(rgb16)  rgb16 = (rgb16 & 0b11111100000) | (rgb16 << 11) | (rgb16 >> 11)
+#define  RGB565TOBGR565(rgb16)  rgb16 = __REVSH((rgb16 & 0b1110000000000111) | ((rgb16 & 0b0000000011111000) << 5) | ((rgb16 & 0b0001111100000000) >> 5))
 #else
-#define RGB565TOBGR565(rgb16)
+#define  RGB565TOBGR565(rgb16)  rgb16 = __REVSH(rgb16)
 #endif
 #endif
 
@@ -18,11 +22,12 @@
 #if LCD_REVERSE16 == 1
 #define  RC(a)   ((((a) & 0xFF) << 8) | (((a) & 0xFF00) >> 8))
 #define  RD(a)   __REVSH(a)
+#define  RDN(a)  a
 #if ILI9328_COLORMODE == 0
 // RGB 5-6-5 <-> BGR 5-6-5 (vörös - kék összetevök felcserélése)
-#define RGB565TOBGR565(rgb16)  rgb16 = (rgb16 & 0b1110000000000111) | ((rgb16 & 0b0000000011111000) << 5) | ((rgb16 & 0b0001111100000000) >> 5)
+#define  RGB565TOBGR565(rgb16)  rgb16 = (rgb16 & 0b11111100000) | (rgb16 & 0b11111 << 11) | (rgb16 & 0b1111100000000000 >> 11)
 #else
-#define RGB565TOBGR565(rgb16)
+#define  RGB565TOBGR565(rgb16)
 #endif
 #endif
 
@@ -178,20 +183,19 @@ LCD_DrvTypeDef  *lcd_drv = &ili9328_drv;
 #define ILI9328_IO_INITIALIZED     0x02
 static  uint8_t   Is_ili9328_Initialized = 0;
 
-#if     ILI9328_MULTITASK_MUTEX == 0
-#define  ILI9328_LCDMUTEX_PUSH()
-#define  ILI9328_LCDMUTEX_POP()
-#endif
-
-
-#if      ILI9328_MULTITASK_MUTEX == 1
+#if      ILI9328_MULTITASK_MUTEX == 1 && ILI9328_TOUCH == 1
 volatile uint8_t io_lcd_busy = 0;
 volatile uint8_t io_ts_busy = 0;
 #define  ILI9328_LCDMUTEX_PUSH()    while(io_ts_busy); io_lcd_busy++;
 #define  ILI9328_LCDMUTEX_POP()     io_lcd_busy--
+#else
+#define  ILI9328_LCDMUTEX_PUSH()
+#define  ILI9328_LCDMUTEX_POP()
 #endif
 
 //-----------------------------------------------------------------------------
+#if ILI9328_TOUCH == 1
+
 // Touch paraméterek
 // nyomáserõsség értékek honnan hova konvertálodjanak
 
@@ -223,32 +227,26 @@ TS_DrvTypeDef   ili9328_ts_drv =
 
 TS_DrvTypeDef  *ts_drv = &ili9328_ts_drv;
 
-// A két kijelzõ példányom (kissé) eltér egymástol
-#if 1
 #if (ILI9328_ORIENTATION == 0)
-int32_t  ts_cindex[] = {-2756000, 210932, -423352, 96135608, 269619, 1366, -1021658814};
+int32_t  ts_cindex[] = {-2776428, -209145, -6464, 123162313, 269742, -542860, 95435474};
 #elif (ILI9328_ORIENTATION == 1)
-int32_t  ts_cindex[] = {-2756000, 269619, 1366, -1021658814, -210932, 423352, -754819608};
+int32_t  ts_cindex[] = {-2776428, 269742, -542860, 95435474, 209145, 6464, -786728605};
 #elif (ILI9328_ORIENTATION == 2)
-int32_t  ts_cindex[] = {-2756000, -210932, 423352, -754819608, -269619, -1366, 142494814};
+int32_t  ts_cindex[] = {-2776428, 209145, 6464, -786728605, -269742, 542860, -981116006};
 #elif (ILI9328_ORIENTATION == 3)
-int32_t  ts_cindex[] = {-2756000, -269619, -1366, 142494814, 210932, -423352, 96135608};
-#endif
-
-#else
-
-#if (ILI9328_ORIENTATION == 0)
-int32_t  ts_cindex[] = {-2800640, -215894, 3667, 108105595, 272088, -543244, 80253780};
-#elif (ILI9328_ORIENTATION == 1)
-int32_t  ts_cindex[] = {-2800640, 272088, -543244, 80253780, 215894, -3667, -777458555};
-#elif (ILI9328_ORIENTATION == 2)
-int32_t  ts_cindex[] = {-2800640, 215894, -3667, -777458555, -272088, 543244, -973657940};
-#elif (ILI9328_ORIENTATION == 3)
-int32_t  ts_cindex[] = {-2800640, -272088, 543244, -973657940, -215894, 3667, 108105595};
-#endif
+int32_t  ts_cindex[] = {-2776428, -269742, 542860, -981116006, -209145, -6464, 123162313};
 #endif
 
 uint16_t tx, ty;
+
+/* Link function for Touchscreen */
+uint8_t  TS_IO_DetectToch(void);
+uint16_t TS_IO_GetX(void);
+uint16_t TS_IO_GetY(void);
+uint16_t TS_IO_GetZ1(void);
+uint16_t TS_IO_GetZ2(void);
+
+#endif   // #if ILI9328_TOUCH == 1
 
 /* Link function for LCD peripheral */
 void     LCD_Delay (uint32_t delay);
@@ -260,13 +258,6 @@ void     LCD_IO_WriteData16(uint16_t Data);
 void     LCD_IO_WriteCmd16DataFill16(uint16_t Cmd, uint16_t Data, uint32_t Size);
 void     LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size);
 void     LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
-
-/* Link function for Touchscreen */
-uint8_t  TS_IO_DetectToch(void);
-uint16_t TS_IO_GetX(void);
-uint16_t TS_IO_GetY(void);
-uint16_t TS_IO_GetZ1(void);
-uint16_t TS_IO_GetZ2(void);
 
 //-----------------------------------------------------------------------------
 void ili9328_Init(void)
@@ -434,9 +425,9 @@ uint16_t ili9328_ReadID(void)
   {
     ili9328_Init();
   }
-  LCD_IO_ReadCmd16MultipleData16(RC(0x00), &ret, 1, 2);
+  LCD_IO_ReadCmd16MultipleData16(RC(0x00), &ret, 1, 1);
   ILI9328_LCDMUTEX_POP();
-  return __REVSH(RD(ret));
+  return RDN(ret);
 }
 
 //-----------------------------------------------------------------------------
@@ -481,8 +472,9 @@ uint16_t ili9328_ReadPixel(uint16_t Xpos, uint16_t Ypos)
   ILI9328_LCDMUTEX_PUSH();
   ILI9328_SETCURSOR(Xpos, Ypos);
   LCD_IO_ReadCmd16MultipleData16(RC(ILI9328_RW_GRAM), &ret, 1, 1);
-  RGB565TOBGR565(ret);
+  //RGB565TOBGR565(ret);
   ILI9328_LCDMUTEX_POP();
+  RGB565TOBGR565(ret);
   return ret;
 }
 
@@ -648,26 +640,17 @@ void ili9328_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
 void ili9328_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata)
 {
   ILI9328_LCDMUTEX_PUSH();
-  #if 0
-  ili9328_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
-  ILI9328_SETCURSOR(Xpos, Ypos);
-  LCD_IO_ReadCmd16MultipleData16(RC(ILI9328_RW_GRAM), (uint16_t *)pdata, Xsize * Ysize, 2);
-  LCD_IO_WriteCmd16(RC(ILI9328_HOR_START_AD)); LCD_IO_WriteData16(RC(0));
-  LCD_IO_WriteCmd16(RC(ILI9328_HOR_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_WIDTH - 1));
-  LCD_IO_WriteCmd16(RC(ILI9328_VER_START_AD)); LCD_IO_WriteData16(RC(0));
-  LCD_IO_WriteCmd16(RC(ILI9328_VER_END_AD)); LCD_IO_WriteData16(RC(ILI9328_LCD_PIXEL_HEIGHT - 1));
-  #else
   for(uint16_t yp = Ypos; yp < Ypos + Ysize; yp++)
     for(uint16_t xp = Xpos; xp < Xpos + Xsize; xp++)
     { // mivel memoria olvasáskor nem lépteti a memoriacimet automatikusan csak ez a modszer marad :(
       *pdata = ili9328_ReadPixel(xp, yp);
       pdata += 2;
     }
-  #endif
   ILI9328_LCDMUTEX_POP();
 }
 
 //=============================================================================
+#if ILI9328_TOUCH == 1
 void ili9328_ts_Init(uint16_t DeviceAddr)
 {
   if((Is_ili9328_Initialized & ILI9328_IO_INITIALIZED) == 0)
@@ -752,3 +735,4 @@ void ili9328_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y)
   *X = tx,
   *Y = ty;
 }
+#endif // #if ILI9328_TOUCH == 1
