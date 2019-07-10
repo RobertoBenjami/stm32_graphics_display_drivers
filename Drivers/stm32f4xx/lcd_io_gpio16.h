@@ -1,13 +1,9 @@
 /*
- * 8 bites párhuzamos LCD/TOUCH GPIO driver STM32F4-re
- * 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
-
- * Figyelem: mivel azonos lábakon van az Lcd ás a Touchscreen,
- * ezért ezek ki kell zárni az Lcd és a Touchscreen egyidejü használatát!
- * Tábbszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások megelözéséröl!
+ * 16 bites párhuzamos LCD GPIO driver STM32F4-re
+ * 5 vezárlöláb (CS, RS, WR, RD, RST) + 16 adatláb + háttérvilágitás vezérlés
  */
-#ifndef __LCDTS_IO8P_GPIO_H
-#define __LCDTS_IO8P_GPIO_H
+#ifndef __LCD_IO16P_GPIO_H
+#define __LCD_IO16P_GPIO_H
 
 //=============================================================================
 /* Lcd vezérlö lábak hozzárendelése (A..M, 0..15) */
@@ -26,6 +22,14 @@
 #define LCD_D5            E, 8
 #define LCD_D6            E, 9
 #define LCD_D7            E, 10
+#define LCD_D8            E, 11
+#define LCD_D9            E, 12
+#define LCD_D10           E, 13
+#define LCD_D11           E, 14
+#define LCD_D12           E, 15
+#define LCD_D13           D, 8
+#define LCD_D14           D, 9
+#define LCD_D15           D, 10
 
 /* Háttérvilágitás vezérlés
    - BL: A..M, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
@@ -33,36 +37,11 @@
 #define LCD_BL            B, 1
 #define LCD_BLON          0
 
-/*-----------------------------------------------------------------------------
-Touch I/O lábak és A/D csatornák
-A kijelzön belül a következö lábak vannak párhuzamositva
- - TS_XM <- LCD_RS
- - TS_XP <- LCD_D6
- - TS_YM <- LCD_D7
- - TS_YP <- LCD_WR */
-
-/* ADC konverter száma (értéke lehet 1, 2, 3, vagy 0 ha nem használjuk)
-   - 0: analog touchscreen driver nem lesz használva
-   - 1..3: a használni kivánt A/D konverter száma
-*/
-#define TS_ADC            1
-
-// Megadhatunk az analog touchscreen beolvasásához más lábakat is
-// (ha nem adunk meg itt semmilyen lábat, akkor adjuk lábnak az X, 0 -t,
-//  ekkor az LCD_RS és LCD_WR lesz a touchscreen kiválasztott AD lába)
-#define TS_XM_AN          A, 0
-#define TS_YP_AN          A, 1
-
-// Itt kell megadni, hogy melyik csatornát kiválasztva lehet az adott lábat az AD bemenetére kapcsolni
-#define TS_XM_ADCCH       0
-#define TS_YP_ADCCH       1
-
 /* nsec nagyságrendü várakozás az LCD irási és az olvasási impulzusnál és a touchscreen AD átalakitonál
    - kezdö értéknek érdemes 10 illetve 500-bol elindulni, aztán lehet csökkenteni a sebesség növelése érdekében
      (az értékek függnek a processzor orajelétöl és az LCD kijelzö sebességétöl is)
 */
 #define LCD_IO_RW_DELAY   1
-#define TS_AD_DELAY     500
 
 /*=============================================================================
 I/O csoport optimalizáció, hogy ne bitenként történjenek a GPIO mûveletek:
@@ -72,7 +51,7 @@ Megj: ha az adat lábakat egy porton belül emelkedö sorrendben definiáljuk
 A lenti példa a következö lábakhoz optimalizál:
       LCD_D0<-D14, LCD_D1<-D15, LCD_D2<-D0, LCD_D3<-D1
       LCD_D4<-E7,  LCD_D5<-E8,  LCD_D6<-E9, LCD_D7<-E10 */
-#if 1
+#if 0
 // 8 adatláb kimenetre állítása (adatirány: STM32 -> LCD)
 #define LCD_DIRWRITE { \
 GPIOD->MODER = (GPIOD->MODER & ~((3 << 2 * 14) | (3 << 2 * 15) | (3 << 2 * 0) | (3 << 2 * 1)))  | \
@@ -99,4 +78,4 @@ dt = ((GPIOD->IDR & 0b1100000000000000) >> (14 - 0)) | ((GPIOD->IDR & 0b00000000
      ((GPIOE->IDR & 0b0000011110000000) >> (7 - 4)); }
 #endif
 
-#endif // __LCDTS_IO8P_GPIO_H
+#endif // __LCD_IO16P_GPIO_H

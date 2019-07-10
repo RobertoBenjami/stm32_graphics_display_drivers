@@ -9,8 +9,8 @@ Figyelem: mivel azonos lábakon van az Lcd ás a Touchscreen,
 ezért ezek ki kell zárni az Lcd és a Touchscreen egyidejü használatát!
 Többszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások megelözéséröl! */
 
-#ifndef __LCDTS_IO8P_FSMC_H
-#define __LCDTS_IO8P_FSMC_H
+#ifndef __LCDTS_IO_FSMC8_H
+#define __LCDTS_IO_FSMC8_H
 
 //=============================================================================
 /* Lcd vezérlö lábak hozzárendelése (A..M, 0..15, LCD_CS helye az FSMC által kötött) */
@@ -76,4 +76,4 @@ A kijelzön belül a következö lábak vannak párhuzamositva:
 */
 #define TS_AD_DELAY     500
 
-#endif // __LCDTS_IO8P_FSMC_H
+#endif // __LCDTS_IO_FSMC8_H

@@ -1,10 +1,6 @@
 /*
- * 8 bites párhuzamos LCD/TOUCH GPIO driver STM32F4-re
+ * 8 bites párhuzamos LCD GPIO driver STM32F4-re
  * 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
-
- * Figyelem: mivel azonos lábakon van az Lcd ás a Touchscreen,
- * ezért ezek ki kell zárni az Lcd és a Touchscreen egyidejü használatát!
- * Tábbszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások megelözéséröl!
  */
 
 /* Készitö: Roberto Benjami
@@ -21,18 +17,9 @@
 */
 #define  LCD_CS_MODE          0
 
-// ADC sample time (0:3cycles, 1:15c, 2:28c, 3:55c, 4:84c, 5:112c, 6:144c, 7:480cycles)
-#define  TS_SAMPLETIME        2
-
-// A kijelzön belül a következö lábak vannak párhuzamositva:
-#define  TS_XP                LCD_D6
-#define  TS_XM                LCD_RS
-#define  TS_YP                LCD_WR
-#define  TS_YM                LCD_D7
-
 #include "main.h"
 #include "lcd.h"
-#include "lcdts_io8p_gpio.h"
+#include "lcd_io_gpio8.h"
 
 /* Link function for LCD peripheral */
 void     LCD_Delay (uint32_t delay);
@@ -57,13 +44,6 @@ void     LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_
 void     LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize);
 void     LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
 void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
-
-/* Link function for Touchscreen */
-uint8_t  TS_IO_DetectToch(void);
-uint16_t TS_IO_GetX(void);
-uint16_t TS_IO_GetY(void);
-uint16_t TS_IO_GetZ1(void);
-uint16_t TS_IO_GetZ2(void);
 
 // portláb mádok (PP: push-pull, OD: open drain, FF: input floating)
 #define MODE_DIGITAL_INPUT    0x0
@@ -146,15 +126,11 @@ uint16_t TS_IO_GetZ2(void);
 #if  LCD_CS_MODE ==  0
 #define LCD_CS_ON             GPIOX_ODR(LCD_CS) = 0
 #define LCD_CS_OFF            GPIOX_ODR(LCD_CS) = 1
-#define LCD_TS_ON
-#define LCD_TS_OFF
 #endif
 
 #if  LCD_CS_MODE ==  1
 #define LCD_CS_ON
 #define LCD_CS_OFF
-#define LCD_TS_ON             GPIOX_ODR(LCD_CS) = 1
-#define LCD_TS_OFF            GPIOX_ODR(LCD_CS) = 0
 #endif
 
 //-----------------------------------------------------------------------------
@@ -277,30 +253,6 @@ uint16_t TS_IO_GetZ2(void);
 #define LCD_DATA16_READ(dh, dl) {LCD_DATA8_READ(dl); LCD_DATA8_READ(dh); }
 #endif
 
-#if TS_ADC == 1
-#define RCC_APB2ENR_ADCXEN    RCC_APB2ENR_ADC1EN
-#define ADCX                  ADC1
-#endif
-
-#if TS_ADC == 2
-#define RCC_APB2ENR_ADCXEN    RCC_APB2ENR_ADC2EN
-#define ADCX                  ADC2
-#endif
-
-#if TS_ADC == 3
-#define RCC_APB2ENR_ADCXEN    RCC_APB2ENR_ADC3EN
-#define ADCX                  ADC3
-#endif
-
-/* Ha a touchscreen AD átalakito lábai különböznek RS és WR lábaktol, és párhuzamositva vannak azokkal */
-#ifdef  ADCX
-#if (GPIOX_PORTNUM(TS_XM) != GPIOX_PORTNUM(TS_XM_AN)) || (GPIOX_PIN(TS_XM) != GPIOX_PIN(TS_XM_AN)) || \
-    (GPIOX_PORTNUM(TS_YP) != GPIOX_PORTNUM(TS_YP_AN)) || (GPIOX_PIN(TS_YP) != GPIOX_PIN(TS_YP_AN))
-#define TS_AD_PIN_PARALELL
-#endif
-#endif
-
-
 // 8 bites lábakra másolando adat, illetve olvasáskor ide kerül az aktuális adat
 uint8_t  lcd_data8;
 
@@ -380,33 +332,6 @@ void LCD_IO_Init(void)
   LCD_Delay(1);
   LCD_RST_OFF;                          // RST = 1
   LCD_Delay(1);
-
-  #ifdef ADCX
-
-  #ifdef TS_AD_PIN_PARALELL
-  RCC->AHB1ENR |= GPIOX_CLOCK(TS_XM_AN) | GPIOX_CLOCK(TS_YP_AN);
-  GPIOX_MODER(MODE_ANALOG_INPUT, TS_XM_AN); // XM = AN_INPUT
-  GPIOX_MODER(MODE_ANALOG_INPUT, TS_YP_AN); // YP = AN_INPUT
-  #endif
-
-  RCC->APB2ENR |= RCC_APB2ENR_ADCXEN;
-  ADCX->CR1 = ADC_CR1_DISCEN;
-  ADCX->CR2 = ADC_CR2_ADON;
-
-  #if TS_XM_ADCCH >= 10
-  ADCX->SMPR1 |= TS_SAMPLETIME << (3 * (TS_XM_ADCCH - 10));
-  #else
-  ADCX->SMPR2 |= TS_SAMPLETIME << (3 * (TS_XM_ADCCH));
-  #endif
-
-  #if TS_YP_ADCCH >= 10
-  ADCX->SMPR1 |= TS_SAMPLETIME << (3 * (TS_YP_ADCCH - 10));
-  #else
-  ADCX->SMPR2 |= TS_SAMPLETIME << (3 * (TS_YP_ADCCH));
-  #endif
-  #endif  // #ifdef ADCX
-
-  LCD_TS_OFF;
 }
 
 //-----------------------------------------------------------------------------
@@ -646,154 +571,3 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
   LCD_CS_OFF;
   LCD_DIRWRITE;
 }
-
-//=============================================================================
-#ifdef ADCX
-// CS = 1, X+ = 0, X- = 0; Y+ = in PU, Y- = in PU
-uint8_t TS_IO_DetectToch(void)
-{
-  uint8_t  ret;
-  LCD_TS_ON;
-
-  GPIOX_MODER(MODE_DIGITAL_INPUT, TS_YP);// YP = D_INPUT
-  GPIOX_MODER(MODE_DIGITAL_INPUT, TS_YM);// YM = D_INPUT
-  GPIOX_ODR(TS_XP) = 0;                 // XP = 0
-  GPIOX_ODR(TS_XM) = 0;                 // XM = 0
-
-  // Felhuzo ell. be
-  GPIOX_PUPDR(MODE_PU_UP, TS_YP);
-
-  LCD_IO_Delay(TS_AD_DELAY);
-
-  if(GPIOX_IDR(TS_YP))
-    ret = 0;                            // Touchscreen nincs megnyomva
-  else
-    ret = 1;                            // Touchscreen meg van nyomva
-
-  // Felhuzo ell. ki
-  GPIOX_PUPDR(MODE_PU_NONE, TS_YP);
-
-  GPIOX_ODR(TS_XP) = 1;                 // XP = 1
-  GPIOX_ODR(TS_XM) = 1;                 // XM = 1
-  GPIOX_MODER(MODE_OUT, TS_YP);         // YP = OUT
-  GPIOX_MODER(MODE_OUT, TS_YM);         // YM = OUT
-
-  LCD_TS_OFF;
-  return ret;
-}
-
-//-----------------------------------------------------------------------------
-// X poz analog olvasása
-uint16_t TS_IO_GetX(void)
-{
-  uint16_t ret;
-  LCD_TS_ON;
-
-  GPIOX_MODER(MODE_DIGITAL_INPUT, TS_YM);// YM = D_INPUT
-  GPIOX_MODER(MODE_ANALOG_INPUT, TS_YP); // YP = AN_INPUT
-  GPIOX_ODR(TS_XP) = 0;                 // XP = 0
-  GPIOX_ODR(TS_XM) = 1;                 // XM = 1
-
-  ADCX->SQR3 = TS_YP_ADCCH;
-  LCD_IO_Delay(TS_AD_DELAY);
-  ADCX->CR2 |= ADC_CR2_SWSTART;
-  while(!(ADCX->SR & ADC_SR_EOC));
-  ret = ADCX->DR;
-
-  GPIOX_ODR(TS_XP) = 1;                 // XP = 1
-  GPIOX_MODER(MODE_OUT, TS_YP);
-  GPIOX_MODER(MODE_OUT, TS_YM);
-
-  LCD_TS_OFF;
-  return ret;
-}
-
-//-----------------------------------------------------------------------------
-// Y poz analog olvasása
-uint16_t TS_IO_GetY(void)
-{
-  uint16_t ret;
-  LCD_TS_ON;
-
-  GPIOX_MODER(MODE_DIGITAL_INPUT, TS_XP);// XP = D_INPUT
-  GPIOX_MODER(MODE_ANALOG_INPUT, TS_XM); // XM = AN_INPUT
-  GPIOX_ODR(TS_YM) = 0;                 // YM = 0
-  GPIOX_ODR(TS_YP) = 1;                 // YP = 1
-
-  ADCX->SQR3 = TS_XM_ADCCH;
-  LCD_IO_Delay(TS_AD_DELAY);
-  ADCX->CR2 |= ADC_CR2_SWSTART;
-  while(!(ADCX->SR & ADC_SR_EOC));
-  ret = ADCX->DR;
-
-  GPIOX_ODR(TS_YM) = 1;                 // YM = 1
-  GPIOX_MODER(MODE_OUT, TS_XP);
-  GPIOX_MODER(MODE_OUT, TS_XM);
-
-  LCD_TS_OFF;
-  return ret;
-}
-
-//-----------------------------------------------------------------------------
-// Z1 poz analog olvasása
-uint16_t TS_IO_GetZ1(void)
-{
-  uint16_t ret;
-  LCD_TS_ON;
-
-  GPIOX_MODER(MODE_ANALOG_INPUT, TS_XM); // XM = AN_INPUT
-  GPIOX_MODER(MODE_ANALOG_INPUT, TS_YP); // YP = AN_INPUT
-  GPIOX_ODR(TS_XP) = 0;                 // XP = 0
-  GPIOX_ODR(TS_YM) = 1;                 // YM = 1
-
-  #ifdef LCD_CS_OPT
-  GPIOX_ODR(LCD_CS) = 1;                // CS = 1
-  #endif
-
-  ADCX->SQR3 = TS_YP_ADCCH;
-  LCD_IO_Delay(TS_AD_DELAY);
-  ADCX->CR2 |= ADC_CR2_SWSTART;
-  while(!(ADCX->SR & ADC_SR_EOC));
-  ret = ADCX->DR;
-
-  GPIOX_ODR(TS_XP) = 1;                 // XP = 1
-  GPIOX_MODER(MODE_OUT, TS_XM);
-  GPIOX_MODER(MODE_OUT, TS_YP);
-
-  LCD_TS_OFF;
-  return ret;
-}
-
-//-----------------------------------------------------------------------------
-// Z2 poz analog olvasása
-uint16_t TS_IO_GetZ2(void)
-{
-  uint16_t ret;
-  LCD_TS_ON;
-
-  GPIOX_MODER(MODE_ANALOG_INPUT, TS_XM); // XM = AN_INPUT
-  GPIOX_MODER(MODE_ANALOG_INPUT, TS_YP); // YP = AN_INPUT
-  GPIOX_ODR(TS_XP) = 0;                 // XP = 0
-  GPIOX_ODR(TS_YM) = 1;                 // YM = 1
-
-  ADCX->SQR3 = TS_XM_ADCCH;
-  LCD_IO_Delay(TS_AD_DELAY);
-  ADCX->CR2 |= ADC_CR2_SWSTART;
-  while(!(ADCX->SR & ADC_SR_EOC));
-  ret = ADCX->DR;
-
-  GPIOX_ODR(TS_XP) = 1;                 // XP = 1
-  GPIOX_MODER(MODE_OUT, TS_XM);
-  GPIOX_MODER(MODE_OUT, TS_YP);
-
-  LCD_TS_OFF;
-  return ret;
-}
-
-#else  // #ifdef ADCX
-__weak uint8_t   TS_IO_DetectToch(void) { return 0;}
-__weak uint16_t  TS_IO_GetX(void)       { return 0;}
-__weak uint16_t  TS_IO_GetY(void)       { return 0;}
-__weak uint16_t  TS_IO_GetZ1(void)      { return 0;}
-__weak uint16_t  TS_IO_GetZ2(void)      { return 0;}
-#endif // #else ADCX

@@ -1,7 +1,10 @@
 #include "main.h"
 #include "lcd.h"
-#include "ts.h"
 #include "st7783.h"
+
+#if  ST7783_TOUCH == 1
+#include "ts.h"
+#endif
 
 #if LCD_REVERSE16 == 0
 #define  RC(a)   a
@@ -173,19 +176,19 @@ LCD_DrvTypeDef  *lcd_drv = &st7783_drv;
 #define ST7783_IO_INITIALIZED     0x0002
 static  uint8_t  Is_st7783_Initialized = 0;
 
-#if      ST7783_MULTITASK_MUTEX == 0
-#define  ST7783_LCDMUTEX_PUSH()
-#define  ST7783_LCDMUTEX_POP()
-#endif
-
-#if      ST7783_MULTITASK_MUTEX == 1
+#if      ST7783_MULTITASK_MUTEX == 1 && ST7783_TOUCH == 1
 volatile uint8_t io_lcd_busy = 0;
 volatile uint8_t io_ts_busy = 0;
 #define  ST7783_LCDMUTEX_PUSH()    while(io_ts_busy); io_lcd_busy++;
 #define  ST7783_LCDMUTEX_POP()     io_lcd_busy--
+#else
+#define  ST7783_LCDMUTEX_PUSH()
+#define  ST7783_LCDMUTEX_POP()
 #endif
 
 //-----------------------------------------------------------------------------
+#if ST7783_TOUCH == 1
+
 // Touch paraméterek
 // nyomáserõsség értékek honnan hova konvertálodjanak
 #define TOUCHMINPRESSRC    8192
@@ -228,6 +231,15 @@ int32_t  ts_cindex[] = {-2756000, -269619, -1366, 142494814, 210932, -423352, 96
 
 uint16_t tx, ty;
 
+/* Link function for Touchscreen */
+uint8_t  TS_IO_DetectToch(void);
+uint16_t TS_IO_GetX(void);
+uint16_t TS_IO_GetY(void);
+uint16_t TS_IO_GetZ1(void);
+uint16_t TS_IO_GetZ2(void);
+
+#endif   // #if ST7783_TOUCH == 1
+
 /* Link function for LCD peripheral */
 void     LCD_Delay (uint32_t delay);
 void     LCD_IO_Init(void);
@@ -240,13 +252,6 @@ void     LCD_IO_WriteCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t S
 void     LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size);
 void     LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize);
 void     LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
-
-/* Link function for Touchscreen */
-uint8_t  TS_IO_DetectToch(void);
-uint16_t TS_IO_GetX(void);
-uint16_t TS_IO_GetY(void);
-uint16_t TS_IO_GetZ1(void);
-uint16_t TS_IO_GetZ2(void);
 
 //-----------------------------------------------------------------------------
 void st7783_Init(void)
@@ -607,6 +612,7 @@ void st7783_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t 
 }
   
 //=============================================================================
+#if ST7783_TOUCH == 1
 void st7783_ts_Init(uint16_t DeviceAddr)
 {
   if((Is_st7783_Initialized & ST7783_IO_INITIALIZED) == 0)
@@ -692,3 +698,4 @@ void st7783_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y)
   *X = tx,
   *Y = ty;
 }
+#endif // #if ST7783_TOUCH == 1

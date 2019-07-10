@@ -1,7 +1,10 @@
 #include "main.h"
 #include "lcd.h"
-#include "ts.h"
 #include "ili9488.h"
+
+#if  ILI9488_TOUCH == 1
+#include "ts.h"
+#endif
 
 #if LCD_REVERSE16 == 0
 #define  RC(a)   a
@@ -162,19 +165,19 @@ LCD_DrvTypeDef  *lcd_drv = &ili9488_drv;
 #define ILI9488_IO_INITIALIZED     0x02
 static  uint8_t   Is_ili9488_Initialized = 0;
 
-#if      ILI9488_MULTITASK_MUTEX == 0
-#define  ILI9488_LCDMUTEX_PUSH()
-#define  ILI9488_LCDMUTEX_POP()
-#endif
-
-#if      ILI9488_MULTITASK_MUTEX == 1
+#if      ILI9488_MULTITASK_MUTEX == 1 && ILI9488_TOUCH == 1
 volatile uint8_t io_lcd_busy = 0;
 volatile uint8_t io_ts_busy = 0;
 #define  ILI9488_LCDMUTEX_PUSH()    while(io_ts_busy); io_lcd_busy++;
 #define  ILI9488_LCDMUTEX_POP()     io_lcd_busy--
+#else
+#define  ILI9488_LCDMUTEX_PUSH()
+#define  ILI9488_LCDMUTEX_POP()
 #endif
 
 //-----------------------------------------------------------------------------
+#if ILI9488_TOUCH == 1
+
 // Touch paraméterek
 // nyomáserõsség értékek honnan hova konvertálodjanak
 
@@ -218,6 +221,15 @@ int32_t  ts_cindex[] = {3439877, 466590, 7307, -176730337, 337591, -670620, 1245
 
 uint16_t tx, ty;
 
+/* Link function for Touchscreen */
+uint8_t   TS_IO_DetectToch(void);
+uint16_t  TS_IO_GetX(void);
+uint16_t  TS_IO_GetY(void);
+uint16_t  TS_IO_GetZ1(void);
+uint16_t  TS_IO_GetZ2(void);
+
+#endif   // #if ILI9488_TOUCH == 1
+
 /* Link function for LCD peripheral */
 void     LCD_Delay (uint32_t delay);
 void     LCD_IO_Init(void);
@@ -231,13 +243,6 @@ void     LCD_IO_WriteCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Siz
 void     LCD_IO_WriteCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size);
 void     LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize);
 void     LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
-
-/* Link function for Touchscreen */
-uint8_t   TS_IO_DetectToch(void);
-uint16_t  TS_IO_GetX(void);
-uint16_t  TS_IO_GetY(void);
-uint16_t  TS_IO_GetZ1(void);
-uint16_t  TS_IO_GetZ2(void);
 
 //-----------------------------------------------------------------------------
 void ili9488_Init(void)
@@ -591,6 +596,7 @@ void ili9488_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
 }
 
 //=============================================================================
+#if ILI9488_TOUCH == 1
 void ili9488_ts_Init(uint16_t DeviceAddr)
 {
   if((Is_ili9488_Initialized & ILI9488_IO_INITIALIZED) == 0)
@@ -676,3 +682,4 @@ void ili9488_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y)
   *X = tx,
   *Y = ty;
 }
+#endif // #if ILI9488_TOUCH == 1

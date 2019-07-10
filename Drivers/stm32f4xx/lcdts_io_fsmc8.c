@@ -13,7 +13,7 @@ verzio:  2019.02 */
 
 #include "main.h"
 #include "lcd.h"
-#include "lcdts_io8p_fsmc.h"
+#include "lcdts_io_fsmc8.h"
 
 /* Mivel nincs globálisan felcserélve a 16bites LCD változok, ezért itt kell cserélni */
 #if LCD_REVERSE16 == 0

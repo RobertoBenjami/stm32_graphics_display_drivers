@@ -1,7 +1,10 @@
 #include "main.h"
 #include "lcd.h"
-#include "ts.h"
 #include "hx8347g.h"
+
+#if  HX8347G_TOUCH == 1
+#include "ts.h"
+#endif
 
 void     hx8347g_Init(void);
 uint16_t hx8347g_ReadID(void);
@@ -19,11 +22,6 @@ void     hx8347g_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
 void     hx8347g_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata);
 void     hx8347g_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata);
 void     hx8347g_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t RGBCode);
-
-// Touchscreen
-void     hx8347g_ts_Init(uint16_t DeviceAddr);
-uint8_t  hx8347g_ts_DetectTouch(uint16_t DeviceAddr);
-void     hx8347g_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y);
 
 LCD_DrvTypeDef   hx8347g_drv =
 {
@@ -222,19 +220,19 @@ static  uint8_t   Is_hx8347g_Initialized = 0;
 
 static  uint16_t  yStart, yEnd;
 
-#if      HX8347G_MULTITASK_MUTEX == 0
-#define  HX8347G_LCDMUTEX_PUSH()
-#define  HX8347G_LCDMUTEX_POP()
-#endif
-
-#if      HX8347G_MULTITASK_MUTEX == 1
+#if      HX8347G_MULTITASK_MUTEX == 1 && HX8347G_TOUCH == 1
 volatile uint8_t io_lcd_busy = 0;
 volatile uint8_t io_ts_busy = 0;
 #define  HX8347G_LCDMUTEX_PUSH()    while(io_ts_busy); io_lcd_busy++;
 #define  HX8347G_LCDMUTEX_POP()     io_lcd_busy--
+#else
+#define  HX8347G_LCDMUTEX_PUSH()
+#define  HX8347G_LCDMUTEX_POP()
 #endif
 
 //-----------------------------------------------------------------------------
+#if     HX8347G_TOUCH == 1
+
 // Touch paraméterek
 // nyomáserõsség értékek honnan hova konvertálodjanak
 #define TOUCHMINPRESSRC    8192
@@ -248,6 +246,11 @@ volatile uint8_t io_ts_busy = 0;
 #define ZINDEXB  (-ZINDEXA * TOUCHMINPRESSRC)
 
 #define ABS(N)   (((N)<0) ? (-(N)) : (N))
+
+
+void     hx8347g_ts_Init(uint16_t DeviceAddr);
+uint8_t  hx8347g_ts_DetectTouch(uint16_t DeviceAddr);
+void     hx8347g_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y);
 
 TS_DrvTypeDef   hx8347g_ts_drv =
 {
@@ -277,6 +280,15 @@ int32_t  ts_cindex[] = {-2756000, -269619, -1366, 142494814, 210932, -423352, 96
 
 uint16_t  tx, ty;
 
+/* Link function for Touchscreen */
+uint8_t  TS_IO_DetectToch(void);
+uint16_t TS_IO_GetX(void);
+uint16_t TS_IO_GetY(void);
+uint16_t TS_IO_GetZ1(void);
+uint16_t TS_IO_GetZ2(void);
+
+#endif
+
 /* Link function for LCD peripheral */
 void     LCD_Delay (uint32_t delay);
 void     LCD_IO_Init(void);
@@ -292,15 +304,6 @@ void     LCD_IO_WriteCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t S
 void     LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize);
 void     LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
 void     LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
-
-
-
-/* Link function for Touchscreen */
-uint8_t   TS_IO_DetectToch(void);
-uint16_t  TS_IO_GetX(void);
-uint16_t  TS_IO_GetY(void);
-uint16_t  TS_IO_GetZ1(void);
-uint16_t  TS_IO_GetZ2(void);
 
 //-----------------------------------------------------------------------------
 void hx8347g_WriteRegPair(uint8_t CmdPair, uint16_t Data)
@@ -627,6 +630,7 @@ void hx8347g_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
 }
 
 //=============================================================================
+#if  HX8347G_TOUCH == 1
 void hx8347g_ts_Init(uint16_t DeviceAddr)
 {
   if((Is_hx8347g_Initialized & HX8347G_IO_INITIALIZED) == 0)
@@ -713,3 +717,4 @@ void hx8347g_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y)
   *X = tx,
   *Y = ty;
 }
+#endif  // #if  HX8347G_TOUCH == 1
