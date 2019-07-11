@@ -13,8 +13,6 @@
 
 /* Tesztfoto */
 #define rombitmap  beer_60x100_16
-#define ROMBITMAP_WIDTH  60
-#define ROMBITMAP_HEIGHT 100
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,8 +24,6 @@
 
 /* BSP_LCD_... */
 #include "stm32_adafruit_lcd.h"
-
-extern LCD_DrvTypeDef  *lcd_drv;
 
 //-----------------------------------------------------------------------------
 // freertos vs HAL
@@ -79,7 +75,7 @@ void cbTimer(void const * argument);
 #endif
 
 extern const BITMAPSTRUCT rombitmap;
-uint16_t bitmap[ROMBITMAP_WIDTH * ROMBITMAP_HEIGHT];
+uint16_t bitmap[60 * 100];
 
 //-----------------------------------------------------------------------------
 uint32_t ClearTest(void)
