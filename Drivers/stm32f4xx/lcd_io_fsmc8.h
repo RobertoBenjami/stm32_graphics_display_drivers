@@ -5,9 +5,6 @@ FSMC_NE1<-LCD_CS), FSMC_NOE<-LCD_RD, FSMC_NWE<-LCD_WR, FSMC_Ax<-LCD_RS
 FSMC_D0<-LCD_D0, FSMC_D1<-LCD_D1, FSMC_D2<-LCD_D2, FSMC_D3<-LCD_D3
 FSMC_D4<-LCD_D4, FSMC_D5<-LCD_D5, FSMC_D6<-LCD_D6, FSMC_D7<-LCD_D7 */
 
-#ifndef __LCD_IO_FSMC8_H
-#define __LCD_IO_FSMC8_H
-
 //=============================================================================
 /* Lcd vezérlö lábak hozzárendelése (A..M, 0..15, LCD_CS helye az FSMC által kötött) */
 #define LCD_CS            D, 7
@@ -35,5 +32,3 @@ FSMC_D4<-LCD_D4, FSMC_D5<-LCD_D5, FSMC_D6<-LCD_D6, FSMC_D7<-LCD_D7 */
    - 0..7: Stream
    - 1..3: DMA prioritás (0=low..3=very high) */
 #define LCD_DMA           2, 7, 7, 1
-
-#endif // __LCD_IO_FSMC8_H

@@ -6,8 +6,6 @@
  * ezért ezek ki kell zárni az Lcd és a Touchscreen egyidejü használatát!
  * Tábbszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások megelözéséröl!
  */
-#ifndef __LCDTS_IO_GPIO8_H
-#define __LCDTS_IO_GPIO8_H
 
 //=============================================================================
 // Lcd vezérlö lábak hozzárendelése (A..M, 0..15)
@@ -91,5 +89,3 @@ GPIOE->ODR = (GPIOE->ODR & ~((1 << 7) | (1 << 8) | (1 << 9) | (1 << 10))) |     
 dt = ((GPIOD->IDR & 0b1100000000000000) >> (14 - 0)) | ((GPIOD->IDR & 0b0000000000000011) << (2 - 0)) | \
      ((GPIOE->IDR & 0b0000011110000000) >> (7 - 4)); }
 #endif
-
-#endif // __LCDTS_IO_GPIO8_H

@@ -2,8 +2,6 @@
  * 8 bites párhuzamos LCD GPIO driver STM32F1-re
  * 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
  */
-#ifndef __LCD_IO_GPIO8_H
-#define __LCD_IO_GPIO8_H
 
 //=============================================================================
 // Lcd vezérlö lábak hozzárendelése (A..M, 0..15)
@@ -68,5 +66,3 @@ GPIOE->ODR = (GPIOE->ODR & ~((1 << 7) | (1 << 8) | (1 << 9) | (1 << 10))) |     
 dt = ((GPIOD->IDR & 0b1100000000000000) >> (14 - 0)) | ((GPIOD->IDR & 0b0000000000000011) << (2 - 0)) | \
      ((GPIOE->IDR & 0b0000011110000000) >> (7 - 4)); }
 #endif
-
-#endif // __LCD_IO_GPIO8_H

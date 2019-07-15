@@ -4,9 +4,6 @@
  * verzio:  2019.06
 */
 
-#ifndef __LCD_IO_SPI_H
-#define __LCD_IO_SPI_H
-
 //=============================================================================
 /* SPI kiválasztása (0, 1, 2 3)
    - 0: szoftveres SPI driver (a lábhozzárendelés szabadon kiválaszthato)
@@ -61,5 +58,3 @@
    - 0: stack
    - 1: static buffer */
 #define LCD_DMA_RX_BUFMODE 1
-
-#endif // __LCD_IO_SPI_H

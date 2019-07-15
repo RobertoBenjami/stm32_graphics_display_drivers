@@ -1,10 +1,3 @@
-#ifndef __ST7735_H
-#define __ST7735_H
-
-#ifdef __cplusplus
- extern "C" {
-#endif
-
 /* Orientácio:
    - 0: 128x160 8pin catlakozo felül (portrait)
    - 1: 160x128 8pin catlakozo bal oldalt (landscape)
@@ -23,12 +16,3 @@
 // ST7735 Size (fizikai felbontás, az alapértelmezett (0) orientáciora vonatkoztatva)
 #define  ST7735_LCD_PIXEL_WIDTH   128
 #define  ST7735_LCD_PIXEL_HEIGHT  160
-
-/* LCD driver structure */
-extern   LCD_DrvTypeDef   *lcd_drv;
-      
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __ST7735_H */
