@@ -366,7 +366,7 @@ typedef struct
 //-----------------------------------------------------------------------------
 #if LCD_SPI == 0
 /* Szoftver SPI */
-uint16_t tmp16;
+volatile uint16_t tmp16;
 
 #define LCD_DUMMY_READ        {GPIOX_ODR(LCD_SCK) = 0; LCD_READ_DELAY; GPIOX_ODR(LCD_SCK) = 1;}
 
@@ -413,7 +413,7 @@ uint16_t tmp16;
 #endif
 
 #define LCD_WRITE_CLK         GPIOX_ODR(LCD_SCK) = 0; LCD_WRITE_DELAY; GPIOX_ODR(LCD_SCK) = 1;
-#define LCD_READ_CLK          GPIOX_ODR(LCD_SCK) = 1; GPIOX_ODR(LCD_SCK) = 0; LCD_WRITE_DELAY;
+#define LCD_READ_CLK          GPIOX_ODR(LCD_SCK) = 1; GPIOX_ODR(LCD_SCK) = 1; GPIOX_ODR(LCD_SCK) = 0; LCD_READ_DELAY;
 
 #define LCD_WRITE8(d8) {                         \
   GPIOX_ODR(LCD_MOSI) = BITBAND_ACCESS(d8, 7);   \
@@ -872,9 +872,6 @@ uint8_t da[LCD_DMA_RX_BUFSIZE] __attribute__((aligned));
 
 #endif   // #else LCD_SPI == 0
 
-volatile  uint32_t dmandtr = 0;
-volatile  uint32_t dmandtr_last = 0;
-
 uint8_t   tmp8;
 
 //-----------------------------------------------------------------------------
@@ -942,10 +939,10 @@ void LCD_IO_Bl_OnOff(uint8_t Bl)
 void LCD_IO_Init(void)
 {
   #if LCD_SPI_MODE == 2                 // Full duplex
-  RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_RST) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI) | GPIOX_CLOCK(LCD_MISO));
+  RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI) | GPIOX_CLOCK(LCD_MISO));
   GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_MISO);
   #else                                 // TX vagy half duplex
-  RCC->AHB1ENR |= GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_RST) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI);
+  RCC->AHB1ENR |= GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI);
   #endif
 
   #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12) // háttérvilágitás
@@ -954,14 +951,18 @@ void LCD_IO_Init(void)
   LCD_IO_Bl_OnOff(1);
   #endif
 
+  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12) // reset
+  RCC->APB2ENR |= GPIOX_CLOCK(LCD_RST);
+  GPIOX_MODER(MODE_OUT, LCD_RST);
+  GPIOX_OSPEEDR(MODE_SPD_LOW, LCD_RST);
   LCD_RST_OFF;
+  #endif
+
   LCD_RS_DATA;
   LCD_CS_OFF;
-  GPIOX_MODER(MODE_OUT, LCD_RST);
   GPIOX_MODER(MODE_OUT, LCD_RS);
   GPIOX_MODER(MODE_OUT, LCD_CS);
 
-  GPIOX_OSPEEDR(MODE_SPD_LOW, LCD_RST);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_RS);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_CS);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_SCK);
@@ -1000,11 +1001,13 @@ void LCD_IO_Init(void)
   #endif // #else LCD_SPI == 0
 
   /* Set or Reset the control line */
+  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12) // reset
   LCD_Delay(10);
   LCD_RST_ON;
   LCD_Delay(10);
   LCD_RST_OFF;
   LCD_Delay(10);
+  #endif
 
   #ifdef LCD_DMA_IRQ
   osSemaphoreDef(myBinarySem01);
@@ -1195,7 +1198,7 @@ void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, ui
   LCD_CS_ON;
   LCD_CMD8_WRITE(Cmd);
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0
@@ -1220,7 +1223,7 @@ void LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, 
   LCD_CMD8_WRITE(Cmd);
   LCD_SPI_MODE16;
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0 || LCD_REVERSE16 == 1
@@ -1245,7 +1248,7 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
   LCD_CS_ON;
   LCD_CMD8_WRITE(Cmd);
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0
@@ -1277,7 +1280,7 @@ void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, 
   LCD_CMD16_WRITE(Cmd);
   LCD_SPI_MODE8;
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0
@@ -1304,7 +1307,7 @@ void LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size
   LCD_CS_ON;
   LCD_CMD16_WRITE(Cmd);
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0 || LCD_REVERSE16 == 1
@@ -1332,7 +1335,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
   LCD_CMD16_WRITE(Cmd);
   LCD_SPI_MODE8;
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0

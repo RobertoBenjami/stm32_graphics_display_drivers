@@ -27,21 +27,26 @@
 #define LCD_SPI_AFR       5
 
 /* Lcd vezérlö lábak hozzárendelése ((A..M, 0..15)
-   - LCD_MISO megadása csak full duplex üzemmodban szükséges, TX és half duplex modban nem lesz használva
+   - LCD_RST megadása nem kötelezö (X, 0)
+   - LCD_MISO megadása csak full duplex (LCD_SPI_MODE 2) üzemmodban szükséges
    - hardver SPI esetén az SCK, MOSI, MISO lábak hozzárendelése kötött */
-#define LCD_RST           X, 0   // ha nem használjuk -> X, 0
+#define LCD_RST           X, 0
 #define LCD_RS            X, 0
 
 #define LCD_CS            X, 0
 #define LCD_SCK           X, 0
 #define LCD_MOSI          X, 0
-#define LCD_MISO          X, 0   // csak LCD_SPI_MODE 2 esetén
+#define LCD_MISO          X, 0
 
 /* Háttérvilágitás vezérlés
    - BL: A..M, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
    - BL_ON: 0 vagy 1, a bekapcsolt állapothoz tartozó logikai szint */
 #define LCD_BL            X, 0   // ha nem akarjuk használni X, 0 -t adjunk
 #define LCD_BLON          0
+
+/* Adatirány váltáskor (OUT->IN) van olyan kijelzõ, amelyik extra órajele(ke)t kér az SCK lábra
+   - 0.. (ST7735: 1,  ILI9341: 0) */
+#define LCD_SCK_EXTRACLK  0
 
 /* DMA beállitások (csak hardver SPI)
    - 0..2: 0 = nincs DMA, 1 = DMA1, 2 = DMA2

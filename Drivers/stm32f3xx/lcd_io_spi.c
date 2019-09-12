@@ -1022,7 +1022,7 @@ void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, ui
   LCD_CS_ON;
   LCD_CMD8_WRITE(Cmd);
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0
@@ -1047,7 +1047,7 @@ void LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, 
   LCD_CMD8_WRITE(Cmd);
   LCD_SPI_MODE16;
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0 || LCD_REVERSE16 == 1
@@ -1072,7 +1072,7 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
   LCD_CS_ON;
   LCD_CMD8_WRITE(Cmd);
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0
@@ -1104,7 +1104,7 @@ void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, 
   LCD_CMD16_WRITE(Cmd);
   LCD_SPI_MODE8;
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0
@@ -1131,7 +1131,7 @@ void LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size
   LCD_CS_ON;
   LCD_CMD16_WRITE(Cmd);
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0 || LCD_REVERSE16 == 1
@@ -1159,7 +1159,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
   LCD_CMD16_WRITE(Cmd);
   LCD_SPI_MODE8;
 
-  DummySize = (DummySize << 3) + 1;
+  DummySize = (DummySize << 3) + LCD_SCK_EXTRACLK;
   LCD_DIRREAD(DummySize);
 
   #if DMANUM(LCD_DMA_RX) == 0 || LCD_SPI == 0
