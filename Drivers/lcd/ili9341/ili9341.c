@@ -203,12 +203,6 @@ void ili9341_Init(void)
   LCD_IO_WriteCmd8MultipleData8(0xF7, (uint8_t *)"\x20", 1);
   LCD_IO_WriteCmd8MultipleData8(0xEA, (uint8_t *)"\x00\x00", 2);
 
-  /* LCD_IO_WriteCmd8MultipleData8(0xB0, (uint8_t *)"\x60", 1);
-  LCD_IO_WriteCmd8(0xF6);
-    LCD_IO_WriteData8(0b00000001);
-    LCD_IO_WriteData8(0b00000001);
-    LCD_IO_WriteData8(0b00000000);*/
-
   // Power Control 1 (Vreg1out, Verg2out)
   LCD_IO_WriteCmd8MultipleData8(ILI9341_PWCTR1, (uint8_t *)"\x23", 1);
 
@@ -224,8 +218,11 @@ void ili9341_Init(void)
   // Vertical scroll zero
   LCD_IO_WriteCmd8MultipleData8(ILI9341_VSCRSADD, (uint8_t *)"\x00", 1);
   LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x55", 1);
+
+  // LCD_IO_WriteCmd8MultipleData8(0xF6, (uint8_t *)"\x01\x00\x06", 3);
+
   LCD_IO_WriteCmd8MultipleData8(ILI9341_FRMCTR1, (uint8_t *)"\x00\x18", 2);
-  LCD_IO_WriteCmd8MultipleData8(ILI9341_DFUNCTR, (uint8_t *)"\x0A\x82\x27", 3);  // Display Function Control
+  LCD_IO_WriteCmd8MultipleData8(ILI9341_DFUNCTR, (uint8_t *)"\x08\x82\x27", 3);  // Display Function Control
   LCD_IO_WriteCmd8MultipleData8(0xF2, (uint8_t *)"\x00", 1);            // 3Gamma Function Disable
   LCD_IO_WriteCmd8MultipleData8(ILI9341_GAMMASET, (uint8_t *)"\x01", 1);// Gamma curve selected
 
@@ -236,11 +233,8 @@ void ili9341_Init(void)
   LCD_IO_WriteCmd8MultipleData8(ILI9341_GMCTRN1, (uint8_t *)"\x00\x0E\x14\x03\x11\x07\x31\xC1\x48\x08\x0F\x0C\x31\x36\x0F", 15);
 
   LCD_IO_WriteCmd8(ILI9341_MADCTL); LCD_IO_WriteData8(ILI9341_MAD_DATA_RIGHT_THEN_DOWN);
-  LCD_Delay(1);
   LCD_IO_WriteCmd8(ILI9341_SLPOUT);    // Exit Sleep
-  LCD_Delay(1);
   LCD_IO_WriteCmd8(ILI9341_DISPON);    // Display on
-  LCD_Delay(1);
 }
 
 //-----------------------------------------------------------------------------
@@ -291,21 +285,17 @@ uint16_t ili9341_GetLcdPixelHeight(void)
 
 //-----------------------------------------------------------------------------
 /**
-  * @brief  Get the ST7735 ID.
+  * @brief  Get the ILI9341 ID.
   * @param  None
-  * @retval The ST7735 ID
+  * @retval The ILI9341 ID
+  * @rem    On the my lcd is unusable (stm32f429 discovery)
   */
 uint16_t ili9341_ReadID(void)
 {
   uint32_t dt = 0;
-  LCD_IO_ReadCmd8MultipleData8(0xD9, (uint8_t *)&dt, 4, 1);
-  printf("ili9341 RDDST:%x\r\n", (unsigned int)dt);
-
-  dt = 0;
-  LCD_IO_ReadCmd8MultipleData8(0xD3, (uint8_t *)&dt, 3, 1);
-  printf("ili9341 ID:%x\r\n", (unsigned int)dt);
-  if(dt == 0x419300)
-    return 0x9143;
+  LCD_IO_ReadCmd8MultipleData8(0x04, (uint8_t *)&dt, 4, 0);
+  if(dt == 0x009341)
+    return 0x9341;
   else
     return 0;
 }
@@ -346,9 +336,13 @@ void ili9341_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGBCode)
 uint16_t ili9341_ReadPixel(uint16_t Xpos, uint16_t Ypos)
 {
   uint16_t ret;
+  LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x66", 1); // Read: only 24bit pixel mode
   ILI9341_SETCURSOR(Xpos, Ypos);
   LCD_IO_ReadCmd8MultipleData24to16(ILI9341_RAMRD, (uint16_t *)&ret, 1, 1);
+  LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x55", 1); // Return to 16bit pixel mode
   return(ret);
+
+
 }
 
 //-----------------------------------------------------------------------------
@@ -473,12 +467,9 @@ void ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   */
 void ili9341_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData)
 {
-  for(uint16_t yp = Ypos; yp < Ypos + Ysize; yp++)
-    for(uint16_t xp = Xpos; xp < Xpos + Xsize; xp++)
-    {
-      ILI9341_SETCURSOR(xp, yp);
-      LCD_IO_ReadCmd8MultipleData24to16(ILI9341_RAMRD, (uint16_t *)pData, 1, 1);
-      pData += 2;
-    }
-}
+  ili9341_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
+  LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x66", 1); // Read: only 24bit pixel mode
+  LCD_IO_ReadCmd8MultipleData24to16(ILI9341_RAMRD, (uint16_t *)pData, Xsize * Ysize, 1);
+  LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x55", 1); // Return to 16bit pixel mode
 
+}

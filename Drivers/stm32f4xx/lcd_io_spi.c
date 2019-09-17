@@ -20,6 +20,8 @@
 #define RD(a)                 __REVSH(a)
 #endif
 
+#define DMA_MAXSIZE           0x0100
+
 //-----------------------------------------------------------------------------
 /* Link function for LCD peripheral */
 void  LCD_Delay (uint32_t delay);
@@ -413,7 +415,7 @@ volatile uint16_t tmp16;
 #endif
 
 #define LCD_WRITE_CLK         GPIOX_ODR(LCD_SCK) = 0; LCD_WRITE_DELAY; GPIOX_ODR(LCD_SCK) = 1;
-#define LCD_READ_CLK          GPIOX_ODR(LCD_SCK) = 1; GPIOX_ODR(LCD_SCK) = 1; GPIOX_ODR(LCD_SCK) = 0; LCD_READ_DELAY;
+#define LCD_READ_CLK          GPIOX_ODR(LCD_SCK) = 1; GPIOX_ODR(LCD_SCK) = 0; LCD_READ_DELAY;
 
 #define LCD_WRITE8(d8) {                         \
   GPIOX_ODR(LCD_MOSI) = BITBAND_ACCESS(d8, 7);   \
@@ -646,7 +648,7 @@ volatile uint16_t tmp16;
 
 #if     LCD_SPI_MODE == 1
 /* Kétirányu (halfduplex) SPI esetén az adatirányt váltogatni kell */
-#if (defined(LCD_SPI_SPD_READ) && (LCD_SPI != 0) && (LCD_SPI_SPD != LCD_SPI_SPD_READ)) // Eltérö olvasási/irási sebesség
+#if (defined(LCD_SPI_SPD_READ) && (LCD_SPI_SPD != LCD_SPI_SPD_READ)) // Eltérö olvasási/irási sebesség
 #define LCD_DIRREAD(d)  {                            \
   LCD_DUMMY_READ(d);                                 \
   SPIX->CR1 =                                        \
@@ -681,7 +683,7 @@ volatile uint16_t tmp16;
 
 #else   // LCD_SPI_MODE == 1
 // TX és fullduplex SPI esetén az adatirány fix
-#if (defined(LCD_SPI_SPD_READ) && (LCD_SPI != 0) && (LCD_SPI_SPD != LCD_SPI_SPD_READ)) // Eltérö olvasási/irási sebesség
+#if (defined(LCD_SPI_SPD_READ) && (LCD_SPI_SPD != LCD_SPI_SPD_READ)) // Eltérö olvasási/irási sebesség
 #define LCD_DIRREAD(d) { \
   LCD_DUMMY_READ(d);     \
   SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos);}
@@ -743,51 +745,37 @@ volatile uint16_t tmp16;
 
 #if DMANUM(LCD_DMA_TX) > 0
 /* SPI DMA WRITE(a: data pointer, b: number of data, c: 0=8 bit, 1=16bit, d: 0:MINC=off, 1:MINC=on */
-#define LCD_SPI_DMA_WRITE(a, b, c, d) {                                         \
-    DMAX_IFCR(LCD_DMA_TX) = DMAX_IFCR_CTCIF(LCD_DMA_TX) |  /* DMA IRQ clear */  \
-      DMAX_IFCR_CHTIF(LCD_DMA_TX) | DMAX_IFCR_CTEIF(LCD_DMA_TX) |               \
-      DMAX_IFCR_CDMEIF(LCD_DMA_TX) | DMAX_IFCR_CFEIF(LCD_DMA_TX);               \
-  while(b)                                                                      \
-  {                                                                             \
-    SPIX->CR1 &= ~SPI_CR1_SPE;           /* SPI stop */                         \
-    DMAX_STREAMX(LCD_DMA_TX)->CR = 0;    /* DMA stop */                         \
-    while(DMAX_STREAMX(LCD_DMA_TX)->CR & DMA_SxCR_EN);                          \
-    DMAX_STREAMX(LCD_DMA_TX)->M0AR = (uint32_t)a;                               \
-    DMAX_STREAMX(LCD_DMA_TX)->PAR = (uint32_t)&SPIX->DR;                        \
-    if(b > 0xFFFF)                                                              \
-    {                                                                           \
-      DMAX_STREAMX(LCD_DMA_TX)->NDTR = 0xFFFF;                                  \
-      b -= 0xFFFF;                                                              \
-    }                                                                           \
-    else                                                                        \
-    {                                                                           \
-      DMAX_STREAMX(LCD_DMA_TX)->NDTR = b;                                       \
-      b = 0;                                                                    \
-    }                                                                           \
-    DMAX_STREAMX(LCD_DMA_TX)->CR = TCIE |                                       \
-      (c << DMA_SxCR_MSIZE_Pos) | (c << DMA_SxCR_PSIZE_Pos) |                   \
-      (d << DMA_SxCR_MINC_Pos) | (0b01 << DMA_SxCR_DIR_Pos) |                   \
-      (DMACHN(LCD_DMA_TX) << DMA_SxCR_CHSEL_Pos) |                              \
-      (DMAPRIORITY(LCD_DMA_TX) << DMA_SxCR_PL_Pos);                             \
-    DMAX_STREAMX(LCD_DMA_TX)->CR |= DMA_SxCR_EN;                                \
-    BITBAND_ACCESS(SPIX->CR2, SPI_CR2_TXDMAEN_Pos) = 1;                         \
-    SPIX->CR1 |= SPI_CR1_SPE;                                                   \
-    WAIT_FOR_DMA_END_TX;                                                        \
-  }                                                                             \
-  DMAX_STREAMX(LCD_DMA_TX)->CR = 0;                                             \
-  while(DMAX_STREAMX(LCD_DMA_TX)->CR & DMA_SxCR_EN);                            \
-  BITBAND_ACCESS(SPIX->CR2, SPI_CR2_TXDMAEN_Pos) = 0;                           \
-  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_BSY_Pos));                              \
-  SPIX->CR1 &= ~SPI_CR1_SPE;                                                    \
-  LCD_IO_Delay(2 ^ LCD_SPI_SPD);                                                \
-  LCD_CS_OFF;                                                                   \
-  SPIX->CR1 |= SPI_CR1_SPE;                                                     }
+#define LCD_SPI_DMA_WRITE(a, b, c, d) {                                       \
+  DMAX_IFCR(LCD_DMA_TX) = DMAX_IFCR_CTCIF(LCD_DMA_TX) |  /* DMA IRQ clear */  \
+    DMAX_IFCR_CHTIF(LCD_DMA_TX) | DMAX_IFCR_CTEIF(LCD_DMA_TX) |               \
+    DMAX_IFCR_CDMEIF(LCD_DMA_TX) | DMAX_IFCR_CFEIF(LCD_DMA_TX);               \
+  SPIX->CR1 &= ~SPI_CR1_SPE;           /* SPI stop */                         \
+  DMAX_STREAMX(LCD_DMA_TX)->CR = 0;    /* DMA stop */                         \
+  while(DMAX_STREAMX(LCD_DMA_TX)->CR & DMA_SxCR_EN);                          \
+  DMAX_STREAMX(LCD_DMA_TX)->M0AR = (uint32_t)a;                               \
+  DMAX_STREAMX(LCD_DMA_TX)->PAR = (uint32_t)&SPIX->DR;                        \
+  DMAX_STREAMX(LCD_DMA_TX)->NDTR = b;                                         \
+  DMAX_STREAMX(LCD_DMA_TX)->CR = TCIE |                                       \
+    (c << DMA_SxCR_MSIZE_Pos) | (c << DMA_SxCR_PSIZE_Pos) |                   \
+    (d << DMA_SxCR_MINC_Pos) | (0b01 << DMA_SxCR_DIR_Pos) |                   \
+    (DMACHN(LCD_DMA_TX) << DMA_SxCR_CHSEL_Pos) |                              \
+    (DMAPRIORITY(LCD_DMA_TX) << DMA_SxCR_PL_Pos);                             \
+  DMAX_STREAMX(LCD_DMA_TX)->CR |= DMA_SxCR_EN;                                \
+  BITBAND_ACCESS(SPIX->CR2, SPI_CR2_TXDMAEN_Pos) = 1;                         \
+  SPIX->CR1 |= SPI_CR1_SPE;                                                   \
+  WAIT_FOR_DMA_END_TX;                                                        \
+  DMAX_STREAMX(LCD_DMA_TX)->CR = 0;                                           \
+  while(DMAX_STREAMX(LCD_DMA_TX)->CR & DMA_SxCR_EN);                          \
+  BITBAND_ACCESS(SPIX->CR2, SPI_CR2_TXDMAEN_Pos) = 0;                         \
+  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_BSY_Pos));                            \
+  SPIX->CR1 &= ~SPI_CR1_SPE;                                                  \
+  LCD_IO_Delay(2 ^ LCD_SPI_SPD);                                              \
+  SPIX->CR1 |= SPI_CR1_SPE;                                                   }
 #endif     // #if DMANUM(LCD_DMA_TX) > 0
 
 #if DMANUM(LCD_DMA_RX) > 0
 /* SPI DMA READ(a: data pointer, b: number of data, c: 0=8 bit, 1=16bit */
 #define LCD_SPI_DMA_READ(a, b, c) {                                             \
-  SPIX->CR1 &= ~SPI_CR1_SPE;          /* SPI stop */                            \
   DMAX_IFCR(LCD_DMA_RX) = DMAX_IFCR_CTCIF(LCD_DMA_RX) |  /* DMA IRQ clear */    \
     DMAX_IFCR_CHTIF(LCD_DMA_RX) | DMAX_IFCR_CTEIF(LCD_DMA_RX) |                 \
     DMAX_IFCR_CDMEIF(LCD_DMA_RX) | DMAX_IFCR_CFEIF(LCD_DMA_RX);                 \
@@ -802,9 +790,7 @@ volatile uint16_t tmp16;
     (DMAPRIORITY(LCD_DMA_RX) << DMA_SxCR_PL_Pos | (0 << DMA_SxCR_MBURST_Pos));  \
   DMAX_STREAMX(LCD_DMA_RX)->CR |= DMA_SxCR_EN;  /* DMA start */                 \
   BITBAND_ACCESS(SPIX->CR2, SPI_CR2_RXDMAEN_Pos) = 1; /* SPI DMA eng */         \
-  SPIX->CR1 |= SPI_CR1_SPE;             /* SPI start */                         \
   WAIT_FOR_DMA_END_RX;                                                          \
-  LCD_CS_OFF;                                                                   \
   BITBAND_ACCESS(SPIX->CR2, SPI_CR2_RXDMAEN_Pos) = 0; /* SPI DMA tilt */        \
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos)) tmp8 = SPIX->DR;             \
   SPIX->CR1 &= ~SPI_CR1_SPE;                                                    \
@@ -820,7 +806,6 @@ volatile uint16_t tmp16;
 #define LCD_SPI_DMA_READ24TO16(a, b, c, d) {                                    \
   uint32_t rp = 0, rgbcnt = 0;        /* buffer olv pointer */                  \
   uint32_t nd;                                                                  \
-  SPIX->CR1 &= ~SPI_CR1_SPE;          /* SPI stop */                            \
   DMAX_IFCR(LCD_DMA_RX) = DMAX_IFCR_CTCIF(LCD_DMA_RX) |  /* DMA IRQ clear */    \
     DMAX_IFCR_CHTIF(LCD_DMA_RX) | DMAX_IFCR_CTEIF(LCD_DMA_RX) |                 \
     DMAX_IFCR_CDMEIF(LCD_DMA_RX) | DMAX_IFCR_CFEIF(LCD_DMA_RX);                 \
@@ -836,7 +821,6 @@ volatile uint16_t tmp16;
     (DMAPRIORITY(LCD_DMA_RX) << DMA_SxCR_PL_Pos) | DMA_SxCR_CIRC;               \
   DMAX_STREAMX(LCD_DMA_RX)->CR |= DMA_SxCR_EN;                                  \
   BITBAND_ACCESS(SPIX->CR2, SPI_CR2_RXDMAEN_Pos) = 1;                           \
-  SPIX->CR1 |= SPI_CR1_SPE;                                                     \
   while(b)                                                                      \
   {                                                                             \
     if(nd != DMAX_STREAMX(LCD_DMA_RX)->NDTR)                                    \
@@ -854,14 +838,11 @@ volatile uint16_t tmp16;
       }                                                                         \
     }                                                                           \
   }                                                                             \
-  LCD_CS_OFF;                                                                   \
   BITBAND_ACCESS(SPIX->CR2, SPI_CR2_RXDMAEN_Pos) = 0;                           \
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos)) tmp8 = SPIX->DR;             \
-  SPIX->CR1 &= ~SPI_CR1_SPE;                                                    \
   SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | ((LCD_SPI_SPD << SPI_CR1_BR_Pos) |    \
-    SPI_CR1_BIDIOE); LCD_IO_Delay(2 ^ LCD_SPI_SPD_READ);                        \
+    SPI_CR1_BIDIOE) | SPI_CR1_SPE; LCD_IO_Delay(2 ^ LCD_SPI_SPD_READ);          \
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos)) tmp8 = SPIX->DR;             \
-  SPIX->CR1 |= SPI_CR1_SPE;                                                     \
   DMAX_STREAMX(LCD_DMA_RX)->CR = 0;                                             \
   while(DMAX_STREAMX(LCD_DMA_RX)->CR & DMA_SxCR_EN);                            }
 #endif   // #if DMANUM(LCD_DMA_RX) > 0
@@ -967,9 +948,9 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_CS);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_SCK);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_MOSI);
+  GPIOX_ODR(LCD_SCK) = 1;               // SCK = 1
 
   #if LCD_SPI == 0                      // Szoftver SPI
-  GPIOX_ODR(LCD_SCK) = 1;               // SCK = 0
   GPIOX_MODER(MODE_OUT, LCD_SCK);
   GPIOX_MODER(MODE_OUT, LCD_MOSI);
 
@@ -1006,8 +987,8 @@ void LCD_IO_Init(void)
   LCD_RST_ON;
   LCD_Delay(10);
   LCD_RST_OFF;
-  LCD_Delay(10);
   #endif
+  LCD_Delay(10);
 
   #ifdef LCD_DMA_IRQ
   osSemaphoreDef(myBinarySem01);
@@ -1072,12 +1053,22 @@ void LCD_IO_WriteCmd8DataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
   {
     LCD_DATA16_WRITE(Data);
   }
-  LCD_CS_OFF;
 
   #else
   uint16_t d = RD(Data);
-  LCD_SPI_DMA_WRITE(&d, Size, 1, 0);
+  uint32_t DmaSize;
+  while(Size)
+  {
+    if(Size > DMA_MAXSIZE)
+      DmaSize = DMA_MAXSIZE;
+    else
+      DmaSize = Size;
+    Size -= DmaSize;
+    LCD_SPI_DMA_WRITE(&d, DmaSize, 1, 0);
+  }
   #endif
+
+  LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
@@ -1093,11 +1084,22 @@ void LCD_IO_WriteCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
     LCD_DATA8_WRITE(*pData);
     pData ++;
   }
-  LCD_CS_OFF;
 
   #else
-  LCD_SPI_DMA_WRITE(pData, Size, 0, 1);
+  uint32_t DmaSize;
+  while(Size)
+  {
+    if(Size > DMA_MAXSIZE)
+      DmaSize = DMA_MAXSIZE;
+    else
+      DmaSize = Size;
+    Size -= DmaSize;
+    LCD_SPI_DMA_WRITE(pData, DmaSize, 0, 1);
+    pData += DmaSize;
+  }
   #endif
+
+  LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
@@ -1114,11 +1116,22 @@ void LCD_IO_WriteCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
     LCD_DATA16_WRITE(*pData);
     pData ++;
   }
-  LCD_CS_OFF;
 
   #else
-  LCD_SPI_DMA_WRITE(pData, Size, 1, 1);
+  uint32_t DmaSize;
+  while(Size)
+  {
+    if(Size > DMA_MAXSIZE)
+      DmaSize = DMA_MAXSIZE;
+    else
+      DmaSize = Size;
+    Size -= DmaSize;
+    LCD_SPI_DMA_WRITE(pData, DmaSize, 1, 1);
+    pData += DmaSize;
+  }
   #endif
+
+  LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
@@ -1133,12 +1146,23 @@ void LCD_IO_WriteCmd16DataFill16(uint16_t Cmd, uint16_t Data, uint32_t Size)
   {
     LCD_DATA16_WRITE(Data);
   }
-  LCD_CS_OFF;
 
   #else
   uint16_t d = RD(Data);
-  LCD_SPI_DMA_WRITE(&d, Size, 1, 0);
+
+  uint32_t DmaSize;
+  while(Size)
+  {
+    if(Size > DMA_MAXSIZE)
+      DmaSize = DMA_MAXSIZE;
+    else
+      DmaSize = Size;
+    Size -= DmaSize;
+    LCD_SPI_DMA_WRITE(&d, DmaSize, 1, 0);
+  }
   #endif
+
+  LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
@@ -1155,11 +1179,22 @@ void LCD_IO_WriteCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size)
     LCD_DATA8_WRITE(*pData);
     pData ++;
   }
-  LCD_CS_OFF;
 
   #else
-  LCD_SPI_DMA_WRITE(pData, Size, 0, 1);
+  uint32_t DmaSize;
+  while(Size)
+  {
+    if(Size > DMA_MAXSIZE)
+      DmaSize = DMA_MAXSIZE;
+    else
+      DmaSize = Size;
+    Size -= DmaSize;
+    LCD_SPI_DMA_WRITE(pData, DmaSize, 0, 1);
+    pData += DmaSize;
+  }
   #endif
+
+  LCD_CS_OFF;
 }
 
 //-----------------------------------------------------------------------------
@@ -1175,11 +1210,22 @@ void LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Siz
     LCD_DATA16_WRITE(*pData);
     pData ++;
   }
-  LCD_CS_OFF;
 
   #else
-  LCD_SPI_DMA_WRITE(pData, Size, 1, 1);
+  uint32_t DmaSize;
+  while(Size)
+  {
+    if(Size > DMA_MAXSIZE)
+      DmaSize = DMA_MAXSIZE;
+    else
+      DmaSize = Size;
+    Size -= DmaSize;
+    LCD_SPI_DMA_WRITE(pData, DmaSize, 1, 1);
+    pData += DmaSize;
+  }
   #endif
+
+  LCD_CS_OFF;
 }
 
 #if LCD_SPI_MODE == 0
@@ -1211,7 +1257,20 @@ void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, ui
   LCD_DIRWRITE(tmp8);
 
   #else
-  LCD_SPI_DMA_READ(pData, Size, 0);
+  uint32_t DmaSize;
+  while(Size)
+  {
+    if(Size > DMA_MAXSIZE)
+      DmaSize = DMA_MAXSIZE;
+    else
+      DmaSize = Size;
+    Size -= DmaSize;
+    LCD_SPI_DMA_READ(pData, DmaSize, 0);
+    pData += DmaSize;
+  }
+
+  // LCD_SPI_DMA_READ(pData, Size, 0);
+  LCD_CS_OFF;
   #endif
 }
 
@@ -1237,6 +1296,7 @@ void LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, 
 
   #else
   LCD_SPI_DMA_READ(pData, Size, 1);
+  LCD_CS_OFF;
   #endif
 }
 
@@ -1269,6 +1329,7 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
   #endif
 
   LCD_SPI_DMA_READ24TO16(pData, Size, &da, LCD_DMA_RX_BUFSIZE);
+  LCD_CS_OFF;
   #endif
 }
 
@@ -1297,6 +1358,7 @@ void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, 
 
   #else
   LCD_SPI_DMA_READ(pData, Size, 0);
+  LCD_CS_OFF;
   #endif
 }
 
@@ -1323,6 +1385,7 @@ void LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size
 
   #else
   LCD_SPI_DMA_READ(pData, Size, 1);
+  LCD_CS_OFF;
   #endif
 }
 
@@ -1361,6 +1424,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
   #endif
 
   LCD_SPI_DMA_READ24TO16(pData, Size, &da, LCD_DMA_RX_BUFSIZE);
+  LCD_CS_OFF;
   #endif
 }
 

@@ -9,24 +9,24 @@
 
 //=============================================================================
 // Lcd vezérlö lábak hozzárendelése (A..M, 0..15)
-#define LCD_CS            B, 5
-#define LCD_RS            A, 0
-#define LCD_WR            A, 1
-#define LCD_RD            B, 1
-#define LCD_RST           B, 0
+#define LCD_CS            X, 0
+#define LCD_RS            X, 0
+#define LCD_WR            X, 0
+#define LCD_RD            X, 0
+#define LCD_RST           X, 0
 
 // Lcd adat lábak hozzárendelése (A..M, 0..15)
-#define LCD_D0            B, 8
-#define LCD_D1            B, 9
-#define LCD_D2            B, 10
-#define LCD_D3            B, 11
-#define LCD_D4            B, 12
-#define LCD_D5            B, 13
-#define LCD_D6            B, 14
-#define LCD_D7            B, 15
+#define LCD_D0            X, 0
+#define LCD_D1            X, 0
+#define LCD_D2            X, 0
+#define LCD_D3            X, 0
+#define LCD_D4            X, 0
+#define LCD_D5            X, 0
+#define LCD_D6            X, 0
+#define LCD_D7            X, 0
 
 // Háttérvilágitás vezérlés (opcionális, láb hozzárendelés és aktiv állapot)
-#define LCD_BL            C, 13
+#define LCD_BL            X, 0
 #define LCD_BLON          0
 
 /*-----------------------------------------------------------------------------
@@ -41,11 +41,11 @@ A kijelzön belül a következö lábak vannak párhuzamositva
    - 0: analog touchscreen driver nem lesz használva
    - 1..3: a használni kivánt A/D konverter száma
 */
-#define TS_ADC            1
+#define TS_ADC            0
 
 // Itt kell megadni, hogy melyik csatornát kiválasztva lehet az adott lábat az AD bemenetére kapcsolni
 #define TS_XM_ADCCH       0
-#define TS_YP_ADCCH       1
+#define TS_YP_ADCCH       0
 
 /* nsec nagyságrendü várakozás az LCD irási és az olvasási impulzusnál és a touchscreen AD átalakitonál
    - kezdö értéknek érdemes 10 illetve 500-bol elindulni, aztán lehet csökkenteni a sebesség növelése érdekében
