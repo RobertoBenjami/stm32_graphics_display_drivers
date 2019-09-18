@@ -24,7 +24,7 @@
 #define LCD_SPI_SPD_READ  3
 
 /* SPI láb melyik alternativ funkciohoz tartozik (0..15), (csak hardver SPI) */
-#define LCD_SPI_AFR       5
+#define LCD_SPI_AFR       0
 
 /* Lcd vezérlö lábak hozzárendelése ((A..M, 0..15)
    - LCD_RST megadása nem kötelezö (X, 0)
@@ -53,8 +53,8 @@
    - 0..7: DMA csatorna (DMA request mapping)
    - 0..7: Stream (DMA request mapping)
    - 1..3: DMA prioritás (0=low..3=very high) */
-#define LCD_DMA_TX        0, 0, 4, 0
-#define LCD_DMA_RX        0, 0, 3, 2
+#define LCD_DMA_TX        0, 0, 0, 0
+#define LCD_DMA_RX        0, 0, 0, 0
 
 /* DMA RX buffer [byte] (csak a ...24to16 függvények esetében lesz használatban) */
 #define LCD_DMA_RX_BUFSIZE  256
@@ -62,4 +62,4 @@
 /* DMA RX buffer helye
    - 0: stack
    - 1: static buffer */
-#define LCD_DMA_RX_BUFMODE 1
+#define LCD_DMA_RX_BUFMODE 0

@@ -14,7 +14,7 @@
    - 0: csak SPI TX (csak irni lehet a kijelzöt, LCD_MISO lábat nem szükséges megadni, nem lesz használatban)
    - 1: half duplex (LCD_MOSI láb két irányban lesz müködtetve, LCD_MISO láb nem lesz használva)
    - 2: full duplex (SPI TX: LCD_MOSI, SPI RX: LCD_MISO) */
-#define LCD_SPI_MODE      1
+#define LCD_SPI_MODE      0
 
 /* SPI sebessége
    - szoftver SPI: 0..
@@ -62,4 +62,4 @@
 /* DMA RX buffer helye
    - 0: stack
    - 1: static buffer */
-#define LCD_DMA_RX_BUFMODE 1
+#define LCD_DMA_RX_BUFMODE 0
