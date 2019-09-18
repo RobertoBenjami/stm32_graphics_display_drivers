@@ -9,10 +9,12 @@
 /* Freertos alatt lehetséges Task02 teljesitményének mérése
    - 0: mérés ki
    - 1: mérés be */
-#define POWERMETER    0
+#define POWERMETER    1
 
 /* Tesztfoto */
 #define rombitmap  beer_60x100_16
+#define ROMBITMAP_WIDTH  60
+#define ROMBITMAP_HEIGHT 100
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,25 +27,21 @@
 /* BSP_LCD_... */
 #include "stm32_adafruit_lcd.h"
 
+extern LCD_DrvTypeDef  *lcd_drv;
+
 //-----------------------------------------------------------------------------
 // freertos vs HAL
 #ifdef  osCMSIS
 #define Delay(t)              osDelay(t)
 #define GetTime()             osKernelSysTick()
 
-volatile uint32_t task02_count = 0, task02_reset = 0, task02_run = 0;
-volatile uint32_t task02_powermin = 0, task02_powermax = 0, task02_poweravg = 0;
+volatile uint32_t task02_count = 0, task02_run = 0;
+volatile uint32_t task02_power = 0;
 
 #if     POWERMETER == 1
-#define POWERMETER_RUN        task02_run = 1
-#define POWERMETER_STOP       task02_run = 0
-#define POWERMETER_PRINT      {             \
-  if(task02_powermin != 0xFFFFFFFF)         \
-    printf("Pp min:%d, max:%d, avg:%d\r\n", \
-           (unsigned int)task02_powermin,   \
-           (unsigned int)task02_powermax,   \
-           (unsigned int)task02_poweravg);  \
-  task02_reset = 1;                         }
+#define POWERMETER_START      task02_count = 0; task02_run = 1;
+#define POWERMETER_STOP       task02_power = task02_count; task02_run = 0;
+#define POWERMETER_PRINT      Delay(10); printf("Idletask power: %d (%d/ms)\r\n\r\n", (unsigned int)task02_power, (int)(task02_power / t))
 #endif
 
 osTimerId myTimer01Handle;
@@ -54,8 +52,8 @@ void cbTimer(void const * argument);
 #define GetTime()             HAL_GetTick()
 #endif
 
-#ifndef POWERMETER_RUN
-#define POWERMETER_RUN
+#ifndef POWERMETER_START
+#define POWERMETER_START
 #define POWERMETER_STOP
 #define POWERMETER_PRINT
 #endif
@@ -75,7 +73,7 @@ void cbTimer(void const * argument);
 #endif
 
 extern const BITMAPSTRUCT rombitmap;
-uint16_t bitmap[60 * 100];
+uint16_t bitmap[ROMBITMAP_WIDTH * ROMBITMAP_HEIGHT];
 
 //-----------------------------------------------------------------------------
 uint32_t ClearTest(void)
@@ -359,12 +357,8 @@ void mainApp(void)
 
   Delay(100);
   printf("Display ID = %X\r\n", (unsigned int)BSP_LCD_ReadID());
-  POWERMETER_RUN;
-  Delay(100);
-  POWERMETER_STOP;
-  POWERMETER_PRINT;
 
-  #if 0
+  #if 1
   BSP_LCD_Clear(LCD_COLOR_BLACK);
   Delay(1000);
   t = ReadPixelTest(1);
@@ -376,14 +370,23 @@ void mainApp(void)
   {
     _impure_ptr->_r48->_rand_next = 0;
 
-    POWERMETER_RUN;
+    Delay(100);
+    t = 300;
+    POWERMETER_START;
+    Delay(t);
+    POWERMETER_STOP;
+    printf("\r\nDelay 300\r\n");
+    POWERMETER_PRINT;
+    Delay(1000);
+
+    POWERMETER_START;
     t = ClearTest();
     POWERMETER_STOP;
     printf("Clear Test: %d ms\r\n", (int)t);
     POWERMETER_PRINT;
     Delay(1000);
 
-    POWERMETER_RUN;
+    POWERMETER_START;
     t = PixelTest(100000);
     POWERMETER_STOP;
     printf("Pixel Test: %d ms\r\n", (int)t);
@@ -391,7 +394,7 @@ void mainApp(void)
     Delay(1000);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
-    POWERMETER_RUN;
+    POWERMETER_START;
     t = LineTest(1000);
     POWERMETER_STOP;
     printf("Line Test: %d ms\r\n", (int)t);
@@ -399,7 +402,7 @@ void mainApp(void)
     Delay(1000);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
-    POWERMETER_RUN;
+    POWERMETER_START;
     t = FillRectTest(250);
     POWERMETER_STOP;
     printf("Fill Rect Test: %d ms\r\n", (int)t);
@@ -407,7 +410,7 @@ void mainApp(void)
     Delay(1000);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
-    POWERMETER_RUN;
+    POWERMETER_START;
     t = CircleTest(1000);
     POWERMETER_STOP;
     printf("Circle Test: %d ms\r\n", (int)t);
@@ -415,7 +418,7 @@ void mainApp(void)
     Delay(1000);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
-    POWERMETER_RUN;
+    POWERMETER_START;
     t = FillCircleTest(250);
     POWERMETER_STOP;
     printf("Fill Circle Test: %d ms\r\n", (int)t);
@@ -423,7 +426,7 @@ void mainApp(void)
     Delay(1000);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
-    POWERMETER_RUN;
+    POWERMETER_START;
     t = CharTest(5000);
     POWERMETER_STOP;
     printf("Char Test: %d ms\r\n", (int)t);
@@ -431,7 +434,7 @@ void mainApp(void)
     Delay(1000);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
-    POWERMETER_RUN;
+    POWERMETER_START;
     t = BitmapTest(100);
     POWERMETER_STOP;
     printf("Bitmap Test: %d ms\r\n", (int)t);
@@ -439,7 +442,7 @@ void mainApp(void)
     Delay(1000);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
-    POWERMETER_RUN;
+    POWERMETER_START;
     t = ReadPixelTest(20);
     POWERMETER_STOP;
     printf("ReadPixel Test: %d ms\r\n", (int)t);
@@ -447,7 +450,7 @@ void mainApp(void)
     Delay(1000);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
-    POWERMETER_RUN;
+    POWERMETER_START;
     t = ReadImageTest(20);
     POWERMETER_STOP;
     printf("ReadImage Test: %d ms\r\n", (int)t);
@@ -455,7 +458,7 @@ void mainApp(void)
     Delay(1000);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
-    POWERMETER_RUN;
+    POWERMETER_START;
     t = ColorTest();
     POWERMETER_STOP;
     printf("Color Test: %d ms\r\n", (int)t);
@@ -476,47 +479,11 @@ void mainApp(void)
 //-----------------------------------------------------------------------------
 void StartTask02(void const * argument)
 {
-  osTimerDef(myTimer01, cbTimer);
-  myTimer01Handle = osTimerCreate(osTimer(myTimer01), osTimerPeriodic, NULL);
-  osTimerStart(myTimer01Handle, 100);
   for(;;)
   {
-    task02_count++;
+    if(task02_run)
+      task02_count++;
   }
 }
 
-//-----------------------------------------------------------------------------
-void cbTimer(void const * argument)
-{
-  static uint64_t task02_power = 0;
-  static uint32_t task02_measurenum = 1;
-  uint32_t t32;
-
-  if(task02_reset)
-  {
-    task02_reset = 0;
-    task02_power = 0;
-    task02_powermin = 0xFFFFFFFF;
-    task02_powermax = 0;
-    task02_poweravg = 0;
-    task02_measurenum = 0;
-    return;
-  }
-
-  t32 = task02_count;
-  task02_count = 0;
-
-  if(task02_run)
-  {
-    if(t32 < task02_powermin)
-      task02_powermin = t32;
-
-    if(t32 > task02_powermax)
-      task02_powermax = t32;
-
-    task02_power += t32;
-    task02_measurenum++;
-    task02_poweravg = task02_power / task02_measurenum;
-  }
-}
 #endif
