@@ -358,14 +358,6 @@ void mainApp(void)
   Delay(100);
   printf("Display ID = %X\r\n", (unsigned int)BSP_LCD_ReadID());
 
-  #if 1
-  BSP_LCD_Clear(LCD_COLOR_BLACK);
-  Delay(1000);
-  t = ReadPixelTest(1);
-  t = ReadImageTest(1);
-  Delay(1000);
-  #endif
-
   while(1)
   {
     _impure_ptr->_r48->_rand_next = 0;
