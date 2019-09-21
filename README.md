@@ -41,6 +41,7 @@ App:
 - Paint: Arduino paint clone
 
 How to use starting from zero?
+( https://www.youtube.com/watch?v=4NZ1VwuQWhw&feature=youtu.be )
 1. Create project for Cubemex
    - setting the RCC (Crystal/ceramic resonator)
    - setting the debug (SYS / serial wire or trace assyn sw)
