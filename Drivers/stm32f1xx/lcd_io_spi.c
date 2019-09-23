@@ -21,6 +21,8 @@
 #define RD(a)                 __REVSH(a)
 #endif
 
+#define DMA_MAXSIZE           0xFFFE
+
 //-----------------------------------------------------------------------------
 /* Link function for LCD peripheral */
 void  LCD_Delay (uint32_t delay);
@@ -535,10 +537,10 @@ volatile uint16_t tmp16;
     while(DMAX_CHANNEL(LCD_DMA_TX)->CCR & DMA_CCR_EN);                          \
     DMAX_CHANNEL(LCD_DMA_TX)->CMAR = (uint32_t)a;                               \
     DMAX_CHANNEL(LCD_DMA_TX)->CPAR = (uint32_t)&SPIX->DR;                       \
-    if(b > 0xFFFF)                                                              \
+    if(b > DMA_MAXSIZE)                                                              \
     {                                                                           \
-      DMAX_CHANNEL(LCD_DMA_TX)->CNDTR = 0xFFFF;                                 \
-      b -= 0xFFFF;                                                              \
+      DMAX_CHANNEL(LCD_DMA_TX)->CNDTR = DMA_MAXSIZE;                                 \
+      b -= DMA_MAXSIZE;                                                              \
     }                                                                           \
     else                                                                        \
     {                                                                           \

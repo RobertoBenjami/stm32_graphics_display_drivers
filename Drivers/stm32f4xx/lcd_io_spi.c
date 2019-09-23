@@ -20,7 +20,7 @@
 #define RD(a)                 __REVSH(a)
 #endif
 
-#define DMA_MAXSIZE           0x0100
+#define DMA_MAXSIZE           0xFFFE
 
 //-----------------------------------------------------------------------------
 /* Link function for LCD peripheral */
