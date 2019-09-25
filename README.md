@@ -47,6 +47,7 @@ How to use starting from zero?
    - setting the debug (SYS / serial wire or trace assyn sw)
    - setting the timebase source (i like the basic timer for this)
    - if FSMC : setting the FSMC (chip select, memory type = LCD, Lcd reg select, data = 8 bits, timing)
+   - setting the clock configuration
    - project settings: toolchain = truestudio, stack size = 0x800
    - generate source code
 2. Truestudio
@@ -63,6 +64,7 @@ How to use starting from zero?
    - copy io driver to Lcd folder (lcd_io_...h / c or lcdts_io...h / c)
    - copy lcd driver to Lcd folder (st7735.h / c or ili9325.h /c or...)
    - setting the configuration the io driver header file (pin settings)
+   - setting the LCD configuration (orientation, touchscreen)
    - add include path : Src/Lcd
    - comple ...
    
