@@ -4,7 +4,7 @@
  */
 
 //=============================================================================
-// Lcd vezérlö lábak hozzárendelése (A..M, 0..15)
+// Lcd vezérlö lábak hozzárendelése (A..M, 0..15) (RST láb opcionális)
 #define LCD_CS            X, 0
 #define LCD_RS            X, 0
 #define LCD_WR            X, 0
@@ -26,10 +26,11 @@
 #define LCD_BLON          0
 
 /* nsec nagyságrendü várakozás az LCD irási és az olvasási impulzusnál
-   - kezdö értéknek érdemes 10-bol elindulni, aztán lehet csökkenteni a sebesség növelése érdekében
+   - kezdö értéknek érdemes 10, 20-bol elindulni, aztán lehet csökkenteni a sebesség növelése érdekében
      (az érték függ a processzor orajelétöl és az LCD kijelzö sebességétöl is)
 */
-#define LCD_IO_RW_DELAY   1
+#define LCD_WRITE_DELAY   10
+#define LCD_READ_DELAY    20
 
 /*=============================================================================
 I/O csoport optimalizáció, hogy ne bitenként történjenek a GPIO mûveletek:

@@ -1,5 +1,3 @@
-/* Half completed! */
-
 /*
  * 8 bites párhuzamos LCD/TOUCH GPIO driver STM32F3-ra
  * 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
