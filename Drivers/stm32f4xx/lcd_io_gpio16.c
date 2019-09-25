@@ -1,10 +1,10 @@
 /*
  * 16 bites párhuzamos LCD GPIO driver STM32F4-re
- * 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
+ * 5 vezárlöláb (CS, RS, WR, RD, RST) + 16 adatláb + háttérvilágitás vezérlés
  */
 
 /* Készitö: Roberto Benjami
-   verzio:  2019.07
+   verzio:  2019.09
 
    Megj:
    Minden függvány az adatlábak irányát WRITE üzemmodban hagyja, igy nem kell minden irási
@@ -12,8 +12,8 @@
 */
 
 /* CS láb vezérlési stratégia
-   - 0: CS láb minden irás/olvasás müvelet során állitva van (igy a touchscreen olvasásakor nem szükséges lekapcsolni
-   - 1: CS láb folyamatosan 0-ba van állitva (a touchscreen olvasásakor ezért le kell kapcsolni)
+   - 0: CS láb minden irás/olvasás müvelet során állitva van
+   - 1: CS láb folyamatosan 0-ba van állitva
 */
 #define  LCD_CS_MODE          0
 
@@ -268,21 +268,38 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #endif
 
 //-----------------------------------------------------------------------------
+/* Write / Read spd */
+#if     LCD_WRITE_DELAY == 0
+#define LCD_WR_DELAY
+#elif   LCD_WRITE_DELAY == 1
+#define LCD_WR_DELAY          GPIOX_ODR(LCD_WR) = 0
+#else
+#define LCD_WR_DELAY          LCD_IO_Delay(LCD_WRITE_DELAY - 2)
+#endif
+
+#if     LCD_READ_DELAY == 0
+#define LCD_RD_DELAY
+#elif   LCD_READ_DELAY == 1
+#define LCD_RD_DELAY          GPIOX_ODR(LCD_RD) = 0
+#else
+#define LCD_RD_DELAY          LCD_IO_Delay(LCD_READ_DELAY - 2)
+#endif
+
 #define LCD_DUMMY_READ {          \
   GPIOX_ODR(LCD_RD) = 0;          \
-  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
+  LCD_RD_DELAY;                   \
   GPIOX_ODR(LCD_RD) = 1;          }
 
 #define LCD_DATA16_WRITE(dt) {    \
   lcd_data16 = dt;                \
   LCD_WRITE(lcd_data16);          \
   GPIOX_ODR(LCD_WR) = 0;          \
-  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
+  LCD_WR_DELAY;                   \
   GPIOX_ODR(LCD_WR) = 1;          }
 
 #define LCD_DATA16_READ(dt) {     \
   GPIOX_ODR(LCD_RD) = 0;          \
-  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
+  LCD_RD_DELAY;                   \
   LCD_READ(lcd_data16);           \
   dt = lcd_data16;                \
   GPIOX_ODR(LCD_RD) = 1;          }
@@ -290,7 +307,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define LCD_CMD16_WRITE(cmd16)  {LCD_RS_CMD; LCD_DATA16_WRITE(cmd16); LCD_RS_DATA; }
 
 // 8 bites lábakra másolando adat, illetve olvasáskor ide kerül az aktuális adat
-uint16_t  lcd_data16;
+volatile uint16_t  lcd_data16;
 
 //-----------------------------------------------------------------------------
 #pragma GCC push_options
@@ -311,7 +328,6 @@ void LCD_Delay(uint32_t Delay)
 void LCD_IO_Bl_OnOff(uint8_t Bl)
 {
   #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12)
-//  #ifdef LCD_BL
   if(Bl)
     GPIOX_ODR(LCD_BL) = LCD_BLON;
   else
@@ -322,14 +338,25 @@ void LCD_IO_Bl_OnOff(uint8_t Bl)
 //-----------------------------------------------------------------------------
 void LCD_IO_Init(void)
 {
+  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
   RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_WR) | GPIOX_CLOCK(LCD_RD) | GPIOX_CLOCK_LCD_RST |
                    GPIOX_CLOCK(LCD_D0) | GPIOX_CLOCK(LCD_D1) | GPIOX_CLOCK(LCD_D2) | GPIOX_CLOCK(LCD_D3) |
                    GPIOX_CLOCK(LCD_D4) | GPIOX_CLOCK(LCD_D5) | GPIOX_CLOCK(LCD_D6) | GPIOX_CLOCK(LCD_D7) |
                    GPIOX_CLOCK(LCD_D8) | GPIOX_CLOCK(LCD_D9) | GPIOX_CLOCK(LCD_D10)| GPIOX_CLOCK(LCD_D11)|
                    GPIOX_CLOCK(LCD_D12)| GPIOX_CLOCK(LCD_D13)| GPIOX_CLOCK(LCD_D15)| GPIOX_CLOCK(LCD_D15));
+  LCD_RST_OFF;
+  GPIOX_OSPEEDR(MODE_SPD_LOW, LCD_RST);
+  GPIOX_MODER(MODE_OUT, LCD_RST);
+  #else
+  RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_WR) | GPIOX_CLOCK(LCD_RD) |
+                   GPIOX_CLOCK(LCD_D0) | GPIOX_CLOCK(LCD_D1) | GPIOX_CLOCK(LCD_D2) | GPIOX_CLOCK(LCD_D3) |
+                   GPIOX_CLOCK(LCD_D4) | GPIOX_CLOCK(LCD_D5) | GPIOX_CLOCK(LCD_D6) | GPIOX_CLOCK(LCD_D7) |
+                   GPIOX_CLOCK(LCD_D8) | GPIOX_CLOCK(LCD_D9) | GPIOX_CLOCK(LCD_D10)| GPIOX_CLOCK(LCD_D11)|
+                   GPIOX_CLOCK(LCD_D12)| GPIOX_CLOCK(LCD_D13)| GPIOX_CLOCK(LCD_D15)| GPIOX_CLOCK(LCD_D15));
+  #endif
 
   #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12)
-  RCC->APB2ENR |= GPIOX_CLOCK(LCD_BL);
+  RCC->AHB1ENR |= GPIOX_CLOCK(LCD_BL);
   GPIOX_ODR(LCD_BL) = LCD_BLON;
   GPIOX_MODER(MODE_OUT, LCD_BL);
   #endif
@@ -339,15 +366,11 @@ void LCD_IO_Init(void)
   LCD_RS_DATA;                          // RS = 1
   GPIOX_ODR(LCD_WR) = 1;                // WR = 1
   GPIOX_ODR(LCD_RD) = 1;                // RD = 1
-  LCD_RST_OFF;                          // RST = 1
 
   GPIOX_MODER(MODE_OUT, LCD_CS);
   GPIOX_MODER(MODE_OUT, LCD_RS);
   GPIOX_MODER(MODE_OUT, LCD_WR);
   GPIOX_MODER(MODE_OUT, LCD_RD);
-  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
-  GPIOX_MODER(MODE_OUT, LCD_RST);
-  #endif
 
   LCD_DIRWRITE;                         // adatlábak kimenetre állitása
 
@@ -356,9 +379,6 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_RS);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_WR);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_RD);
-  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
-  GPIOX_OSPEEDR(MODE_SPD_LOW, LCD_RST);
-  #endif
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D0);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D1);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D2);
@@ -377,11 +397,17 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D15);
 
   /* Set or Reset the control line */
+  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
   LCD_Delay(1);
   LCD_RST_ON;                           // RST = 0
   LCD_Delay(1);
   LCD_RST_OFF;                          // RST = 1
+  #endif
   LCD_Delay(1);
+
+  #if  LCD_CS_MODE == 1
+  GPIOX_ODR(LCD_CS) = 0;                // CS = 0
+  #endif
 }
 
 //-----------------------------------------------------------------------------
@@ -535,8 +561,11 @@ void LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, 
 //-----------------------------------------------------------------------------
 void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
 {
-  uint8_t  rgb888[3];
-  uint16_t d16;
+  union packed
+  {
+    uint8_t  rgb888[6];
+    uint16_t rgb888_16[3];
+  }u;
   LCD_CS_ON;
   LCD_CMD16_WRITE((uint8_t)Cmd);
   LCD_DIRREAD;
@@ -544,13 +573,27 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
     LCD_DUMMY_READ;
   while(Size--)
   {
-    LCD_DATA16_READ(d16);
-    rgb888[1] = (uint8_t)d16;
-    LCD_DATA16_READ(d16);
-    rgb888[0] = (uint8_t)d16;
-    LCD_DATA16_READ(d16);
-    rgb888[2] = (uint8_t)d16;
-    *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    LCD_DATA16_READ(u.rgb888_16[0]);
+    LCD_DATA16_READ(u.rgb888_16[1]);
+    LCD_DATA16_READ(u.rgb888_16[2]);
+    #if LCD_REVERSE16 == 0
+    *pData = ((u.rgb888[1] & 0b11111000) << 8 | (u.rgb888[0] & 0b11111100) << 3 | u.rgb888[3] >> 3);
+    #endif
+    #if LCD_REVERSE16 == 1
+    *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    #endif
+    pData++;
+    if(Size)
+    {
+      #if LCD_REVERSE16 == 0
+      *pData = ((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      #endif
+      #if LCD_REVERSE16 == 1
+      *pData = __REVSH((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      #endif
+      pData++;
+      Size--;
+    }
   }
   LCD_CS_OFF;
   LCD_DIRWRITE;
@@ -597,8 +640,11 @@ void LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size
 //-----------------------------------------------------------------------------
 void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
 {
-  uint8_t  rgb888[3];
-  uint16_t d16;
+  union packed
+  {
+    uint8_t  rgb888[6];
+    uint16_t rgb888_16[3];
+  }u;
   LCD_CS_ON;
   LCD_CMD16_WRITE(Cmd);
   LCD_DIRREAD;
@@ -606,13 +652,27 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
     LCD_DUMMY_READ;
   while(Size--)
   {
-    LCD_DATA16_READ(d16);
-    rgb888[1] = (uint8_t)d16;
-    LCD_DATA16_READ(d16);
-    rgb888[0] = (uint8_t)d16;
-    LCD_DATA16_READ(d16);
-    rgb888[2] = (uint8_t)d16;
-    *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    LCD_DATA16_READ(u.rgb888_16[0]);
+    LCD_DATA16_READ(u.rgb888_16[1]);
+    LCD_DATA16_READ(u.rgb888_16[2]);
+    #if LCD_REVERSE16 == 0
+    *pData = ((u.rgb888[1] & 0b11111000) << 8 | (u.rgb888[0] & 0b11111100) << 3 | u.rgb888[3] >> 3);
+    #endif
+    #if LCD_REVERSE16 == 1
+    *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    #endif
+    pData++;
+    if(Size)
+    {
+      #if LCD_REVERSE16 == 0
+      *pData = ((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      #endif
+      #if LCD_REVERSE16 == 1
+      *pData = __REVSH((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      #endif
+      pData++;
+      Size--;
+    }
   }
   LCD_CS_OFF;
   LCD_DIRWRITE;
