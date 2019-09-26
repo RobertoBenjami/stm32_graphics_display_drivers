@@ -333,8 +333,8 @@ typedef struct
 #define DMAX_IFCR_CFEIF(a)              DMAX_IFCR_CFEIF_(a)
 
 #if DMANUM(LCD_DMA) > 0
-/* SPI DMA WRITE(a: src data pointer, b: target data pointer, c: source increment, d: target increment,
-                 e: number of data, f: 0=8 bit, 1=16bit */
+/* mem to mem DMA copy(a: src data pointer, b: target data pointer, c: source increment, d: target increment,
+                       e: number of data, f: 0=8 bit, 1=16bit */
 #define LCD_FSMC_DMA(a, b, c, d, e, f) {                                        \
   while(e)                                                                      \
   {                                                                             \
