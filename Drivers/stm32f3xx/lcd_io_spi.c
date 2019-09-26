@@ -175,13 +175,8 @@ void  LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t
 #define LCD_RS_DATA           GPIOX_SET(LCD_RS)
 
 /* Reset láb aktiv/passziv */
-#if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
 #define LCD_RST_ON            GPIOX_CLR(LCD_RST)
 #define LCD_RST_OFF           GPIOX_SET(LCD_RST)
-#else
-#define LCD_RST_ON
-#define LCD_RST_OFF
-#endif
 
 /* Chip select láb */
 #define LCD_CS_ON             GPIOX_CLR(LCD_CS)

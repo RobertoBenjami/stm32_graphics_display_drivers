@@ -2,22 +2,15 @@
 5 vezárlöláb (CS, RS, WR, RD, RST) + 16 adatláb
 
 Kászitö: Roberto Benjami
-verzio:  2019.02 */
+verzio:  2019.09 */
 
 #include "main.h"
 #include "lcd.h"
 #include "lcd_io_fsmc16.h"
 
-#define LCD_ADDR_DATA         (LCD_ADDR_BASE + (1 << (LCD_REGSELECT_BIT + 1)) - 2)
+#define  LCD_ADDR_DATA       (LCD_ADDR_BASE + (1 << (LCD_REGSELECT_BIT + 2)) - 2)
 
-/* Mivel nincs globálisan felcserélve a 16bites LCD változok, ezért itt kell cserélni */
-#if LCD_REVERSE16 == 0
-#define RD(a)                 a
-#endif
-
-#if LCD_REVERSE16 == 1
-#define RD(a)                 __REVSH(a)
-#endif
+#define  DMA_MAXSIZE         0xFFFE
 
 /* Link function for LCD peripheral */
 void     LCD_Delay (uint32_t delay);
@@ -58,7 +51,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define MODE_PU_UP            0x1
 #define MODE_PU_DOWN          0x2
 
-#define BITBAND_ACCESS(variable, bitnumber) *(volatile uint32_t*)(((uint32_t)&variable & 0xF0000000) + 0x2000000 + (((uint32_t)&variable & 0x000FFFFF) << 5) + (bitnumber << 2))
+#define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
 
 #define GPIOX_PORT_(a, b)     GPIO ## a
 #define GPIOX_PORT(a)         GPIOX_PORT_(a)
@@ -110,15 +103,6 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define GPIOX_PORTNAME_(a, b) a
 #define GPIOX_PORTNUM(a)      GPIOX_PORTNUM_(a)
 #define GPIOX_PORTNAME(a)     GPIOX_PORTNAME_(a)
-
-// Reset láb aktiv/passziv
-#if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
-#define LCD_RST_ON            GPIOX_ODR(LCD_RST) = 0
-#define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
-#else
-#define LCD_RST_ON
-#define LCD_RST_OFF
-#endif
 
 //-----------------------------------------------------------------------------
 #define DMA_ISR_TCIF0_Pos       (5U)
@@ -358,10 +342,10 @@ typedef struct
     DMAX_IFCR(LCD_DMA) = DMAX_IFCR_CTCIF(LCD_DMA);                              \
     DMAX_STREAMX(LCD_DMA)->PAR = (uint32_t)a;                                   \
     DMAX_STREAMX(LCD_DMA)->M0AR = (uint32_t)b;                                  \
-    if(e > 0xFFFF)                                                              \
+    if(e > DMA_MAXSIZE)                                                              \
     {                                                                           \
       DMAX_STREAMX(LCD_DMA)->NDTR = 0xFFFF;                                     \
-      e -= 0xFFFF;                                                              \
+      e -= DMA_MAXSIZE;                                                              \
     }                                                                           \
     else                                                                        \
     {                                                                           \
@@ -377,7 +361,6 @@ typedef struct
     WAIT_FOR_DMA_END;                                                           \
   }                                                                             }
 #endif
-
 
 //-----------------------------------------------------------------------------
 #if DMANUM(LCD_DMA) > 0
@@ -405,6 +388,10 @@ void DMAX_STREAMX_IRQHANDLER(LCD_DMA)(void)
   }
 }
 #endif
+
+// Reset láb aktiv/passziv
+#define LCD_RST_ON            GPIOX_ODR(LCD_RST) = 0
+#define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
 
 //-----------------------------------------------------------------------------
 #pragma GCC push_options
@@ -437,22 +424,24 @@ void LCD_IO_Init(void)
 {
   // GPIO Ports Clock Enable
   #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
-  RCC->APB2ENR |= GPIOX_CLOCK(LCD_RST);
+  RCC->AHB1ENR |= GPIOX_CLOCK(LCD_RST);
   GPIOX_MODER(MODE_OUT, LCD_RST);       // RST = GPIO OUT
   GPIOX_ODR(LCD_RST) = 1;               // RST = 1
   #endif
 
   #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12)
-  RCC->APB2ENR |= GPIOX_CLOCK(LCD_BL);
+  RCC->AHB1ENR |= GPIOX_CLOCK(LCD_BL);
   GPIOX_ODR(LCD_BL) = LCD_BLON;
   GPIOX_MODER(MODE_OUT, LCD_BL);
   #endif
 
   /* Set or Reset the control line */
+  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
   LCD_Delay(1);
   LCD_RST_ON;
   LCD_Delay(1);
   LCD_RST_OFF;
+  #endif
   LCD_Delay(1);
 
   #if DMANUM(LCD_DMA) == 1
@@ -497,15 +486,14 @@ void LCD_IO_WriteData16(uint16_t Data)
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd8DataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
 {
-  uint16_t d = RD(Data);
   *(volatile uint16_t *)LCD_ADDR_BASE = (uint16_t)Cmd;
 
   #if DMANUM(LCD_DMA) == 0
   while(Size--)
-    *(volatile uint16_t *)LCD_ADDR_DATA = d;
+    *(volatile uint16_t *)LCD_ADDR_DATA = Data;
 
   #else
-  LCD_FSMC_DMA(&d, LCD_ADDR_DATA, 0, 0, Size, 1);
+  LCD_FSMC_DMA(&Data, LCD_ADDR_DATA, 0, 0, Size, 1);
   #endif
 }
 
@@ -547,14 +535,13 @@ void LCD_IO_WriteCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
 void LCD_IO_WriteCmd16DataFill16(uint16_t Cmd, uint16_t Data, uint32_t Size)
 {
   *(volatile uint16_t *)LCD_ADDR_BASE = Cmd;
-  uint16_t d = RD(Data);
 
   #if DMANUM(LCD_DMA) == 0
   while(Size--)
-    *(volatile uint16_t *)LCD_ADDR_DATA = d;
+    *(volatile uint16_t *)LCD_ADDR_DATA = Data;
 
   #else
-  LCD_FSMC_DMA(&d, LCD_ADDR_DATA, 0, 0, Size, 1);
+  LCD_FSMC_DMA(&Data, LCD_ADDR_DATA, 0, 0, Size, 1);
   #endif
 }
 
@@ -648,8 +635,11 @@ void LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, 
 //-----------------------------------------------------------------------------
 void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
 {
-  uint8_t  rgb888[3];
-  uint16_t d16;
+  union packed
+  {
+    uint8_t  rgb888[6];
+    uint16_t rgb888_16[3];
+  }u;
 
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
@@ -663,20 +653,28 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
 
   while(Size--)
   {
-    d16 = *(volatile uint16_t*)LCD_ADDR_DATA;
-    rgb888[1] = (uint8_t)d16;
-    d16 = *(volatile uint16_t*)LCD_ADDR_DATA;
-    rgb888[0] = (uint8_t)d16;
-    d16 = *(volatile uint16_t*)LCD_ADDR_DATA;
-    rgb888[2] = (uint8_t)d16;
+    u.rgb888_16[0] = *(volatile uint16_t*)LCD_ADDR_DATA;
+    u.rgb888_16[1] = *(volatile uint16_t*)LCD_ADDR_DATA;
+    u.rgb888_16[2] = *(volatile uint16_t*)LCD_ADDR_DATA;
 
     #if LCD_REVERSE16 == 0
-    *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = ((u.rgb888[1] & 0b11111000) << 8 | (u.rgb888[0] & 0b11111100) << 3 | u.rgb888[3] >> 3);
     #endif
     #if LCD_REVERSE16 == 1
     *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
+    if(Size)
+    {
+      #if LCD_REVERSE16 == 0
+      *pData = ((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      #endif
+      #if LCD_REVERSE16 == 1
+      *pData = __REVSH((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      #endif
+      pData++;
+      Size--;
+    }
   }
 }
 
@@ -734,8 +732,11 @@ void LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size
 //-----------------------------------------------------------------------------
 void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
 {
-  uint8_t  rgb888[3];
-  uint16_t d16;
+  union packed
+  {
+    uint8_t  rgb888[6];
+    uint16_t rgb888_16[3];
+  }u;
 
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
@@ -749,19 +750,27 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
 
   while(Size--)
   {
-    d16 = *(volatile uint16_t*)LCD_ADDR_DATA;
-    rgb888[1] = (uint8_t)d16;
-    d16 = *(volatile uint16_t*)LCD_ADDR_DATA;
-    rgb888[0] = (uint8_t)d16;
-    d16 = *(volatile uint16_t*)LCD_ADDR_DATA;
-    rgb888[2] = (uint8_t)d16;
+    u.rgb888_16[0] = *(volatile uint16_t*)LCD_ADDR_DATA;
+    u.rgb888_16[1] = *(volatile uint16_t*)LCD_ADDR_DATA;
+    u.rgb888_16[2] = *(volatile uint16_t*)LCD_ADDR_DATA;
 
     #if LCD_REVERSE16 == 0
-    *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = ((u.rgb888[1] & 0b11111000) << 8 | (u.rgb888[0] & 0b11111100) << 3 | u.rgb888[3] >> 3);
     #endif
     #if LCD_REVERSE16 == 1
     *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
+    if(Size)
+    {
+      #if LCD_REVERSE16 == 0
+      *pData = ((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      #endif
+      #if LCD_REVERSE16 == 1
+      *pData = __REVSH((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      #endif
+      pData++;
+      Size--;
+    }
   }
 }

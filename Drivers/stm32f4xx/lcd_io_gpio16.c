@@ -60,13 +60,13 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define MODE_PU_UP            0x1
 #define MODE_PU_DOWN          0x2
 
-#define BITBAND_ACCESS(variable, bitnumber) *(volatile uint32_t*)(((uint32_t)&variable & 0xF0000000) + 0x2000000 + (((uint32_t)&variable & 0x000FFFFF) << 5) + (bitnumber << 2))
+#define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
 
 #define GPIOX_PORT_(a, b)     GPIO ## a
 #define GPIOX_PORT(a)         GPIOX_PORT_(a)
 
 #define GPIOX_PIN_(a, b)      b
-#define GPIOX_PIN(x)          GPIOX_PIN_(x)
+#define GPIOX_PIN(a)          GPIOX_PIN_(a)
 
 #define GPIOX_MODER_(a,b,c)   GPIO ## b->MODER = (GPIO ## b->MODER & ~(3 << (2 * c))) | (a << (2 * c));
 #define GPIOX_MODER(a, b)     GPIOX_MODER_(a, b)
@@ -108,10 +108,10 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define GPIOX_PORTTONUM_K     10
 #define GPIOX_PORTTONUM_L     11
 #define GPIOX_PORTTONUM_M     12
-#define GPIOX_PORTNUM_(p, m)  GPIOX_PORTTONUM_ ## p
-#define GPIOX_PORTNAME_(p, m) p
-#define GPIOX_PORTNUM(x)      GPIOX_PORTNUM_(x)
-#define GPIOX_PORTNAME(x)     GPIOX_PORTNAME_(x)
+#define GPIOX_PORTNUM_(a, b)  GPIOX_PORTTONUM_ ## a
+#define GPIOX_PORTNAME_(a, b) a
+#define GPIOX_PORTNUM(a)      GPIOX_PORTNUM_(a)
+#define GPIOX_PORTNAME(a)     GPIOX_PORTNAME_(a)
 
 //-----------------------------------------------------------------------------
 // Parancs/adat láb üzemmod
@@ -119,15 +119,8 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define LCD_RS_DATA           GPIOX_ODR(LCD_RS) = 1
 
 // Reset láb aktiv/passziv
-#if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
 #define LCD_RST_ON            GPIOX_ODR(LCD_RST) = 0
 #define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
-#define GPIOX_CLOCK_LCD_RST   GPIOX_CLOCK(LCD_RST)
-#else
-#define LCD_RST_ON
-#define LCD_RST_OFF
-#define GPIOX_CLOCK_LCD_RST   0
-#endif
 
 // Chip select láb
 #if  LCD_CS_MODE ==  0
@@ -339,7 +332,7 @@ void LCD_IO_Bl_OnOff(uint8_t Bl)
 void LCD_IO_Init(void)
 {
   #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
-  RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_WR) | GPIOX_CLOCK(LCD_RD) | GPIOX_CLOCK_LCD_RST |
+  RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_WR) | GPIOX_CLOCK(LCD_RD) | GPIOX_CLOCK(LCD_RST) |
                    GPIOX_CLOCK(LCD_D0) | GPIOX_CLOCK(LCD_D1) | GPIOX_CLOCK(LCD_D2) | GPIOX_CLOCK(LCD_D3) |
                    GPIOX_CLOCK(LCD_D4) | GPIOX_CLOCK(LCD_D5) | GPIOX_CLOCK(LCD_D6) | GPIOX_CLOCK(LCD_D7) |
                    GPIOX_CLOCK(LCD_D8) | GPIOX_CLOCK(LCD_D9) | GPIOX_CLOCK(LCD_D10)| GPIOX_CLOCK(LCD_D11)|

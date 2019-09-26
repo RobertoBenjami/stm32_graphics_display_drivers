@@ -293,8 +293,8 @@ uint16_t ili9341_GetLcdPixelHeight(void)
 uint16_t ili9341_ReadID(void)
 {
   uint32_t dt = 0;
-  LCD_IO_ReadCmd8MultipleData8(0x04, (uint8_t *)&dt, 4, 0);
-  if(dt == 0x009341)
+  LCD_IO_ReadCmd8MultipleData8(0xD3, (uint8_t *)&dt, 3, 1);
+  if(dt == 0x419300)
     return 0x9341;
   else
     return 0;
