@@ -5,27 +5,34 @@
 
 //=============================================================================
 /* Lcd vezérlö lábak hozzárendelése (A..M, 0..15) */
-#define LCD_CS            D, 7
-#define LCD_RS            D, 13
-#define LCD_WR            D, 5
-#define LCD_RD            D, 4
-#define LCD_RST           C, 5
+#define LCD_CS            X, 0
+#define LCD_RS            X, 0
+#define LCD_WR            X, 0
+#define LCD_RD            X, 0
+#define LCD_RST           X, 0
 
 /* Lcd adat lábak hozzárendelése (A..M, 0..15) */
-#define LCD_D0            D, 14
-#define LCD_D1            D, 15
-#define LCD_D2            D, 0
-#define LCD_D3            D, 1
-#define LCD_D4            E, 7
-#define LCD_D5            E, 8
-#define LCD_D6            E, 9
-#define LCD_D7            E, 10
+#define LCD_D0            X, 0
+#define LCD_D1            X, 0
+#define LCD_D2            X, 0
+#define LCD_D3            X, 0
+#define LCD_D4            X, 0
+#define LCD_D5            X, 0
+#define LCD_D6            X, 0
+#define LCD_D7            X, 0
 
 /* Háttérvilágitás vezérlés
    - BL: A..M, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
    - BL_ON: 0 vagy 1, a bekapcsolt állapothoz tartozó logikai szint */
-#define LCD_BL            B, 1
+#define LCD_BL            X, 0
 #define LCD_BLON          0
+
+/* nsec nagyságrendü várakozás az LCD irási és az olvasási impulzusnál
+   - kezdö értéknek érdemes 10, 20-bol elindulni, aztán lehet csökkenteni a sebesség növelése érdekében
+     (az értékek függnek a processzor orajelétöl és az LCD kijelzö sebességétöl is)
+*/
+#define LCD_WRITE_DELAY  10
+#define LCD_READ_DELAY   20
 
 /*=============================================================================
 I/O csoport optimalizáció, hogy ne bitenként történjenek a GPIO mûveletek:
@@ -35,7 +42,7 @@ Megj: ha az adat lábakat egy porton belül emelkedö sorrendben definiáljuk
 A lenti példa a következö lábakhoz optimalizál:
       LCD_D0<-D14, LCD_D1<-D15, LCD_D2<-D0, LCD_D3<-D1
       LCD_D4<-E7,  LCD_D5<-E8,  LCD_D6<-E9, LCD_D7<-E10 */
-#if 1
+#if 0
 // 8 adatláb kimenetre állítása (adatirány: STM32 -> LCD)
 #define LCD_DIRWRITE { \
 GPIOD->MODER = (GPIOD->MODER & ~((3 << 2 * 14) | (3 << 2 * 15) | (3 << 2 * 0) | (3 << 2 * 1)))  | \

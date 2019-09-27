@@ -11,13 +11,13 @@ Többszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások mege
 
 //=============================================================================
 /* Lcd vezérlö lábak hozzárendelése (A..M, 0..15, LCD_CS helye az FSMC által kötött) */
-#define LCD_CS            D, 7
-#define LCD_RST           C, 5
+#define LCD_CS            X, 0
+#define LCD_RST           X, 0
 
 /* Háttérvilágitás vezérlés
    - BL: A..M, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
    - BL_ON: 0 vagy 1, a bekapcsolt állapothoz tartozó logikai szint */
-#define LCD_BL            B, 1
+#define LCD_BL            X, 0
 #define LCD_BLON          0
 
 //=============================================================================
@@ -35,7 +35,7 @@ Többszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások mege
    - 0..7: DMA csatorna
    - 0..7: Stream
    - 1..3: DMA prioritás (0=low..3=very high) */
-#define LCD_DMA           2, 7, 7, 1
+#define LCD_DMA           0, 0, 0, 0
 
 /*=============================================================================
 Touch I/O lábak és A/D csatornák
@@ -52,20 +52,20 @@ A kijelzön belül a következö lábak vannak párhuzamositva:
 */
 #define TS_ADC            0
 
-// Ezen lábak helyzetét az FSMC vezérlö határozza meg
-#define TS_XM             D, 13
-#define TS_YP             D, 5
-#define TS_XP             E, 9
-#define TS_YM             E, 10
+// Ezen lábak helyzetét az FSMC vezérlö határozza meg (f407: D13, D5, E9, E10)
+#define TS_XM             X, 0
+#define TS_YP             X, 0
+#define TS_XP             X, 0
+#define TS_YM             X, 0
 
 // Mivel az FSMC lábai jellemzöen nem használhatoak AD bemenetként, párhuzamosan köthetjük valamelyik AD bemenetnek is használhato lábbal.
 // (ha nem adunk meg itt semmilyen lábat, akkor az LCD_RS és LCD_WR lesz a touchscreen kiválasztott AD lába)
-#define TS_XM_AN          A, 0
-#define TS_YP_AN          A, 1
+#define TS_XM_AN          X, 0
+#define TS_YP_AN          X, 0
 
 // Itt kell megadni, hogy melyik csatornát kiválasztva lehet az adott lábat az AD bemenetére kapcsolni
 #define TS_XM_ADCCH       0
-#define TS_YP_ADCCH       1
+#define TS_YP_ADCCH       0
 
 /* nsec nagyságrendü várakozás a touchscreen AD átalakitonál
    - kezdö értéknek érdemes 500-bol elindulni, aztán lehet csökkenteni a sebesség növelése érdekében

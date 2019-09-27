@@ -24,6 +24,10 @@ verzio:  2019.02 */
 #define RD(a)                 a
 #endif
 
+#define LCD_ADDR_DATA         (LCD_ADDR_BASE + (1 << (LCD_REGSELECT_BIT + 2)) - 2)
+
+#define DMA_MAXSIZE           0xFFFE
+
 /* Link function for LCD peripheral */
 void     LCD_Delay (uint32_t delay);
 void     LCD_IO_Init(void);
@@ -70,7 +74,7 @@ uint16_t TS_IO_GetZ2(void);
 #define MODE_PU_UP            0x1
 #define MODE_PU_DOWN          0x2
 
-#define BITBAND_ACCESS(variable, bitnumber) *(volatile uint32_t*)(((uint32_t)&variable & 0xF0000000) + 0x2000000 + (((uint32_t)&variable & 0x000FFFFF) << 5) + (bitnumber << 2))
+#define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
 
 #define GPIOX_PORT_(a, b)     GPIO ## a
 #define GPIOX_PORT(a)         GPIOX_PORT_(a)
@@ -361,10 +365,10 @@ typedef struct
     DMAX_IFCR(LCD_DMA) = DMAX_IFCR_CTCIF(LCD_DMA);                              \
     DMAX_STREAMX(LCD_DMA)->PAR = (uint32_t)a;                                   \
     DMAX_STREAMX(LCD_DMA)->M0AR = (uint32_t)b;                                  \
-    if(e > 0xFFFF)                                                              \
+    if(e > DMA_MAXSIZEF)                                                        \
     {                                                                           \
-      DMAX_STREAMX(LCD_DMA)->NDTR = 0xFFFF;                                     \
-      e -= 0xFFFF;                                                              \
+      DMAX_STREAMX(LCD_DMA)->NDTR = DMA_MAXSIZE;                                \
+      e -= DMA_MAXSIZE;                                                         \
     }                                                                           \
     else                                                                        \
     {                                                                           \
@@ -379,28 +383,22 @@ typedef struct
     DMAX_STREAMX(LCD_DMA)->CR |= DMA_SxCR_EN;                                   \
     WAIT_FOR_DMA_END;                                                           \
   }                                                                             }
-#endif
-
-
-//-----------------------------------------------------------------------------
-// Reset láb aktiv/passziv
-#define LCD_RST_ON            GPIOX_ODR(LCD_RST) = 0
-#define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
-
-#define LCD_ADDR_DATA         (LCD_ADDR_BASE + (1 << LCD_REGSELECT_BIT))
-
-#if DMANUM(LCD_DMA) > 0
 
 #ifdef  osFeature_Semaphore
 #define WAIT_FOR_DMA_END      osSemaphoreWait(BinarySemDmaHandle, osWaitForever)
 #define TCIE                  DMA_SxCR_TCIE
 #define LCD_DMA_IRQ
-#else
+#else   // #ifdef  osFeature_Semaphore
 #define WAIT_FOR_DMA_END      while(!(DMAX_ISR(LCD_DMA) & DMAX_ISR_TCIF(LCD_DMA)));
 #define TCIE                  0
-#endif
+#endif  // #else  osFeature_Semaphore
 
-#endif  // #if LCD_DMA == 1
+#endif  // #if LCD_DMA > 0
+
+//-----------------------------------------------------------------------------
+// Reset láb aktiv/passziv
+#define LCD_RST_ON            GPIOX_ODR(LCD_RST) = 0
+#define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
 
 //-----------------------------------------------------------------------------
 // Touch kiolvasásakor a chip select lábat és még néhány lábat le kell választani az FSMC-röl
@@ -437,7 +435,7 @@ typedef struct
     (GPIOX_PORTNUM(TS_YP) != GPIOX_PORTNUM(TS_YP_AN)) || (GPIOX_PIN(TS_YP) != GPIOX_PIN(TS_YP_AN))
 #define TS_AD_PIN_PARALELL
 #endif
-#endif
+#endif  // #ifdef  ADCX
 
 //-----------------------------------------------------------------------------
 #ifdef LCD_DMA_IRQ
@@ -483,9 +481,13 @@ void LCD_IO_Init(void)
 {
   // GPIO Ports Clock Enable
   #ifdef ADCX
-  RCC->APB2ENR |= GPIOX_CLOCK(LCD_RST) | GPIOX_CLOCK(TS_XM) | GPIOX_CLOCK(TS_XP) | GPIOX_CLOCK(TS_YM) | GPIOX_CLOCK(TS_YP);
-  #else
-  RCC->APB2ENR |= GPIOX_CLOCK(LCD_RST);
+  RCC->AHB1ENR |= GPIOX_CLOCK(TS_XM) | GPIOX_CLOCK(TS_XP) | GPIOX_CLOCK(TS_YM) | GPIOX_CLOCK(TS_YP);
+  #endif
+
+  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
+  RCC->AHB1ENR |= GPIOX_CLOCK(LCD_RST);
+  GPIOX_MODER(MODE_OUT, LCD_RST);       // RST = GPIO OUT
+  GPIOX_ODR(LCD_RST) = 1;               // RST = 1
   #endif
 
   #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12)
@@ -494,14 +496,13 @@ void LCD_IO_Init(void)
   GPIOX_MODER(MODE_OUT, LCD_BL);
   #endif
 
-  GPIOX_MODER(MODE_OUT, LCD_RST);       // RST = GPIO OUT
-  GPIOX_ODR(LCD_RST) = 1;               // RST = 1
-
   /* Set or Reset the control line */
+  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
   LCD_Delay(1);
-  GPIOX_ODR(LCD_RST) = 0;               // RST = 0
+  LCD_RST_ON;
   LCD_Delay(1);
-  GPIOX_ODR(LCD_RST) = 1;               // RST = 1
+  LCD_RST_OFF;
+  #endif
   LCD_Delay(1);
 
   GPIOX_ODR(LCD_CS) = 1;
@@ -582,8 +583,6 @@ void LCD_IO_WriteCmd8DataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
     *(volatile uint16_t *)LCD_ADDR_DATA = d;
 
   #else
-  /* SPI DMA WRITE(a: src data pointer, b: target data pointer, c: source increment, d: target increment,
-                   e: number of data, f: 0=8 bit, 1=16bit */
   LCD_FSMC_DMA(&d, LCD_ADDR_DATA, 0, 0, Size, 1);
   #endif
 }
@@ -746,8 +745,7 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
     rgb888[2] = *(volatile uint8_t*)LCD_ADDR_DATA;
     #if LCD_REVERSE16 == 0
     *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
-    #endif
-    #if LCD_REVERSE16 == 1
+    #else
     *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
@@ -827,8 +825,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
     rgb888[2] = *(volatile uint8_t*)LCD_ADDR_DATA;
     #if LCD_REVERSE16 == 0
     *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
-    #endif
-    #if LCD_REVERSE16 == 1
+    #else
     *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     #endif
     pData++;

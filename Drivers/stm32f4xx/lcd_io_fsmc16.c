@@ -342,10 +342,10 @@ typedef struct
     DMAX_IFCR(LCD_DMA) = DMAX_IFCR_CTCIF(LCD_DMA);                              \
     DMAX_STREAMX(LCD_DMA)->PAR = (uint32_t)a;                                   \
     DMAX_STREAMX(LCD_DMA)->M0AR = (uint32_t)b;                                  \
-    if(e > DMA_MAXSIZE)                                                              \
+    if(e > DMA_MAXSIZE)                                                         \
     {                                                                           \
-      DMAX_STREAMX(LCD_DMA)->NDTR = 0xFFFF;                                     \
-      e -= DMA_MAXSIZE;                                                              \
+      DMAX_STREAMX(LCD_DMA)->NDTR = DMA_MAXSIZE;                                \
+      e -= DMA_MAXSIZE;                                                         \
     }                                                                           \
     else                                                                        \
     {                                                                           \
@@ -360,24 +360,25 @@ typedef struct
     DMAX_STREAMX(LCD_DMA)->CR |= DMA_SxCR_EN;                                   \
     WAIT_FOR_DMA_END;                                                           \
   }                                                                             }
-#endif
-
-//-----------------------------------------------------------------------------
-#if DMANUM(LCD_DMA) > 0
 
 #ifdef  osFeature_Semaphore
 #define WAIT_FOR_DMA_END      osSemaphoreWait(BinarySemDmaHandle, osWaitForever)
 #define TCIE                  DMA_SxCR_TCIE
 #define LCD_DMA_IRQ
-#else
+#else   // #ifdef  osFeature_Semaphore
 #define WAIT_FOR_DMA_END      while(!(DMAX_ISR(LCD_DMA) & DMAX_ISR_TCIF(LCD_DMA)));
 #define TCIE                  0
-#endif
+#endif  // #else  osFeature_Semaphore
 
-#endif  // #if LCD_DMA == 1
+#endif  // #if LCD_DMA > 0
 
 //-----------------------------------------------------------------------------
-#ifdef LCD_DMA_IRQ
+// Reset láb aktiv/passziv
+#define LCD_RST_ON            GPIOX_ODR(LCD_RST) = 0
+#define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
+
+//-----------------------------------------------------------------------------
+#ifdef  LCD_DMA_IRQ
 osSemaphoreId BinarySemDmaHandle;
 void DMAX_STREAMX_IRQHANDLER(LCD_DMA)(void)
 {
@@ -388,19 +389,6 @@ void DMAX_STREAMX_IRQHANDLER(LCD_DMA)(void)
   }
 }
 #endif
-
-// Reset láb aktiv/passziv
-#define LCD_RST_ON            GPIOX_ODR(LCD_RST) = 0
-#define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
-
-//-----------------------------------------------------------------------------
-#pragma GCC push_options
-#pragma GCC optimize("O0")
-//void LCD_IO_Delay(volatile uint32_t c)
-//{
-//  while(c--);
-//}
-#pragma GCC pop_options
 
 //-----------------------------------------------------------------------------
 void LCD_Delay(uint32_t Delay)
@@ -756,8 +744,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
 
     #if LCD_REVERSE16 == 0
     *pData = ((u.rgb888[1] & 0b11111000) << 8 | (u.rgb888[0] & 0b11111100) << 3 | u.rgb888[3] >> 3);
-    #endif
-    #if LCD_REVERSE16 == 1
+    #else
     *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
@@ -765,8 +752,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
     {
       #if LCD_REVERSE16 == 0
       *pData = ((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
-      #endif
-      #if LCD_REVERSE16 == 1
+      #else
       *pData = __REVSH((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
       #endif
       pData++;

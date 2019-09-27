@@ -8,7 +8,7 @@
  */
 
 /* Készitö: Roberto Benjami
-   verzio:  2019.05
+   verzio:  2019.09
 
    Megj:
    Minden függvány az adatlábak irányát WRITE üzemmodban hagyja, igy nem kell minden irási
@@ -80,7 +80,7 @@ uint16_t TS_IO_GetZ2(void);
 #define MODE_PU_UP            0x1
 #define MODE_PU_DOWN          0x2
 
-#define BITBAND_ACCESS(variable, bitnumber) *(volatile uint32_t*)(((uint32_t)&variable & 0xF0000000) + 0x2000000 + (((uint32_t)&variable & 0x000FFFFF) << 5) + (bitnumber << 2))
+#define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
 
 #define GPIOX_PORT_(a, b)     GPIO ## a
 #define GPIOX_PORT(a)         GPIOX_PORT_(a)
@@ -128,10 +128,10 @@ uint16_t TS_IO_GetZ2(void);
 #define GPIOX_PORTTONUM_K     10
 #define GPIOX_PORTTONUM_L     11
 #define GPIOX_PORTTONUM_M     12
-#define GPIOX_PORTNUM_(p, m)  GPIOX_PORTTONUM_ ## p
-#define GPIOX_PORTNAME_(p, m) p
-#define GPIOX_PORTNUM(x)      GPIOX_PORTNUM_(x)
-#define GPIOX_PORTNAME(x)     GPIOX_PORTNAME_(x)
+#define GPIOX_PORTNUM_(a, b)  GPIOX_PORTTONUM_ ## a
+#define GPIOX_PORTNAME_(a, b) a
+#define GPIOX_PORTNUM(a)      GPIOX_PORTNUM_(a)
+#define GPIOX_PORTNAME(a)     GPIOX_PORTNAME_(a)
 
 //-----------------------------------------------------------------------------
 // Parancs/adat láb üzemmod
@@ -245,21 +245,38 @@ uint16_t TS_IO_GetZ2(void);
 #endif
 
 //-----------------------------------------------------------------------------
+/* Write / Read spd */
+#if     LCD_WRITE_DELAY == 0
+#define LCD_WR_DELAY
+#elif   LCD_WRITE_DELAY == 1
+#define LCD_WR_DELAY          GPIOX_ODR(LCD_WR) = 0
+#else
+#define LCD_WR_DELAY          LCD_IO_Delay(LCD_WRITE_DELAY - 2)
+#endif
+
+#if     LCD_READ_DELAY == 0
+#define LCD_RD_DELAY
+#elif   LCD_READ_DELAY == 1
+#define LCD_RD_DELAY          GPIOX_ODR(LCD_RD) = 0
+#else
+#define LCD_RD_DELAY          LCD_IO_Delay(LCD_READ_DELAY - 2)
+#endif
+
 #define LCD_DUMMY_READ {          \
   GPIOX_ODR(LCD_RD) = 0;          \
-  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
+  LCD_RD_DELAY;                   \
   GPIOX_ODR(LCD_RD) = 1;          }
 
 #define LCD_DATA8_WRITE(dt) {     \
   lcd_data8 = dt;                 \
   LCD_WRITE(lcd_data8);           \
   GPIOX_ODR(LCD_WR) = 0;          \
-  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
+  LCD_WR_DELAY;                   \
   GPIOX_ODR(LCD_WR) = 1;          }
 
 #define LCD_DATA8_READ(dt) {      \
   GPIOX_ODR(LCD_RD) = 0;          \
-  LCD_IO_Delay(LCD_IO_RW_DELAY);  \
+  LCD_RD_DELAY;                   \
   LCD_READ(dt);                   \
   GPIOX_ODR(LCD_RD) = 1;          }
 
@@ -300,7 +317,6 @@ uint16_t TS_IO_GetZ2(void);
 #endif
 #endif
 
-
 // 8 bites lábakra másolando adat, illetve olvasáskor ide kerül az aktuális adat
 uint8_t  lcd_data8;
 
@@ -334,12 +350,20 @@ void LCD_IO_Bl_OnOff(uint8_t Bl)
 //-----------------------------------------------------------------------------
 void LCD_IO_Init(void)
 {
+  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
   RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_WR) | GPIOX_CLOCK(LCD_RD) | GPIOX_CLOCK(LCD_RST) |
                    GPIOX_CLOCK(LCD_D0) | GPIOX_CLOCK(LCD_D1) | GPIOX_CLOCK(LCD_D2) | GPIOX_CLOCK(LCD_D3) |
                    GPIOX_CLOCK(LCD_D4) | GPIOX_CLOCK(LCD_D5) | GPIOX_CLOCK(LCD_D6) | GPIOX_CLOCK(LCD_D7));
+  LCD_RST_OFF;                          // RST = 1
+  GPIOX_MODER(MODE_OUT, LCD_RST);
+  #else
+  RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_WR) | GPIOX_CLOCK(LCD_RD) |
+                   GPIOX_CLOCK(LCD_D0) | GPIOX_CLOCK(LCD_D1) | GPIOX_CLOCK(LCD_D2) | GPIOX_CLOCK(LCD_D3) |
+                   GPIOX_CLOCK(LCD_D4) | GPIOX_CLOCK(LCD_D5) | GPIOX_CLOCK(LCD_D6) | GPIOX_CLOCK(LCD_D7));
+  #endif
 
   #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12)
-  RCC->APB2ENR |= GPIOX_CLOCK(LCD_BL);
+  RCC->AHB1ENR |= GPIOX_CLOCK(LCD_BL);
   GPIOX_ODR(LCD_BL) = LCD_BLON;
   GPIOX_MODER(MODE_OUT, LCD_BL);
   #endif
@@ -349,13 +373,11 @@ void LCD_IO_Init(void)
   LCD_RS_DATA;                          // RS = 1
   GPIOX_ODR(LCD_WR) = 1;                // WR = 1
   GPIOX_ODR(LCD_RD) = 1;                // RD = 1
-  LCD_RST_OFF;                          // RST = 1
 
   GPIOX_MODER(MODE_OUT, LCD_CS);
   GPIOX_MODER(MODE_OUT, LCD_RS);
   GPIOX_MODER(MODE_OUT, LCD_WR);
   GPIOX_MODER(MODE_OUT, LCD_RD);
-  GPIOX_MODER(MODE_OUT, LCD_RST);
 
   LCD_DIRWRITE;                         // adatlábak kimenetre állitása
 
@@ -364,7 +386,6 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_RS);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_WR);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_RD);
-  GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_RST);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D0);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D1);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D2);
@@ -375,10 +396,12 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D7);
 
   /* Set or Reset the control line */
+  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
   LCD_Delay(1);
   LCD_RST_ON;                           // RST = 0
   LCD_Delay(1);
   LCD_RST_OFF;                          // RST = 1
+  #endif
   LCD_Delay(1);
 
   #ifdef ADCX
@@ -573,8 +596,7 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
     LCD_DATA8_READ(rgb888[2]);
     #if LCD_REVERSE16 == 0
     *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
-    #endif
-    #if LCD_REVERSE16 == 1
+    #else
     *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
@@ -637,8 +659,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
     LCD_DATA8_READ(rgb888[2]);
     #if LCD_REVERSE16 == 0
     *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
-    #endif
-    #if LCD_REVERSE16 == 1
+    #else
     *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
