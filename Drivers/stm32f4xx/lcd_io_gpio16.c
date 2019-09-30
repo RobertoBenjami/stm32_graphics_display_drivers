@@ -278,26 +278,10 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define LCD_RD_DELAY          LCD_IO_Delay(LCD_READ_DELAY - 2)
 #endif
 
-#define LCD_DUMMY_READ {          \
-  GPIOX_ODR(LCD_RD) = 0;          \
-  LCD_RD_DELAY;                   \
-  GPIOX_ODR(LCD_RD) = 1;          }
-
-#define LCD_DATA16_WRITE(dt) {    \
-  lcd_data16 = dt;                \
-  LCD_WRITE(lcd_data16);          \
-  GPIOX_ODR(LCD_WR) = 0;          \
-  LCD_WR_DELAY;                   \
-  GPIOX_ODR(LCD_WR) = 1;          }
-
-#define LCD_DATA16_READ(dt) {     \
-  GPIOX_ODR(LCD_RD) = 0;          \
-  LCD_RD_DELAY;                   \
-  LCD_READ(lcd_data16);           \
-  dt = lcd_data16;                \
-  GPIOX_ODR(LCD_RD) = 1;          }
-
-#define LCD_CMD16_WRITE(cmd16)  {LCD_RS_CMD; LCD_DATA16_WRITE(cmd16); LCD_RS_DATA; }
+#define LCD_DUMMY_READ        { GPIOX_ODR(LCD_RD) = 0; LCD_RD_DELAY; GPIOX_ODR(LCD_RD) = 1; }
+#define LCD_DATA16_WRITE(dt)  { lcd_data16 = dt; LCD_WRITE(lcd_data16); GPIOX_ODR(LCD_WR) = 0; LCD_WR_DELAY; GPIOX_ODR(LCD_WR) = 1; }
+#define LCD_DATA16_READ(dt)   { GPIOX_ODR(LCD_RD) = 0; LCD_RD_DELAY; LCD_READ(lcd_data16); dt = lcd_data16; GPIOX_ODR(LCD_RD) = 1; }
+#define LCD_CMD16_WRITE(cmd16) { LCD_RS_CMD; LCD_DATA16_WRITE(cmd16); LCD_RS_DATA; }
 
 // 8 bites lábakra másolando adat, illetve olvasáskor ide kerül az aktuális adat
 volatile uint16_t  lcd_data16;
@@ -571,8 +555,7 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
     LCD_DATA16_READ(u.rgb888_16[2]);
     #if LCD_REVERSE16 == 0
     *pData = ((u.rgb888[1] & 0b11111000) << 8 | (u.rgb888[0] & 0b11111100) << 3 | u.rgb888[3] >> 3);
-    #endif
-    #if LCD_REVERSE16 == 1
+    #else
     *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
@@ -580,8 +563,7 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
     {
       #if LCD_REVERSE16 == 0
       *pData = ((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
-      #endif
-      #if LCD_REVERSE16 == 1
+      #else
       *pData = __REVSH((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
       #endif
       pData++;
@@ -650,8 +632,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
     LCD_DATA16_READ(u.rgb888_16[2]);
     #if LCD_REVERSE16 == 0
     *pData = ((u.rgb888[1] & 0b11111000) << 8 | (u.rgb888[0] & 0b11111100) << 3 | u.rgb888[3] >> 3);
-    #endif
-    #if LCD_REVERSE16 == 1
+    #else
     *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
@@ -659,8 +640,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
     {
       #if LCD_REVERSE16 == 0
       *pData = ((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
-      #endif
-      #if LCD_REVERSE16 == 1
+      #else
       *pData = __REVSH((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
       #endif
       pData++;

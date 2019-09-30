@@ -148,8 +148,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #if GPIOX_PIN(LCD_D0) == 0
 // LCD adatlábai 0..7 portlábon vannak (pl. B0,B1,B2,B3,B4,B5,B6,B7)
 #define LCD_AUTOOPT  1
-#endif
-#if GPIOX_PIN(LCD_D0) == 8
+#elif GPIOX_PIN(LCD_D0) == 8
 // LCD adatlábai 8..15 portlábon vannak (pl. B8,B9,B10,B11,B12,B13,B14,B15)
 #define LCD_AUTOOPT  2
 #else

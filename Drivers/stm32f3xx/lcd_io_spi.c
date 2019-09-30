@@ -344,9 +344,8 @@ volatile uint16_t tmp16;
   LCD_READ_CLK;                                      \
   if(GPIOX_IDR(LCD_MISO)) d16 |= 0x0001;             \
   GPIOX_SET(LCD_SCK);                                }
-#endif
+#else
 
-#if LCD_REVERSE16 == 1
 #define LCD_WRITE16(d16) {                                        \
   if(d16 & 0x0080) GPIOX_SET(LCD_MOSI); else GPIOX_CLR(LCD_MOSI); \
   LCD_WRITE_CLK;                                                  \
@@ -643,9 +642,9 @@ volatile uint16_t tmp16;
     if(nd != DMAX_CHANNEL(LCD_DMA_RX)->CNDTR)                                   \
     {                                                                           \
       if(!--nd)                                                                 \
-        nd = LCD_DMA_RX_BUFSIZE;                                                \
+        nd = d;                                                                 \
       rgb888[rgbcnt++] = da[rp++];                                              \
-      rp &= (LCD_DMA_RX_BUFSIZE - 1);                                           \
+      rp &= (d - 1);                                                            \
       if(rgbcnt == 3)                                                           \
       {                                                                         \
         rgbcnt = 0;                                                             \
@@ -708,7 +707,7 @@ void DMAX_STREAMX_IRQHANDLER(LCD_DMA_RX)(void)
 }
 #endif
 
-#endif
+#endif  // #ifdef LCD_DMA_IRQ
 
 //-----------------------------------------------------------------------------
 #pragma GCC push_options
@@ -1165,12 +1164,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
     LCD_DATA8_READ(rgb888[0]);
     LCD_DATA8_READ(rgb888[1]);
     LCD_DATA8_READ(rgb888[2]);
-    #if LCD_REVERSE16 == 0
-    *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
-    #endif
-    #if LCD_REVERSE16 == 1
-    *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
-    #endif
+    *pData = RD((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     pData++;
   }
   LCD_CS_OFF;

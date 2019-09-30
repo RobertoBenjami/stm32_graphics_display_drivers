@@ -245,33 +245,16 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define LCD_RD_DELAY          LCD_IO_Delay(LCD_READ_DELAY - 2)
 #endif
 
-#define LCD_DUMMY_READ {          \
-  GPIOX_CLR(LCD_RD);              \
-  LCD_RD_DELAY;                   \
-  GPIOX_SET(LCD_RD);              }
-
-#define LCD_DATA8_WRITE(dt) {     \
-  lcd_data8 = dt;                 \
-  LCD_WRITE(lcd_data8);           \
-  GPIOX_CLR(LCD_WR);              \
-  LCD_WR_DELAY;                   \
-  GPIOX_SET(LCD_WR);              }
-
-#define LCD_DATA8_READ(dt) {      \
-  GPIOX_CLR(LCD_RD);              \
-  LCD_RD_DELAY;                   \
-  LCD_READ(dt);                   \
-  GPIOX_SET(LCD_RD);              }
-
-#define LCD_CMD8_WRITE(cmd)     {LCD_RS_CMD; LCD_DATA8_WRITE(cmd); LCD_RS_DATA; }
+#define LCD_DUMMY_READ        { GPIOX_CLR(LCD_RD); LCD_RD_DELAY; GPIOX_SET(LCD_RD); }
+#define LCD_DATA8_WRITE(dt)   { lcd_data8 = dt; LCD_WRITE(lcd_data8); GPIOX_CLR(LCD_WR); LCD_WR_DELAY; GPIOX_SET(LCD_WR); }
+#define LCD_DATA8_READ(dt)    { GPIOX_CLR(LCD_RD); LCD_RD_DELAY; LCD_READ(dt); GPIOX_SET(LCD_RD); }
+#define LCD_CMD8_WRITE(cmd)   { LCD_RS_CMD; LCD_DATA8_WRITE(cmd); LCD_RS_DATA; }
 
 #if LCD_REVERSE16 == 0
 #define LCD_CMD16_WRITE(cmd16)  {LCD_RS_CMD; LCD_DATA8_WRITE(cmd16 >> 8); LCD_DATA8_WRITE(cmd16); LCD_RS_DATA; }
 #define LCD_DATA16_WRITE(d16)   {LCD_DATA8_WRITE(d16 >> 8); LCD_DATA8_WRITE(d16); }
 #define LCD_DATA16_READ(dh, dl) {LCD_DATA8_READ(dh); LCD_DATA8_READ(dl); }
-#endif
-
-#if LCD_REVERSE16 == 1
+#else
 #define LCD_CMD16_WRITE(cmd)    {LCD_RS_CMD; LCD_DATA8_WRITE(cmd); LCD_DATA8_WRITE(cmd >> 8); LCD_RS_DATA; }
 #define LCD_DATA16_WRITE(data)  {LCD_DATA8_WRITE(data); LCD_DATA8_WRITE(data >> 8); }
 #define LCD_DATA16_READ(dh, dl) {LCD_DATA8_READ(dl); LCD_DATA8_READ(dh); }
@@ -541,8 +524,7 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
     LCD_DATA8_READ(rgb888[2]);
     #if LCD_REVERSE16 == 0
     *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
-    #endif
-    #if LCD_REVERSE16 == 1
+    #else
     *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
@@ -605,8 +587,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
     LCD_DATA8_READ(rgb888[2]);
     #if LCD_REVERSE16 == 0
     *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
-    #endif
-    #if LCD_REVERSE16 == 1
+    #else
     *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
