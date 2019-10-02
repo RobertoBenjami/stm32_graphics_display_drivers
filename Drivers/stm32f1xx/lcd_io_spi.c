@@ -62,7 +62,7 @@ void  LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t
 #define MODE_PU_DIGITAL_INPUT 0x8
 #define MODE_PP_ALTER_10MHZ   0x9
 #define MODE_PP_ALTER_2MHZ    0xA
-#define MODE_PP_ALTER_50MH    0xB
+#define MODE_PP_ALTER_50MHZ   0xB
 #define MODE_RESERVED         0xC
 #define MODE_OD_ALTER_10MHZ   0xD
 #define MODE_OD_ALTER_2MHZ    0xE
@@ -421,14 +421,14 @@ volatile uint16_t tmp16;
 /* Read SPI sebesség */
 #define LCD_READ_DELAY        LCD_IO_Delay(LCD_SPI_SPD_READ * 4)
 
-#define LCD_DUMMY_READ(d)     {GPIOX_MODER(MODE_PP_OUT_50MHZ, LCD_SCK); \
-                               while(d--)                               \
-                               {                                        \
-                                 GPIOX_ODR(LCD_SCK) = 0;                \
-                                 LCD_READ_DELAY;                        \
-                                 GPIOX_ODR(LCD_SCK) = 1;                \
-                               }                                        \
-                               GPIOX_MODER(MODE_PP_ALTER_50MH, LCD_SCK);}
+#define LCD_DUMMY_READ(d)     {GPIOX_MODER(MODE_PP_OUT_50MHZ, LCD_SCK);  \
+                               while(d--)                                \
+                               {                                         \
+                                 GPIOX_ODR(LCD_SCK) = 0;                 \
+                                 LCD_READ_DELAY;                         \
+                                 GPIOX_ODR(LCD_SCK) = 1;                 \
+                               }                                         \
+                               GPIOX_MODER(MODE_PP_ALTER_50MHZ, LCD_SCK);}
 
 #define LCD_SPI_MODE8         BITBAND_ACCESS(SPIX->CR1, SPI_CR1_DFF_Pos) = 0
 #define LCD_SPI_MODE16        BITBAND_ACCESS(SPIX->CR1, SPI_CR1_DFF_Pos) = 1
@@ -730,8 +730,8 @@ void LCD_IO_Init(void)
   #else                                 // Hardver SPI
   LCD_SPI_RCC_EN;
 
-  GPIOX_MODER(MODE_PP_ALTER_50MH, LCD_SCK);
-  GPIOX_MODER(MODE_PP_ALTER_50MH, LCD_MOSI);
+  GPIOX_MODER(MODE_PP_ALTER_50MHZ, LCD_SCK);
+  GPIOX_MODER(MODE_PP_ALTER_50MHZ, LCD_MOSI);
 
   #if LCD_SPI_MODE == 1
   // Half duplex (adatirány váltogatás)

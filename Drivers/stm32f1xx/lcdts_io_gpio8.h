@@ -1,5 +1,5 @@
 /*
- * 8 bites párhuzamos LCD/TOUCH GPIO driver STM32F3-ra
+ * 8 bites párhuzamos LCD/TOUCH GPIO driver STM32F1-re
  * 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
 
  * Figyelem: mivel azonos lábakon van az Lcd ás a Touchscreen,
@@ -42,12 +42,6 @@ A kijelzön belül a következö lábak vannak párhuzamositva
    - 1..3: a használni kivánt A/D konverter száma
 */
 #define TS_ADC            0
-
-// Megadhatunk az analog touchscreen beolvasásához más lábakat is
-// (ha nem adunk meg itt semmilyen lábat, akkor adjuk lábnak az X, 0 -t,
-//  ekkor az LCD_RS és LCD_WR lesz a touchscreen kiválasztott AD lába)
-#define TS_XM_AN          X, 0
-#define TS_YP_AN          X, 0
 
 // Itt kell megadni, hogy melyik csatornát kiválasztva lehet az adott lábat az AD bemenetére kapcsolni
 #define TS_XM_ADCCH       0

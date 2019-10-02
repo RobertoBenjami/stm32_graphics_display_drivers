@@ -57,7 +57,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define MODE_PU_DIGITAL_INPUT 0x8
 #define MODE_PP_ALTER_10MHZ   0x9
 #define MODE_PP_ALTER_2MHZ    0xA
-#define MODE_PP_ALTER_50MH    0xB
+#define MODE_PP_ALTER_50MHZ   0xB
 #define MODE_RESERVED         0xC
 #define MODE_OD_ALTER_10MHZ   0xD
 #define MODE_OD_ALTER_2MHZ    0xE
