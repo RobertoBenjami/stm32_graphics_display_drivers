@@ -90,7 +90,7 @@ uint16_t TS_IO_GetZ2(void);
 #define GPIOX_PORT(a)         GPIOX_PORT_(a)
 
 #define GPIOX_PIN_(a, b)      b
-#define GPIOX_PIN(x)          GPIOX_PIN_(x)
+#define GPIOX_PIN(a)          GPIOX_PIN_(a)
 
 #define GPIOX_MODE_(a,b,c)    ((GPIO_TypeDef*)(((c & 8) >> 1) + GPIO ## b ## _BASE))->CRL = (((GPIO_TypeDef*)(((c & 8) >> 1) + GPIO ## b ## _BASE))->CRL & ~(0xF << ((c & 7) << 2))) | (a << ((c & 7) << 2))
 #define GPIOX_MODE(a, b)      GPIOX_MODE_(a, b)
@@ -789,7 +789,7 @@ uint16_t TS_IO_GetZ2(void)
 }
 
 //-----------------------------------------------------------------------------
-#else // #if TS_ADC > 0
+#else // #ifdef ADCX
 __weak uint8_t   TS_IO_DetectToch(void) { return 0;}
 __weak uint16_t  TS_IO_GetX(void)       { return 0;}
 __weak uint16_t  TS_IO_GetY(void)       { return 0;}

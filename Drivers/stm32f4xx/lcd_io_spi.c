@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32F4
  * készitö: Roberto Benjami
- * verzio:  2019.05
+ * verzio:  2019.09
  *
  * - hardver és szoftver SPI
  * - 3 féle üzemmód (csak TX, half duplex, full duplex)
@@ -648,11 +648,7 @@ volatile uint16_t tmp16;
 #if     LCD_SPI_MODE == 1
 /* Kétirányu (halfduplex) SPI esetén az adatirányt váltogatni kell */
 #if (defined(LCD_SPI_SPD_READ) && (LCD_SPI_SPD != LCD_SPI_SPD_READ)) // Eltérö olvasási/irási sebesség
-#define LCD_DIRREAD(d)  {                            \
-  LCD_DUMMY_READ(d);                                 \
-  SPIX->CR1 =                                        \
-    (SPIX->CR1 & ~(SPI_CR1_BR | SPI_CR1_BIDIOE)) |   \
-    (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos);            }
+#define LCD_DIRREAD(d)   { LCD_DUMMY_READ(d); SPIX->CR1 = (SPIX->CR1 & ~(SPI_CR1_BR | SPI_CR1_BIDIOE)) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos); }
 #define LCD_DIRWRITE(d8) {                           \
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))   \
     d8 = SPIX->DR;                                   \
@@ -666,9 +662,7 @@ volatile uint16_t tmp16;
   SPIX->CR1 |= SPI_CR1_SPE;                          }
 
 #else   // azonos sebesség, csak LCD_MOSI irányváltás
-#define LCD_DIRREAD(d) {                             \
-  LCD_DUMMY_READ(d);                                 \
-  BITBAND_ACCESS(SPIX->CR1, SPI_CR1_BIDIOE_Pos) = 0; }
+#define LCD_DIRREAD(d) { LCD_DUMMY_READ(d); BITBAND_ACCESS(SPIX->CR1, SPI_CR1_BIDIOE_Pos) = 0; }
 #define LCD_DIRWRITE(d8) {                           \
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))   \
     d8 = SPIX->DR;                                   \

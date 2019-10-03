@@ -69,7 +69,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define GPIOX_PORT(a)         GPIOX_PORT_(a)
 
 #define GPIOX_PIN_(a, b)      b
-#define GPIOX_PIN(x)          GPIOX_PIN_(x)
+#define GPIOX_PIN(a)          GPIOX_PIN_(a)
 
 #define GPIOX_MODE_(a,b,c)    ((GPIO_TypeDef*)(((c & 8) >> 1) + GPIO ## b ## _BASE))->CRL = (((GPIO_TypeDef*)(((c & 8) >> 1) + GPIO ## b ## _BASE))->CRL & ~(0xF << ((c & 7) << 2))) | (a << ((c & 7) << 2))
 #define GPIOX_MODE(a, b)      GPIOX_MODE_(a, b)
