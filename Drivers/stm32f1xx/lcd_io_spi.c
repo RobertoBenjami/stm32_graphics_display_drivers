@@ -49,7 +49,6 @@ void  LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Siz
 void  LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
 
 //-----------------------------------------------------------------------------
-// portláb mádok (PP: push-pull, OD: open drain, FF: input floating)
 // portláb módok (PP: push-pull, OD: open drain, FF: input floating)
 #define MODE_ANALOG_INPUT     0x0
 #define MODE_PP_OUT_10MHZ     0x1
@@ -434,13 +433,10 @@ volatile uint16_t tmp16;
 #define LCD_SPI_MODE16        BITBAND_ACCESS(SPIX->CR1, SPI_CR1_DFF_Pos) = 1
 
 #if     LCD_SPI_MODE == 1
+
 /* Kétirányu (halfduplex) SPI esetén az adatirányt váltogatni kell */
 #if (defined(LCD_SPI_SPD_READ) && (LCD_SPI_SPD != LCD_SPI_SPD_READ)) // Eltérö olvasási/irási sebesség
-#define LCD_DIRREAD(d)  {                            \
-  LCD_DUMMY_READ(d);                                 \
-  SPIX->CR1 = (SPIX->CR1 & ~(SPI_CR1_BR |            \
-    SPI_CR1_BIDIOE)) |                               \
-    (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos);            }
+#define LCD_DIRREAD(d)  { LCD_DUMMY_READ(d); SPIX->CR1 = (SPIX->CR1 & ~(SPI_CR1_BR | SPI_CR1_BIDIOE)) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos); }
 #define LCD_DIRWRITE(d8) {                           \
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))   \
     d8 = *(uint8_t *)&SPIX->DR;                      \
@@ -450,10 +446,9 @@ volatile uint16_t tmp16;
   LCD_IO_Delay(2 ^ LCD_SPI_SPD_READ);                \
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))   \
     d8 = *(uint8_t *)&SPIX->DR;                      }
+
 #else   // azonos sebesség, csak LCD_MOSI irányváltás
-#define LCD_DIRREAD(d) {                             \
-  LCD_DUMMY_READ(d);                                 \
-  BITBAND_ACCESS(SPIX->CR1, SPI_CR1_BIDIOE_Pos) = 0; }
+#define LCD_DIRREAD(d)   { LCD_DUMMY_READ(d); BITBAND_ACCESS(SPIX->CR1, SPI_CR1_BIDIOE_Pos) = 0; }
 #define LCD_DIRWRITE(d8) {                           \
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))   \
     d8 = *(uint8_t *)&SPIX->DR;                      \
@@ -466,45 +461,20 @@ volatile uint16_t tmp16;
 #else   // LCD_SPI_MODE == 1
 // TX és fullduplex SPI esetén az adatirány fix
 #if (defined(LCD_SPI_SPD_READ) && (LCD_SPI_SPD != LCD_SPI_SPD_READ)) // Eltérö olvasási/irási sebesség
-#define LCD_DIRREAD(d) {                             \
-  LCD_DUMMY_READ(d);                                 \
-  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) |            \
-    (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos);            }
-#define LCD_DIRWRITE(d8)  {                          \
-  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) |            \
-    (LCD_SPI_SPD << SPI_CR1_BR_Pos);                 }
+#define LCD_DIRREAD(d)   { LCD_DUMMY_READ(d); SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos); }
+#define LCD_DIRWRITE(d8) { SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD << SPI_CR1_BR_Pos); }
 #else   // nincs irányváltás és sebességeltérés sem
 #define LCD_DIRREAD(d)   LCD_DUMMY_READ(d)
 #define LCD_DIRWRITE(d8)
 #endif
 #endif  // #else LCD_SPI_MODE == 1
 
-#define LCD_DATA8_WRITE(d8)   {                   \
-  *(volatile uint8_t *)&SPIX->DR = d8;            \
-  LCD_IO_Delay(1);                                \
-  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_BSY_Pos));}
-
-#define LCD_DATA8_READ(d8)    {                      \
-  while(!BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos)); \
-  d8 = (uint8_t)SPIX->DR;                            }
-
-#define LCD_CMD8_WRITE(cmd8)   {                  \
-  LCD_RS_CMD;                                     \
-  LCD_DATA8_WRITE(cmd8);                          \
-  LCD_RS_DATA;                                    }
-
-#define LCD_DATA16_WRITE(d16)   {                 \
-  SPIX->DR = RD(d16);                             \
-  LCD_IO_Delay(1);                                \
-  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_BSY_Pos));}
-#define LCD_DATA16_READ(d16)    {                    \
-  while(!BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos)); \
-  d16 = RD(SPIX->DR);                                }
-
-#define LCD_CMD16_WRITE(cmd16)  {                 \
-  LCD_RS_CMD;                                     \
-  LCD_DATA16_WRITE(cmd16);                        \
-  LCD_RS_DATA;                                    }
+#define LCD_DATA8_WRITE(d8)    { *(volatile uint8_t *)&SPIX->DR = d8; LCD_IO_Delay(1); while(BITBAND_ACCESS(SPIX->SR, SPI_SR_BSY_Pos)); }
+#define LCD_DATA8_READ(d8)     { while(!BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos)); d8 = (uint8_t)SPIX->DR; }
+#define LCD_CMD8_WRITE(cmd8)   { LCD_RS_CMD; LCD_DATA8_WRITE(cmd8); LCD_RS_DATA; }
+#define LCD_DATA16_WRITE(d16)  { SPIX->DR = RD(d16); LCD_IO_Delay(1); while(BITBAND_ACCESS(SPIX->SR, SPI_SR_BSY_Pos)); }
+#define LCD_DATA16_READ(d16)   { while(!BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos)); d16 = RD(SPIX->DR); }
+#define LCD_CMD16_WRITE(cmd16) { LCD_RS_CMD; LCD_DATA16_WRITE(cmd16); LCD_RS_DATA; }
 
 #if DMANUM(LCD_DMA_TX) > 0 || DMANUM(LCD_DMA_RX) > 0
 #ifdef  osFeature_Semaphore
@@ -537,10 +507,10 @@ volatile uint16_t tmp16;
     while(DMAX_CHANNEL(LCD_DMA_TX)->CCR & DMA_CCR_EN);                          \
     DMAX_CHANNEL(LCD_DMA_TX)->CMAR = (uint32_t)a;                               \
     DMAX_CHANNEL(LCD_DMA_TX)->CPAR = (uint32_t)&SPIX->DR;                       \
-    if(b > DMA_MAXSIZE)                                                              \
+    if(b > DMA_MAXSIZE)                                                         \
     {                                                                           \
-      DMAX_CHANNEL(LCD_DMA_TX)->CNDTR = DMA_MAXSIZE;                                 \
-      b -= DMA_MAXSIZE;                                                              \
+      DMAX_CHANNEL(LCD_DMA_TX)->CNDTR = DMA_MAXSIZE;                            \
+      b -= DMA_MAXSIZE;                                                         \
     }                                                                           \
     else                                                                        \
     {                                                                           \
@@ -772,7 +742,7 @@ void LCD_IO_Init(void)
   HAL_NVIC_EnableIRQ(DMAX_CHANNEL_IRQ(LCD_DMA_RX));
   #endif
   osSemaphoreWait(BinarySemDmaHandle, 1);
-  #endif
+  #endif  // #ifdef LCD_DMA_IRQ
 }
 
 //-----------------------------------------------------------------------------
