@@ -48,6 +48,8 @@ void  LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Siz
 void  LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
 
 //-----------------------------------------------------------------------------
+#define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
+
 // portláb mádok (PP: push-pull, OD: open drain, FF: input floating)
 #define MODE_DIGITAL_INPUT    0x0
 #define MODE_OUT              0x1
@@ -63,16 +65,11 @@ void  LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t
 #define MODE_PU_UP            0x1
 #define MODE_PU_DOWN          0x2
 
-#define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
-
 #define GPIOX_PORT_(a, b)     GPIO ## a
 #define GPIOX_PORT(a)         GPIOX_PORT_(a)
 
 #define GPIOX_PIN_(a, b)      b
 #define GPIOX_PIN(a)          GPIOX_PIN_(a)
-
-#define GPIOX_AFR_(a,b,c)     GPIO ## b->AFR[c >> 3] = (GPIO ## b->AFR[c >> 3] & ~(0x0F << (4 * (c & 7)))) | (a << (4 * (c & 7)));
-#define GPIOX_AFR(a, b)       GPIOX_AFR_(a, b)
 
 #define GPIOX_MODER_(a,b,c)   GPIO ## b->MODER = (GPIO ## b->MODER & ~(3 << (2 * c))) | (a << (2 * c));
 #define GPIOX_MODER(a, b)     GPIOX_MODER_(a, b)
@@ -102,19 +99,19 @@ void  LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t
 #define GPIOX_CLOCK_(a, b)    RCC_AHB1ENR_GPIO ## a ## EN
 #define GPIOX_CLOCK(a)        GPIOX_CLOCK_(a)
 
-#define GPIOX_PORTTONUM_A     1
-#define GPIOX_PORTTONUM_B     2
-#define GPIOX_PORTTONUM_C     3
-#define GPIOX_PORTTONUM_D     4
-#define GPIOX_PORTTONUM_E     5
-#define GPIOX_PORTTONUM_F     6
-#define GPIOX_PORTTONUM_G     7
-#define GPIOX_PORTTONUM_H     8
-#define GPIOX_PORTTONUM_J     9
-#define GPIOX_PORTTONUM_K     10
-#define GPIOX_PORTTONUM_L     11
-#define GPIOX_PORTTONUM_M     12
-#define GPIOX_PORTNUM_(a, b)  GPIOX_PORTTONUM_ ## a
+#define GPIOX_PORTNUM_A       1
+#define GPIOX_PORTNUM_B       2
+#define GPIOX_PORTNUM_C       3
+#define GPIOX_PORTNUM_D       4
+#define GPIOX_PORTNUM_E       5
+#define GPIOX_PORTNUM_F       6
+#define GPIOX_PORTNUM_G       7
+#define GPIOX_PORTNUM_H       8
+#define GPIOX_PORTNUM_J       9
+#define GPIOX_PORTNUM_K       10
+#define GPIOX_PORTNUM_L       11
+#define GPIOX_PORTNUM_M       12
+#define GPIOX_PORTNUM_(a, b)  GPIOX_PORTNUM_ ## a
 #define GPIOX_PORTNAME_(a, b) a
 #define GPIOX_PORTNUM(a)      GPIOX_PORTNUM_(a)
 #define GPIOX_PORTNAME(a)     GPIOX_PORTNAME_(a)
@@ -878,7 +875,7 @@ void LCD_Delay(uint32_t Delay)
 //-----------------------------------------------------------------------------
 void LCD_IO_Bl_OnOff(uint8_t Bl)
 {
-  #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12)
+  #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A
   if(Bl)
     GPIOX_ODR(LCD_BL) = LCD_BLON;
   else
@@ -896,13 +893,13 @@ void LCD_IO_Init(void)
   RCC->AHB1ENR |= GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI);
   #endif
 
-  #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12) // háttérvilágitás
+  #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A  // háttérvilágitás
   RCC->AHB1ENR |= GPIOX_CLOCK(LCD_BL);
   GPIOX_MODER(MODE_OUT, LCD_BL);
   LCD_IO_Bl_OnOff(1);
   #endif
 
-  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12) // reset
+  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A // reset
   RCC->APB2ENR |= GPIOX_CLOCK(LCD_RST);
   GPIOX_MODER(MODE_OUT, LCD_RST);
   GPIOX_OSPEEDR(MODE_SPD_LOW, LCD_RST);
@@ -951,7 +948,7 @@ void LCD_IO_Init(void)
   #endif // #else LCD_SPI == 0
 
   /* Set or Reset the control line */
-  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12) // reset
+  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A // reset
   LCD_Delay(10);
   LCD_RST_ON;
   LCD_Delay(10);

@@ -45,6 +45,7 @@ void     LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Si
 void     LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
 void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
 
+//-----------------------------------------------------------------------------
 // portláb mádok (PP: push-pull, OD: open drain, FF: input floating)
 #define MODE_DIGITAL_INPUT    0x0
 #define MODE_OUT              0x1

@@ -5,21 +5,21 @@
 
 //=============================================================================
 /* Lcd vezérlö lábak hozzárendelése (A..M, 0..15) */
-#define LCD_CS            F, 3
-#define LCD_RS            C, 3
-#define LCD_WR            C, 0
-#define LCD_RD            A, 3
-#define LCD_RST           F, 5
+#define LCD_CS            X, 0
+#define LCD_RS            X, 0
+#define LCD_WR            X, 0
+#define LCD_RD            X, 0
+#define LCD_RST           X, 0
 
 /* Lcd adat lábak hozzárendelése (A..M, 0..15) */
-#define LCD_D0            F, 12
-#define LCD_D1            D, 15
-#define LCD_D2            F, 15
-#define LCD_D3            E, 13
-#define LCD_D4            F, 14
-#define LCD_D5            E, 11
-#define LCD_D6            E, 9
-#define LCD_D7            F, 13
+#define LCD_D0            X, 0
+#define LCD_D1            X, 0
+#define LCD_D2            X, 0
+#define LCD_D3            X, 0
+#define LCD_D4            X, 0
+#define LCD_D5            X, 0
+#define LCD_D6            X, 0
+#define LCD_D7            X, 0
 
 // Lcd vezérlö lábak hozzárendelése
 

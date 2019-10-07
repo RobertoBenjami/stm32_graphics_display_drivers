@@ -65,6 +65,9 @@ uint16_t TS_IO_GetY(void);
 uint16_t TS_IO_GetZ1(void);
 uint16_t TS_IO_GetZ2(void);
 
+//-----------------------------------------------------------------------------
+#define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
+
 // portláb mádok (PP: push-pull, OD: open drain, FF: input floating)
 #define MODE_DIGITAL_INPUT    0x0
 #define MODE_OUT              0x1
@@ -80,13 +83,11 @@ uint16_t TS_IO_GetZ2(void);
 #define MODE_PU_UP            0x1
 #define MODE_PU_DOWN          0x2
 
-#define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
-
 #define GPIOX_PORT_(a, b)     GPIO ## a
 #define GPIOX_PORT(a)         GPIOX_PORT_(a)
 
 #define GPIOX_PIN_(a, b)      b
-#define GPIOX_PIN(x)          GPIOX_PIN_(x)
+#define GPIOX_PIN(a)          GPIOX_PIN_(a)
 
 #define GPIOX_MODER_(a,b,c)   GPIO ## b->MODER = (GPIO ## b->MODER & ~(3 << (2 * c))) | (a << (2 * c));
 #define GPIOX_MODER(a, b)     GPIOX_MODER_(a, b)
@@ -116,19 +117,19 @@ uint16_t TS_IO_GetZ2(void);
 #define GPIOX_CLOCK_(a, b)    RCC_AHB1ENR_GPIO ## a ## EN
 #define GPIOX_CLOCK(a)        GPIOX_CLOCK_(a)
 
-#define GPIOX_PORTTONUM_A     1
-#define GPIOX_PORTTONUM_B     2
-#define GPIOX_PORTTONUM_C     3
-#define GPIOX_PORTTONUM_D     4
-#define GPIOX_PORTTONUM_E     5
-#define GPIOX_PORTTONUM_F     6
-#define GPIOX_PORTTONUM_G     7
-#define GPIOX_PORTTONUM_H     8
-#define GPIOX_PORTTONUM_J     9
-#define GPIOX_PORTTONUM_K     10
-#define GPIOX_PORTTONUM_L     11
-#define GPIOX_PORTTONUM_M     12
-#define GPIOX_PORTNUM_(a, b)  GPIOX_PORTTONUM_ ## a
+#define GPIOX_PORTNUM_A       1
+#define GPIOX_PORTNUM_B       2
+#define GPIOX_PORTNUM_C       3
+#define GPIOX_PORTNUM_D       4
+#define GPIOX_PORTNUM_E       5
+#define GPIOX_PORTNUM_F       6
+#define GPIOX_PORTNUM_G       7
+#define GPIOX_PORTNUM_H       8
+#define GPIOX_PORTNUM_J       9
+#define GPIOX_PORTNUM_K       10
+#define GPIOX_PORTNUM_L       11
+#define GPIOX_PORTNUM_M       12
+#define GPIOX_PORTNUM_(a, b)  GPIOX_PORTNUM_ ## a
 #define GPIOX_PORTNAME_(a, b) a
 #define GPIOX_PORTNUM(a)      GPIOX_PORTNUM_(a)
 #define GPIOX_PORTNAME(a)     GPIOX_PORTNAME_(a)
@@ -338,7 +339,7 @@ void LCD_Delay(uint32_t Delay)
 //-----------------------------------------------------------------------------
 void LCD_IO_Bl_OnOff(uint8_t Bl)
 {
-  #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12)
+  #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A
 //  #ifdef LCD_BL
   if(Bl)
     GPIOX_ODR(LCD_BL) = LCD_BLON;
@@ -350,7 +351,7 @@ void LCD_IO_Bl_OnOff(uint8_t Bl)
 //-----------------------------------------------------------------------------
 void LCD_IO_Init(void)
 {
-  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
+  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
   RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_WR) | GPIOX_CLOCK(LCD_RD) | GPIOX_CLOCK(LCD_RST) |
                    GPIOX_CLOCK(LCD_D0) | GPIOX_CLOCK(LCD_D1) | GPIOX_CLOCK(LCD_D2) | GPIOX_CLOCK(LCD_D3) |
                    GPIOX_CLOCK(LCD_D4) | GPIOX_CLOCK(LCD_D5) | GPIOX_CLOCK(LCD_D6) | GPIOX_CLOCK(LCD_D7));
@@ -362,7 +363,7 @@ void LCD_IO_Init(void)
                    GPIOX_CLOCK(LCD_D4) | GPIOX_CLOCK(LCD_D5) | GPIOX_CLOCK(LCD_D6) | GPIOX_CLOCK(LCD_D7));
   #endif
 
-  #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12)
+  #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A
   RCC->AHB1ENR |= GPIOX_CLOCK(LCD_BL);
   GPIOX_ODR(LCD_BL) = LCD_BLON;
   GPIOX_MODER(MODE_OUT, LCD_BL);
@@ -396,7 +397,7 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D7);
 
   /* Set or Reset the control line */
-  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12)
+  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
   LCD_Delay(1);
   LCD_RST_ON;                           // RST = 0
   LCD_Delay(1);
