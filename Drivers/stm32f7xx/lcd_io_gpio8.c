@@ -1,10 +1,10 @@
 /*
- * 8 bites párhuzamos LCD GPIO driver STM32F4-re
+ * 8 bites párhuzamos LCD GPIO driver STM32F7-re
  * 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
  */
 
 /* Készitö: Roberto Benjami
-   verzio:  2019.09
+   verzio:  2019.10
 
    Megj:
    Minden függvány az adatlábak irányát WRITE üzemmodban hagyja, igy nem kell minden irási
@@ -45,8 +45,6 @@ void     LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Si
 void     LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
 void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize);
 
-#define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
-
 // portláb mádok (PP: push-pull, OD: open drain, FF: input floating)
 #define MODE_DIGITAL_INPUT    0x0
 #define MODE_OUT              0x1
@@ -77,10 +75,13 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define GPIOX_PUPDR_(a,b,c)   GPIO ## b->PUPDR = (GPIO ## b->PUPDR & ~(3 << (2 * c))) | (a << (2 * c));
 #define GPIOX_PUPDR(a, b)     GPIOX_PUPDR_(a, b)
 
-#define GPIOX_ODR_(a, b)      BITBAND_ACCESS(GPIO ## a ->ODR, b)
-#define GPIOX_ODR(a)          GPIOX_ODR_(a)
+#define GPIOX_SET_(a, b)      GPIO ## a ->BSRR = 1 << b
+#define GPIOX_SET(a)          GPIOX_SET_(a)
 
-#define GPIOX_IDR_(a, b)      BITBAND_ACCESS(GPIO ## a ->IDR, b)
+#define GPIOX_CLR_(a, b)      GPIO ## a ->BSRR = 1 << (b + 16)
+#define GPIOX_CLR(a)          GPIOX_CLR_(a)
+
+#define GPIOX_IDR_(a, b)      (GPIO ## a ->IDR & (1 << b))
 #define GPIOX_IDR(a)          GPIOX_IDR_(a)
 
 #define GPIOX_LINE_(a, b)     EXTI_Line ## b
@@ -115,17 +116,17 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 
 //-----------------------------------------------------------------------------
 // Parancs/adat láb üzemmod
-#define LCD_RS_CMD            GPIOX_ODR(LCD_RS) = 0
-#define LCD_RS_DATA           GPIOX_ODR(LCD_RS) = 1
+#define LCD_RS_CMD            GPIOX_CLR(LCD_RS)
+#define LCD_RS_DATA           GPIOX_SET(LCD_RS)
 
 // Reset láb aktiv/passziv
-#define LCD_RST_ON            GPIOX_ODR(LCD_RST) = 0
-#define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
+#define LCD_RST_ON            GPIOX_CLR(LCD_RST)
+#define LCD_RST_OFF           GPIOX_SET(LCD_RST)
 
 // Chip select láb
 #if  LCD_CS_MODE ==  0
-#define LCD_CS_ON             GPIOX_ODR(LCD_CS) = 0
-#define LCD_CS_OFF            GPIOX_ODR(LCD_CS) = 1
+#define LCD_CS_ON             GPIOX_CLR(LCD_CS)
+#define LCD_CS_OFF            GPIOX_SET(LCD_CS)
 #endif
 
 #if  LCD_CS_MODE ==  1
@@ -189,15 +190,15 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define LCD_WRITE(dt) { \
   GPIOX_PORT(LCD_D0)->BSRR = (dt << GPIOX_PIN(LCD_D0)) | (0xFF << (GPIOX_PIN(LCD_D0) + 16));}
 #else   // #ifdef  LCD_AUTOOPT
-#define LCD_WRITE(dt) {;                  \
-  GPIOX_ODR(LCD_D0) = BITBAND_ACCESS(dt, 0); \
-  GPIOX_ODR(LCD_D1) = BITBAND_ACCESS(dt, 1); \
-  GPIOX_ODR(LCD_D2) = BITBAND_ACCESS(dt, 2); \
-  GPIOX_ODR(LCD_D3) = BITBAND_ACCESS(dt, 3); \
-  GPIOX_ODR(LCD_D4) = BITBAND_ACCESS(dt, 4); \
-  GPIOX_ODR(LCD_D5) = BITBAND_ACCESS(dt, 5); \
-  GPIOX_ODR(LCD_D6) = BITBAND_ACCESS(dt, 6); \
-  GPIOX_ODR(LCD_D7) = BITBAND_ACCESS(dt, 7); }
+#define LCD_WRITE(dt) {                                      \
+    if(dt & 0x01) GPIOX_SET(LCD_D0); else GPIOX_CLR(LCD_D0); \
+    if(dt & 0x02) GPIOX_SET(LCD_D1); else GPIOX_CLR(LCD_D1); \
+    if(dt & 0x04) GPIOX_SET(LCD_D2); else GPIOX_CLR(LCD_D2); \
+    if(dt & 0x08) GPIOX_SET(LCD_D3); else GPIOX_CLR(LCD_D3); \
+    if(dt & 0x10) GPIOX_SET(LCD_D4); else GPIOX_CLR(LCD_D4); \
+    if(dt & 0x20) GPIOX_SET(LCD_D5); else GPIOX_CLR(LCD_D5); \
+    if(dt & 0x40) GPIOX_SET(LCD_D6); else GPIOX_CLR(LCD_D6); \
+    if(dt & 0x80) GPIOX_SET(LCD_D7); else GPIOX_CLR(LCD_D7); }
 #endif
 #endif
 
@@ -208,15 +209,15 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define LCD_READ(dt) {                          \
   dt = GPIOX_PORT(LCD_D0)->IDR >> GPIOX_PIN(LCD_D0); }
 #else   // #ifdef  LCD_AUTOOPT
-#define LCD_READ(dt) {                  \
-  BITBAND_ACCESS(dt, 0) = GPIOX_IDR(LCD_D0); \
-  BITBAND_ACCESS(dt, 1) = GPIOX_IDR(LCD_D1); \
-  BITBAND_ACCESS(dt, 2) = GPIOX_IDR(LCD_D2); \
-  BITBAND_ACCESS(dt, 3) = GPIOX_IDR(LCD_D3); \
-  BITBAND_ACCESS(dt, 4) = GPIOX_IDR(LCD_D4); \
-  BITBAND_ACCESS(dt, 5) = GPIOX_IDR(LCD_D5); \
-  BITBAND_ACCESS(dt, 6) = GPIOX_IDR(LCD_D6); \
-  BITBAND_ACCESS(dt, 7) = GPIOX_IDR(LCD_D7); }
+#define LCD_READ(dt) {                       \
+  if(GPIOX_IDR(LCD_D0)) dt = 1; else dt = 0; \
+  if(GPIOX_IDR(LCD_D1)) dt |= 0x02;          \
+  if(GPIOX_IDR(LCD_D2)) dt |= 0x04;          \
+  if(GPIOX_IDR(LCD_D3)) dt |= 0x08;          \
+  if(GPIOX_IDR(LCD_D4)) dt |= 0x10;          \
+  if(GPIOX_IDR(LCD_D5)) dt |= 0x24;          \
+  if(GPIOX_IDR(LCD_D6)) dt |= 0x40;          \
+  if(GPIOX_IDR(LCD_D7)) dt |= 0x80;          }
 #endif
 #endif
 
@@ -225,7 +226,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #if     LCD_WRITE_DELAY == 0
 #define LCD_WR_DELAY
 #elif   LCD_WRITE_DELAY == 1
-#define LCD_WR_DELAY          GPIOX_ODR(LCD_WR) = 0
+#define LCD_WR_DELAY          GPIOX_CLR(LCD_WR)
 #else
 #define LCD_WR_DELAY          LCD_IO_Delay(LCD_WRITE_DELAY - 2)
 #endif
@@ -233,14 +234,14 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #if     LCD_READ_DELAY == 0
 #define LCD_RD_DELAY
 #elif   LCD_READ_DELAY == 1
-#define LCD_RD_DELAY          GPIOX_ODR(LCD_RD) = 0
+#define LCD_RD_DELAY          GPIOX_CLR(LCD_RD)
 #else
 #define LCD_RD_DELAY          LCD_IO_Delay(LCD_READ_DELAY - 2)
 #endif
 
-#define LCD_DUMMY_READ        { GPIOX_ODR(LCD_RD) = 0; LCD_RD_DELAY; GPIOX_ODR(LCD_RD) = 1; }
-#define LCD_DATA8_WRITE(dt)   { lcd_data8 = dt; LCD_WRITE(lcd_data8); GPIOX_ODR(LCD_WR) = 0; LCD_WR_DELAY; GPIOX_ODR(LCD_WR) = 1; }
-#define LCD_DATA8_READ(dt)    { GPIOX_ODR(LCD_RD) = 0; LCD_RD_DELAY; LCD_READ(dt); GPIOX_ODR(LCD_RD) = 1; }
+#define LCD_DUMMY_READ        { GPIOX_CLR(LCD_RD); LCD_RD_DELAY; GPIOX_SET(LCD_RD); }
+#define LCD_DATA8_WRITE(dt)   { lcd_data8 = dt; LCD_WRITE(lcd_data8); GPIOX_CLR(LCD_WR); LCD_WR_DELAY; GPIOX_SET(LCD_WR); }
+#define LCD_DATA8_READ(dt)    { GPIOX_CLR(LCD_RD); LCD_RD_DELAY; LCD_READ(dt); GPIOX_SET(LCD_RD); }
 #define LCD_CMD8_WRITE(cmd)   { LCD_RS_CMD; LCD_DATA8_WRITE(cmd); LCD_RS_DATA; }
 
 #if LCD_REVERSE16 == 0
@@ -275,10 +276,17 @@ void LCD_Delay(uint32_t Delay)
 void LCD_IO_Bl_OnOff(uint8_t Bl)
 {
   #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A
+  #if LCD_BLON == 1
   if(Bl)
-    GPIOX_ODR(LCD_BL) = LCD_BLON;
+    GPIOX_SET(LCD_BL);
   else
-    GPIOX_ODR(LCD_BL) = 1 - LCD_BLON;
+    GPIOX_CLR(LCD_BL);
+  #else
+  if(Bl)
+    GPIOX_CLR(LCD_BL);
+  else
+    GPIOX_SET(LCD_BL);
+  #endif
   #endif
 }
 
@@ -304,10 +312,10 @@ void LCD_IO_Init(void)
   #endif
 
   // disable the LCD
-  GPIOX_ODR(LCD_CS) = 1;                // CS = 1
+  GPIOX_SET(LCD_CS);                    // CS = 1
   LCD_RS_DATA;                          // RS = 1
-  GPIOX_ODR(LCD_WR) = 1;                // WR = 1
-  GPIOX_ODR(LCD_RD) = 1;                // RD = 1
+  GPIOX_SET(LCD_WR);                    // WR = 1
+  GPIOX_SET(LCD_RD);                    // RD = 1
 
   GPIOX_MODER(MODE_OUT, LCD_CS);
   GPIOX_MODER(MODE_OUT, LCD_RS);
@@ -331,7 +339,7 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D7);
 
   /* Set or Reset the control line */
-  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
+  #if GPIOX_PORTNUM(LCD_RST) >= 1
   LCD_Delay(1);
   LCD_RST_ON;                           // RST = 0
   LCD_Delay(1);
