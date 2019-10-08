@@ -55,30 +55,22 @@ A lenti példa a következö lábakhoz optimalizál:
       LCD_D8<-E11,  LCD_D9<-E12,  LCD_D10<-E13, LCD_D11<-E14
       LCD_D12<-E15, LCD_D13<-D8,  LCD_D14<-D9,  LCD_D15<-D10 */
 #if 0
-// 8 adatláb kimenetre állítása (adatirány: STM32 -> LCD)
-#define LCD_DIRWRITE { \
-GPIOD->MODER = (GPIOD->MODER & ~((3 << 2 * 14) | (3 << 2 * 15) | (3 << 2 * 0) | (3 << 2 * 1) | (3 << 2 * 8) | (3 << 2 * 9) | (3 << 2 * 10)))  | \
-                                ((1 << 2 * 14) | (1 << 2 * 15) | (1 << 2 * 0) | (1 << 2 * 1) | (1 << 2 * 8) | (1 << 2 * 9) | (1 << 2 * 10));    \
-GPIOE->MODER = (GPIOE->MODER & ~((3 << 2 * 7)  | (3 << 2 * 8)  | (3 << 2 * 9) | (3 << 2 * 10) | (3 << 2 * 11)  | (3 << 2 * 12) | (3 << 2 * 13) | (3 << 2 * 14)  | (3 << 2 * 15))) | \
-                                ((1 << 2 * 7)  | (1 << 2 * 8)  | (1 << 2 * 9) | (1 << 2 * 10) | (1 << 2 * 11)  | (1 << 2 * 12) | (1 << 2 * 13) | (1 << 2 * 14)  | (1 << 2 * 15));   }
-// 8 adatláb bemenetre állítása (adatirány: STM32 <- LCD)
-#define LCD_DIRREAD { \
-GPIOD->MODER = (GPIOD->MODER & ~((3 << 2 * 14) | (3 << 2 * 15) | (3 << 2 * 0) | (3 << 2 * 1) | (3 << 2 * 8) | (3 << 2 * 9) | (3 << 2 * 10)))  | \
-                                ((0 << 2 * 14) | (0 << 2 * 15) | (0 << 2 * 0) | (0 << 2 * 1) | (0 << 2 * 8) | (0 << 2 * 9) | (0 << 2 * 10));    \
-GPIOE->MODER = (GPIOE->MODER & ~((3 << 2 * 7)  | (3 << 2 * 8)  | (3 << 2 * 9) | (3 << 2 * 10) | (3 << 2 * 11)  | (3 << 2 * 12) | (3 << 2 * 13) | (3 << 2 * 14)  | (3 << 2 * 15))) | \
-                                ((0 << 2 * 7)  | (0 << 2 * 8)  | (0 << 2 * 9) | (0 << 2 * 10) | (0 << 2 * 11)  | (0 << 2 * 12) | (0 << 2 * 13) | (0 << 2 * 14)  | (0 << 2 * 15));   }
-
-// 8 adatláb írása, STM32 -> LCD (a kiirandó adat a makro dt paraméterében van)
-#define LCD_WRITE(dt) { \
-GPIOD->ODR = (GPIOD->ODR & ~((1 << 14) | (1 << 15) | (1 << 0) | (1 << 1) | (1 << 8) | (1 << 9) | (1 << 10))) |        \
-                            (((dt & 0b00000011) << 14) | ((dt & 0b00001100) >> 2) | ((dt & 0b1110000000000000) >> 5)); \
-GPIOE->ODR = (GPIOE->ODR & ~((1 << 7) | (1 << 8) | (1 << 9) | (1 << 10) | (1 << 11) | (1 << 12) | (1 << 13) | (1 << 14) | (1 << 15))) |         \
-                            ((dt & 0b0001111111110000) << (7 - 4));                         }
-
-// 8 adatláb olvasása, STM32 <- LCD (az olvasott adat dt paraméterben megadott változoba kerül)
-#define LCD_READ(dt) { \
-dt = ((GPIOD->IDR & 0b1100000000000000) >> (14 - 0)) | ((GPIOD->IDR & 0b0000000000000011) << (2 - 0)) | ((GPIOD->IDR & 0b0000011100000000) << (13 - 8)) | \
-     ((GPIOE->IDR & 0b1111111110000000) >> (7 - 4)); }
+// datapins setting to output (data direction: STM32 -> LCD)
+#define LCD_DIRWRITE { /* D0..D1, D8..D10, D14..D15, E7..E15 <- 0b01 */ \
+GPIOD->MODER = (GPIOD->MODER & ~0b11110000001111110000000000001111) | 0b01010000000101010000000000000101; \
+GPIOE->MODER = (GPIOE->MODER & ~0b11111111111111111100000000000000) | 0b01010101010101010100000000000000; }
+// datapins setting to input (data direction: STM32 <- LCD)
+#define LCD_DIRREAD { /* D0..D1, D8..D10, D14..D15, E7..E15 <- 0b00 */ \
+GPIOD->MODER = (GPIOD->MODER & ~0b11110000001111110000000000001111); \
+GPIOE->MODER = (GPIOE->MODER & ~0b11111111111111111100000000000000); }
+// datapins write, STM32 -> LCD (write I/O pins from dt data)
+#define LCD_WRITE(dt) { /* D14..15 <- dt0..1, D0..1 <- dt2..3, D8..10 <- dt13..15, E7..15 <- dt4..12 */ \
+GPIOD->ODR = (GPIOD->ODR & ~0b1100011100000011) | (((dt & 0b11) << 14) | ((dt & 0b1100) >> 2) | ((dt & 0b1110000000000000) >> 5)); \
+GPIOE->ODR = (GPIOE->ODR & ~0b1111111110000000) | ((dt & 0b0001111111110000) << 3); }
+// datapins read, STM32 <- LCD (read from I/O pins and store to dt data)
+#define LCD_READ(dt) { /* dt0..1 <- D14..15, dt2..3 <- D0..1, dt13..15 <- D8..10, dt4..12 <- E7..15 */ \
+dt = ((GPIOD->IDR & 0b1100000000000000) >> 14) | ((GPIOD->IDR & 0b0000000000000011) << 2) | \
+     ((GPIOD->IDR & 0b0000011100000000) << 5)  | ((GPIOE->IDR & 0b1111111110000000) >> 3); }
 #endif
 
 #endif // __LCD_IO16P_GPIO_H
