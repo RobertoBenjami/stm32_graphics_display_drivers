@@ -658,7 +658,7 @@ void LCD_Delay(uint32_t Delay)
 //-----------------------------------------------------------------------------
 void LCD_IO_Bl_OnOff(uint8_t Bl)
 {
-  #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12)
+  #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A
   if(Bl)
     GPIOX_ODR(LCD_BL) = LCD_BLON;
   else
@@ -676,13 +676,13 @@ void LCD_IO_Init(void)
   RCC->APB2ENR |= GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI);
   #endif
 
-  #if (GPIOX_PORTNUM(LCD_BL) >= 1) && (GPIOX_PORTNUM(LCD_BL) <= 12) // háttérvilágitás
+  #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A    // háttérvilágitás
   RCC->APB2ENR |= GPIOX_CLOCK(LCD_BL);
   GPIOX_MODER(MODE_PP_OUT_2MHZ, LCD_BL);
   LCD_IO_Bl_OnOff(1);
   #endif
 
-  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12) // reset
+  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A   // reset
   RCC->APB2ENR |= GPIOX_CLOCK(LCD_RST);
   GPIOX_MODER(MODE_PP_OUT_2MHZ, LCD_RST);
   LCD_RST_OFF;
@@ -723,7 +723,7 @@ void LCD_IO_Init(void)
   #endif // #else LCD_SPI == 0
 
   /* Set or Reset the control line */
-  #if (GPIOX_PORTNUM(LCD_RST) >= 1) && (GPIOX_PORTNUM(LCD_RST) <= 12) // reset
+  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A   // reset
   LCD_Delay(10);
   LCD_RST_ON;
   LCD_Delay(10);

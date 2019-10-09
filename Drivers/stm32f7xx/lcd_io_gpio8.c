@@ -340,7 +340,7 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D7);
 
   /* Set or Reset the control line */
-  #if GPIOX_PORTNUM(LCD_RST) >= 1
+  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
   LCD_Delay(1);
   LCD_RST_ON;                           // RST = 0
   LCD_Delay(1);
