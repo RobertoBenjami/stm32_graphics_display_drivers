@@ -315,7 +315,7 @@ void LCD_IO_Init(void)
 
   #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A    // háttérvilágitás
   RCC->APB2ENR |= GPIOX_CLOCK(LCD_BL);
-  GPIOX_MODER(MODE_PP_OUT_2MHZ, LCD_BL);
+  GPIOX_MODE(MODE_PP_OUT_2MHZ, LCD_BL);
   LCD_IO_Bl_OnOff(1);
   #endif
 

@@ -191,7 +191,7 @@ volatile uint16_t tmp16;
 #define LCD_MISO              LCD_MOSI
 
 #define LCD_DIRREAD(d)        {                 \
-  GPIOX_MODER(MODE_PU_DIGITAL_INPUT, LCD_MOSI); \
+  GPIOX_MODE(MODE_PU_DIGITAL_INPUT, LCD_MOSI);  \
   GPIOX_ODR(LCD_MOSI) = 0;                      \
   LCD_READ_DELAY;                               \
   while(d--)                                    \
@@ -201,7 +201,7 @@ volatile uint16_t tmp16;
     GPIOX_ODR(LCD_SCK) = 1;                     \
   }                                             }
 
-#define LCD_DIRWRITE(d)       GPIOX_MODER(MODE_PP_OUT_50MHZ, LCD_MOSI)
+#define LCD_DIRWRITE(d)       GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_MOSI)
 #else
 /* TX és fullduplex SPI esetén az adatirány fix */
 #define LCD_DIRREAD(d)
@@ -437,14 +437,14 @@ volatile uint16_t tmp16;
 /* Read SPI sebesség */
 #define LCD_READ_DELAY        LCD_IO_Delay(LCD_SPI_SPD_READ * 4)
 
-#define LCD_DUMMY_READ(d)     {GPIOX_MODER(MODE_PP_OUT_50MHZ, LCD_SCK);  \
+#define LCD_DUMMY_READ(d)     {GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_SCK);   \
                                while(d--)                                \
                                {                                         \
                                  GPIOX_ODR(LCD_SCK) = 0;                 \
                                  LCD_READ_DELAY;                         \
                                  GPIOX_ODR(LCD_SCK) = 1;                 \
                                }                                         \
-                               GPIOX_MODER(MODE_PP_ALTER_50MHZ, LCD_SCK);}
+                               GPIOX_MODE(MODE_PP_ALTER_50MHZ, LCD_SCK); }
 
 #define LCD_SPI_MODE8         BITBAND_ACCESS(SPIX->CR1, SPI_CR1_DFF_Pos) = 0
 #define LCD_SPI_MODE16        BITBAND_ACCESS(SPIX->CR1, SPI_CR1_DFF_Pos) = 1
@@ -687,38 +687,38 @@ void LCD_IO_Init(void)
 {
   #if LCD_SPI_MODE == 2                 // Full duplex
   RCC->APB2ENR |= (GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI) | GPIOX_CLOCK(LCD_MISO));
-  GPIOX_MODER(MODE_FF_DIGITAL_INPUT, LCD_MISO);
+  GPIOX_MODE(MODE_FF_DIGITAL_INPUT, LCD_MISO);
   #else                                 // TX vagy half duplex
   RCC->APB2ENR |= GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI);
   #endif
 
   #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A    // háttérvilágitás
   RCC->APB2ENR |= GPIOX_CLOCK(LCD_BL);
-  GPIOX_MODER(MODE_PP_OUT_2MHZ, LCD_BL);
+  GPIOX_MODE(MODE_PP_OUT_2MHZ, LCD_BL);
   LCD_IO_Bl_OnOff(1);
   #endif
 
   #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A   // reset
   RCC->APB2ENR |= GPIOX_CLOCK(LCD_RST);
-  GPIOX_MODER(MODE_PP_OUT_2MHZ, LCD_RST);
+  GPIOX_MODE(MODE_PP_OUT_2MHZ, LCD_RST);
   LCD_RST_OFF;
   #endif
 
   LCD_RS_DATA;
   LCD_CS_OFF;
-  GPIOX_MODER(MODE_PP_OUT_50MHZ, LCD_RS);
-  GPIOX_MODER(MODE_PP_OUT_50MHZ, LCD_CS);
+  GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_RS);
+  GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_CS);
   GPIOX_ODR(LCD_SCK) = 1;               // SCK = 1
 
   #if LCD_SPI == 0                      // Szoftver SPI
-  GPIOX_MODER(MODE_PP_OUT_50MHZ, LCD_SCK);
-  GPIOX_MODER(MODE_PP_OUT_50MHZ, LCD_MOSI);
+  GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_SCK);
+  GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_MOSI);
 
   #else                                 // Hardver SPI
   LCD_SPI_RCC_EN;
 
-  GPIOX_MODER(MODE_PP_ALTER_50MHZ, LCD_SCK);
-  GPIOX_MODER(MODE_PP_ALTER_50MHZ, LCD_MOSI);
+  GPIOX_MODE(MODE_PP_ALTER_50MHZ, LCD_SCK);
+  GPIOX_MODE(MODE_PP_ALTER_50MHZ, LCD_MOSI);
 
   #if LCD_SPI_MODE == 1
   // Half duplex (adatirány váltogatás)
