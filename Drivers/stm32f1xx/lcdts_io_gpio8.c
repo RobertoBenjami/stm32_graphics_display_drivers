@@ -87,14 +87,29 @@ uint16_t TS_IO_GetZ2(void);
 #define MODE_OD_ALTER_2MHZ    0xE
 #define MODE_OD_ALTER_50MHZ   0xF
 
-#define GPIOX_MODER_(a, b, c) ((GPIO_TypeDef*)(((c & 8) >> 1) + GPIO ## b ## _BASE))->CRL = (((GPIO_TypeDef*)(((c & 8) >> 1) + GPIO ## b ## _BASE))->CRL & ~(0xF << ((c & 7) << 2))) | (a << ((c & 7) << 2));
-#define GPIOX_MODER(a, b)     GPIOX_MODER_(a, b)
+#define GPIOX_PORT_(a, b)     GPIO ## a
+#define GPIOX_PORT(a)         GPIOX_PORT_(a)
+
+#define GPIOX_PIN_(a, b)      b
+#define GPIOX_PIN(a)          GPIOX_PIN_(a)
+
+#define GPIOX_MODE_(a,b,c)    ((GPIO_TypeDef*)(((c & 8) >> 1) + GPIO ## b ## _BASE))->CRL = (((GPIO_TypeDef*)(((c & 8) >> 1) + GPIO ## b ## _BASE))->CRL & ~(0xF << ((c & 7) << 2))) | (a << ((c & 7) << 2))
+#define GPIOX_MODE(a, b)      GPIOX_MODE_(a, b)
 
 #define GPIOX_ODR_(a, b)      BITBAND_ACCESS(GPIO ## a ->ODR, b)
 #define GPIOX_ODR(a)          GPIOX_ODR_(a)
 
 #define GPIOX_IDR_(a, b)      BITBAND_ACCESS(GPIO ## a ->IDR, b)
 #define GPIOX_IDR(a)          GPIOX_IDR_(a)
+
+#define GPIOX_LINE_(a, b)     EXTI_Line ## b
+#define GPIOX_LINE(a)         GPIOX_LINE_(a)
+
+#define GPIOX_PORTSRC_(a, b)  GPIO_PortSourceGPIO ## a
+#define GPIOX_PORTSRC(a)      GPIOX_PORTSRC_(a)
+
+#define GPIOX_PINSRC_(a, b)   GPIO_PinSource ## b
+#define GPIOX_PINSRC(a)       GPIOX_PINSRC_(a)
 
 #define GPIOX_CLOCK_(a, b)    RCC_APB2ENR_IOP ## a ## EN
 #define GPIOX_CLOCK(a)        GPIOX_CLOCK_(a)
@@ -112,8 +127,9 @@ uint16_t TS_IO_GetZ2(void);
 #define GPIOX_PORTNUM_L       11
 #define GPIOX_PORTNUM_M       12
 #define GPIOX_PORTNUM_(a, b)  GPIOX_PORTNUM_ ## a
-#define GPIOX_PORTNAME_(a, b) a
 #define GPIOX_PORTNUM(a)      GPIOX_PORTNUM_(a)
+
+#define GPIOX_PORTNAME_(a, b) a
 #define GPIOX_PORTNAME(a)     GPIOX_PORTNAME_(a)
 
 //-----------------------------------------------------------------------------

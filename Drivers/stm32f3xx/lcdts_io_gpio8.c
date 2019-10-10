@@ -130,8 +130,9 @@ uint16_t TS_IO_GetZ2(void);
 #define GPIOX_PORTNUM_L       11
 #define GPIOX_PORTNUM_M       12
 #define GPIOX_PORTNUM_(a, b)  GPIOX_PORTNUM_ ## a
-#define GPIOX_PORTNAME_(a, b) a
 #define GPIOX_PORTNUM(a)      GPIOX_PORTNUM_(a)
+
+#define GPIOX_PORTNAME_(a, b) a
 #define GPIOX_PORTNAME(a)     GPIOX_PORTNAME_(a)
 
 //-----------------------------------------------------------------------------
