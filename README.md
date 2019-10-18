@@ -45,8 +45,8 @@ App:
 - Paint: Arduino paint clone
 
 How to use starting from zero?
-stm32f103c8 - spi: https://www.youtube.com/watch?v=4NZ1VwuQWhw&feature=youtu.be
-stm32f103c8 - gpio8: https://www.youtube.com/watch?v=2oP4vGotuJA&feature=youtu.be
+ - stm32f103c8 - spi: https://www.youtube.com/watch?v=4NZ1VwuQWhw&feature=youtu.be
+ - stm32f103c8 - gpio8: https://www.youtube.com/watch?v=2oP4vGotuJA&feature=youtu.be
 1. Create project for Cubemx
    - setting the RCC (Crystal/ceramic resonator)
    - setting the debug (SYS / serial wire or trace assyn sw)
