@@ -105,7 +105,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9341_drv;
 
 #define ILI9341_PWCTR6         0xFC
 
-// entry mode bitjei szinsorrend, rajzol·si ir·ny)
+// entry mode bitjei szinsorrend, rajzol√°si ir√°ny)
 #define ILI9341_MAD_RGB        0x08
 #define ILI9341_MAD_BGR        0x00
 
@@ -121,7 +121,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9341_drv;
 #define ILI9341_MAD_COLORMODE  ILI9341_MAD_BGR
 #endif
 
-// Az orient·ciokhoz tartozo ENTRY modok jobra/fel Ès jobbra/le rajzol·si ir·nyhoz Ès a maxim·lis koordin·t·k
+// Az orient√°ciokhoz tartozo ENTRY modok jobra/fel √©s jobbra/le rajzol√°si ir√°nyhoz √©s a maxim√°lis koordin√°t√°k
 #if (ILI9341_ORIENTATION == 0)
 #define ILI9341_SIZE_X                     ILI9341_LCD_PIXEL_WIDTH
 #define ILI9341_SIZE_Y                     ILI9341_LCD_PIXEL_HEIGHT
@@ -191,9 +191,9 @@ void ili9341_Init(void)
     Is_ili9341_Initialized |= ILI9341_IO_INITIALIZED;
   }
 
-  LCD_Delay(1);
+  LCD_Delay(10);
   LCD_IO_WriteCmd8(ILI9341_SWRESET);
-  LCD_Delay(1);
+  LCD_Delay(10);
 
   LCD_IO_WriteCmd8MultipleData8(0xEF, (uint8_t *)"\x03\x80\x02", 3);
   LCD_IO_WriteCmd8MultipleData8(0xCF, (uint8_t *)"\x00\xC1\x30", 3);
@@ -234,7 +234,9 @@ void ili9341_Init(void)
 
   LCD_IO_WriteCmd8(ILI9341_MADCTL); LCD_IO_WriteData8(ILI9341_MAD_DATA_RIGHT_THEN_DOWN);
   LCD_IO_WriteCmd8(ILI9341_SLPOUT);    // Exit Sleep
+  LCD_Delay(10);
   LCD_IO_WriteCmd8(ILI9341_DISPON);    // Display on
+  LCD_Delay(10);
 }
 
 //-----------------------------------------------------------------------------
