@@ -45,14 +45,15 @@ App:
 - Paint: Arduino paint clone
 
 How to use starting from zero?
-( https://www.youtube.com/watch?v=4NZ1VwuQWhw&feature=youtu.be )
+stm32f103c8 - spi: https://www.youtube.com/watch?v=4NZ1VwuQWhw&feature=youtu.be
+stm32f103c8 - gpio8: https://www.youtube.com/watch?v=2oP4vGotuJA&feature=youtu.be
 1. Create project for Cubemx
    - setting the RCC (Crystal/ceramic resonator)
    - setting the debug (SYS / serial wire or trace assyn sw)
    - setting the timebase source (i like the basic timer for this)
    - if FSMC : setting the FSMC (chip select, memory type = LCD, Lcd reg select, data = 8 or 16 bits, timing)
    - setting the clock configuration
-   - project settings: toolchain = truestudio, stack size = 0x800
+   - project settings: project name, toolchain = truestudio, stack size = 0x800
    - generate source code
 2. Truestudio
    - open projects from file system
