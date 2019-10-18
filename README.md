@@ -61,16 +61,15 @@ How to use starting from zero?
    - add USER CODE BEGIN PFP: void mainApp(void);
    - add USER CODE BEGIN WHILE: mainApp();
    - open main.h
-   - add USER CODE BEGIN Includes: #include "stm32f1xx_hal.h" or #include "stm32f4xx_hal.h or ..."
+   - add USER CODE BEGIN Includes (#include "stm32f1xx_hal.h" or #include "stm32f4xx_hal.h" or ...)
    - add 2 new folder for Src folder (App, Lcd)
    - copy files from App/... to App
    - copy 4 or 7 files from Drivers to Lcd (lcd.h, bmp.h, stm32_adafruit_lcd.h / c, if touch: ts.h, stm32_adafruit_ts.h / c)
    - copy Fonts folder to Lcd folder
-   - copy io driver to Lcd folder (lcd_io_...h / c or lcdts_io...h / c)
+   - copy io driver to Lcd folder (lcd_io_...h / c or lcdts_io...h / c or...)
    - copy lcd driver to Lcd folder (st7735.h / c or ili9325.h /c or...)
    - setting the configuration the io driver header file (pin settings, speed settings etc...)
    - setting the LCD configuration (orientation, touchscreen)
    - add include path : Src/Lcd
    - comple ...
-   
    
