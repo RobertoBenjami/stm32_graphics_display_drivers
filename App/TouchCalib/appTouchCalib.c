@@ -130,13 +130,13 @@ void touchcalib(void)
 }
 
 //-----------------------------------------------------------------------------
-// dx0..dy2 : képernyö koordináták
-// tx0..tx2 : touchscreen által visszaadott koordináták
+// dx0..dy2 : kÃ©pernyÃ¶ koordinÃ¡tÃ¡k
+// tx0..tx2 : touchscreen Ã¡ltal visszaadott koordinÃ¡tÃ¡k
 void cindexgen(int32_t dx0, int32_t dy0, int32_t dx1, int32_t dy1, int32_t dx2, int32_t dy2,
                int32_t tx0, int32_t ty0, int32_t tx1, int32_t ty1, int32_t tx2, int32_t ty2)
 {
   Delay(10);
-  printf("int32_t  ts_cindex[] = {%d, ", (int)((tx0-tx2)*(ty1-ty2) - (tx1-tx2)*(ty0-ty2)));
+  printf("{%d, ", (int)((tx0-tx2)*(ty1-ty2) - (tx1-tx2)*(ty0-ty2)));
   Delay(10);
   printf("%d, ", (int)((dx0-dx2)*(ty1-ty2) - (dx1-dx2)*(ty0-ty2)));
   Delay(10);
@@ -200,39 +200,43 @@ void mainApp(void)
 
   touchcalib_drawBox(dx2, dy2, LCD_COLOR_YELLOW);
   while(!ts_drv->DetectTouch(0))
-    Delay(50);
+    Delay(10);
   ts_drv->GetXY(0, &x, &y);
   tx2 = x; ty2 = y;
   while(ts_drv->DetectTouch(0))
   HAL_Delay(CALIBDELAY);
 
-  printf("#if (LCD_ORIENTATION == 0)\r\n");
+  Delay(10);
+  printf("#define  TS_CINDEX_0        ");
+  Delay(10);
   cindexgen(dx0, dy0,
             dx1, dy1,
             dx2, dy2,
             tx0, ty0, tx1, ty1, tx2, ty2);
-  Delay(150);
 
-  printf("#elif (LCD_ORIENTATION == 1)\r\n");
+  Delay(10);
+  printf("#define  TS_CINDEX_1        ");
+  Delay(10);
   cindexgen(dy0, BSP_LCD_GetXSize() - 1 - dx0,
             dy1, BSP_LCD_GetXSize() - 1 - dx1,
             dy2, BSP_LCD_GetXSize() - 1 - dx2,
             tx0, ty0, tx1, ty1, tx2, ty2);
-  Delay(150);
+  Delay(10);
+  printf("#define  TS_CINDEX_2        ");
 
-  printf("#elif (LCD_ORIENTATION == 2)\r\n");
+  Delay(10);
   cindexgen(BSP_LCD_GetXSize() - 1 - dx0, BSP_LCD_GetYSize() - 1 - dy0,
             BSP_LCD_GetXSize() - 1 - dx1, BSP_LCD_GetYSize() - 1 - dy1,
             BSP_LCD_GetXSize() - 1 - dx2, BSP_LCD_GetYSize() - 1 - dy2,
             tx0, ty0, tx1, ty1, tx2, ty2);
-  Delay(150);
 
-  printf("#elif (LCD_ORIENTATION == 3)\r\n");
+  Delay(10);
+  printf("#define  TS_CINDEX_3        ");
+  Delay(10);
   cindexgen(BSP_LCD_GetYSize() - 1 - dy0, dx0,
             BSP_LCD_GetYSize() - 1 - dy1, dx1,
             BSP_LCD_GetYSize() - 1 - dy2, dx2,
             tx0, ty0, tx1, ty1, tx2, ty2);
-  printf("#endif\r\n");
 
   while(1);
 }
