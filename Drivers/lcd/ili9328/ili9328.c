@@ -11,20 +11,20 @@
 #define  RD(a)   a
 #define  RDN(a)  __REVSH(a)
 #if ILI9328_COLORMODE == 0
-// RGB 5-6-5 <-> BGR 5-6-5 (vörös - kék összetevök felcserélése)
+// RGB 5-6-5 <-> BGR 5-6-5 (vÃ¶rÃ¶s - kÃ©k Ã¶sszetevÃ¶k felcserÃ©lÃ©se)
 #define  RGB565TOBGR565(rgb16)  rgb16 = __REVSH((rgb16 & 0b1110000000000111) | ((rgb16 & 0b0000000011111000) << 5) | ((rgb16 & 0b0001111100000000) >> 5))
 #else
 #define  RGB565TOBGR565(rgb16)  rgb16 = __REVSH(rgb16)
 #endif
 #endif
 
-/* Konstans szám bájtjainak cseréje, változó bájtjainak cseréje */
+/* Konstans szÃ¡m bÃ¡jtjainak cserÃ©je, vÃ¡ltozÃ³ bÃ¡jtjainak cserÃ©je */
 #if LCD_REVERSE16 == 1
 #define  RC(a)   ((((a) & 0xFF) << 8) | (((a) & 0xFF00) >> 8))
 #define  RD(a)   __REVSH(a)
 #define  RDN(a)  a
 #if ILI9328_COLORMODE == 0
-// RGB 5-6-5 <-> BGR 5-6-5 (vörös - kék összetevök felcserélése)
+// RGB 5-6-5 <-> BGR 5-6-5 (vÃ¶rÃ¶s - kÃ©k Ã¶sszetevÃ¶k felcserÃ©lÃ©se)
 #define  RGB565TOBGR565(rgb16)  rgb16 = (rgb16 & 0b11111100000) | (rgb16 & 0b11111 << 11) | (rgb16 & 0b1111100000000000 >> 11)
 #else
 #define  RGB565TOBGR565(rgb16)
@@ -128,7 +128,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9328_drv;
 #define ILI9328_PANEL_IF_CTRL5     0x97
 #define ILI9328_PANEL_IF_CTRL6     0x98
 
-// entry mode bitjei (16 vs 18 bites szinkód, szinsorrend, rajzolási irány)
+// entry mode bitjei (16 vs 18 bites szinkÃ³d, szinsorrend, rajzolÃ¡si irÃ¡ny)
 #define ILI9328_ENTRY_18BITCOLOR   0x8000
 #define ILI9328_ENTRY_18BITBCD     0x4000
 
@@ -142,13 +142,13 @@ LCD_DrvTypeDef  *lcd_drv = &ili9328_drv;
 #define ILI9328_ENTRY_Y_DOWN       0x0020
 
 #if ILI9328_COLORMODE == 0
-// RGB 5-6-5 <-> BGR 5-6-5 (vörös - kék összetevök felcserélése)
+// RGB 5-6-5 <-> BGR 5-6-5 (vÃ¶rÃ¶s - kÃ©k Ã¶sszetevÃ¶k felcserÃ©lÃ©se)
 #define ILI9328_ENTRY_COLORMODE    ILI9328_ENTRY_RGB
 #else
 #define ILI9328_ENTRY_COLORMODE    ILI9328_ENTRY_BGR
 #endif
 
-// Az orientáciokhoz tartozo ENTRY modok jobra/fel és jobbra/le rajzolási irányhoz
+// Az orientÃ¡ciokhoz tartozo ENTRY modok jobra/fel Ã©s jobbra/le rajzolÃ¡si irÃ¡nyhoz
 #if (ILI9328_ORIENTATION == 0)
 #define ILI9328_ENTRY_DATA_RIGHT_THEN_UP     ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_RIGHT | ILI9328_ENTRY_Y_UP
 #define ILI9328_ENTRY_DATA_RIGHT_THEN_DOWN   ILI9328_ENTRY_COLORMODE | ILI9328_ENTRY_X_RIGHT | ILI9328_ENTRY_Y_DOWN
@@ -196,8 +196,8 @@ volatile uint8_t io_ts_busy = 0;
 //-----------------------------------------------------------------------------
 #if ILI9328_TOUCH == 1
 
-// Touch paraméterek
-// nyomáserõsség értékek honnan hova konvertálodjanak
+// Touch paramÃ©terek
+// nyomÃ¡serÃµssÃ©g Ã©rtÃ©kek honnan hova konvertÃ¡lodjanak
 
 #define TOUCHMINPRESSRC    8192
 #define TOUCHMAXPRESSRC    4096
@@ -205,7 +205,7 @@ volatile uint8_t io_ts_busy = 0;
 #define TOUCHMAXPRESTRG     255
 #define TOUCH_FILTER          8
 
-// fixpontos Z indexek (16bit egész, 16bit tört)
+// fixpontos Z indexek (16bit egÃ©sz, 16bit tÃ¶rt)
 #define ZINDEXA  ((65536 * (TOUCHMAXPRESTRG - TOUCHMINPRESTRG)) / (TOUCHMAXPRESSRC - TOUCHMINPRESSRC))
 #define ZINDEXB  (-ZINDEXA * TOUCHMINPRESSRC)
 
@@ -228,13 +228,13 @@ TS_DrvTypeDef   ili9328_ts_drv =
 TS_DrvTypeDef  *ts_drv = &ili9328_ts_drv;
 
 #if (ILI9328_ORIENTATION == 0)
-int32_t  ts_cindex[] = {-2776428, -209145, -6464, 123162313, 269742, -542860, 95435474};
+int32_t  ts_cindex[] = TS_CINDEX_0;
 #elif (ILI9328_ORIENTATION == 1)
-int32_t  ts_cindex[] = {-2776428, 269742, -542860, 95435474, 209145, 6464, -786728605};
+int32_t  ts_cindex[] = TS_CINDEX_1;
 #elif (ILI9328_ORIENTATION == 2)
-int32_t  ts_cindex[] = {-2776428, 209145, 6464, -786728605, -269742, 542860, -981116006};
+int32_t  ts_cindex[] = TS_CINDEX_2;
 #elif (ILI9328_ORIENTATION == 3)
-int32_t  ts_cindex[] = {-2776428, -269742, 542860, -981116006, -209145, -6464, 123162313};
+int32_t  ts_cindex[] = TS_CINDEX_3;
 #endif
 
 uint16_t tx, ty;
@@ -316,7 +316,7 @@ void ili9328_Init(void)
     LCD_Delay(5);
 
     //------DISPLAY ON------
-    LCD_IO_WriteCmd16(RC(ILI9328_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibráljon
+    LCD_IO_WriteCmd16(RC(ILI9328_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibrÃ¡ljon
     LCD_IO_WriteCmd16(RC(ILI9328_DISP_CTRL1)); LCD_IO_WriteData16(RC(0x0133));
   }
 }
@@ -347,7 +347,7 @@ void ili9328_DisplayOn(void)
   LCD_IO_WriteCmd16(RC(ILI9328_POW_CTRL7)); LCD_IO_WriteData16(RC(0x0015));
 
   /* Display On */
-  LCD_IO_WriteCmd16(RC(ILI9328_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibráljon
+  LCD_IO_WriteCmd16(RC(ILI9328_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibrÃ¡ljon
   LCD_IO_WriteCmd16(RC(ILI9328_DISP_CTRL1)); LCD_IO_WriteData16(RC(0x0133)); /* display ON */
 
   LCD_IO_Bl_OnOff(1);
@@ -642,7 +642,7 @@ void ili9328_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   ILI9328_LCDMUTEX_PUSH();
   for(uint16_t yp = Ypos; yp < Ypos + Ysize; yp++)
     for(uint16_t xp = Xpos; xp < Xpos + Xsize; xp++)
-    { // mivel memoria olvasáskor nem lépteti a memoriacimet automatikusan csak ez a modszer marad :(
+    { // mivel memoria olvasÃ¡skor nem lÃ©pteti a memoriacimet automatikusan csak ez a modszer marad :(
       *pdata = ili9328_ReadPixel(xp, yp);
       pdata += 2;
     }
@@ -717,7 +717,7 @@ uint8_t ili9328_ts_DetectTouch(uint16_t DeviceAddr)
         z21 = z22;
       }
     }
-    // ha sokadik probára sem sikerült stabil koordinátát kiolvasni -> nincs változás
+    // ha sokadik probÃ¡ra sem sikerÃ¼lt stabil koordinÃ¡tÃ¡t kiolvasni -> nincs vÃ¡ltozÃ¡s
   }
   else
     tp = 0; // nincs lenyomva
