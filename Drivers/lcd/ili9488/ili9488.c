@@ -123,7 +123,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9488_drv;
 
 #define LCD_ORIENTATION  ILI9488_ORIENTATION
 
-// Az orientáciokhoz tartozo ENTRY modok jobra/fel és jobbra/le rajzolási irányhoz
+// Az orientÃ¡ciokhoz tartozo ENTRY modok jobra/fel Ã©s jobbra/le rajzolÃ¡si irÃ¡nyhoz
 #if (LCD_ORIENTATION == 0)
 #define ILI9488_MAX_X                      (ILI9488_LCD_PIXEL_WIDTH - 1)
 #define ILI9488_MAX_Y                      (ILI9488_LCD_PIXEL_HEIGHT - 1)
@@ -167,8 +167,8 @@ volatile uint8_t io_ts_busy = 0;
 //-----------------------------------------------------------------------------
 #if ILI9488_TOUCH == 1
 
-// Touch paraméterek
-// nyomáserõsség értékek honnan hova konvertálodjanak
+// Touch paramÃ©terek
+// nyomÃ¡serÃµssÃ©g Ã©rtÃ©kek honnan hova konvertÃ¡lodjanak
 
 #define TOUCHMINPRESSRC    8192
 #define TOUCHMAXPRESSRC    4096
@@ -176,7 +176,7 @@ volatile uint8_t io_ts_busy = 0;
 #define TOUCHMAXPRESTRG     255
 #define TOUCH_FILTER         16
 
-// fixpontos Z indexek (16bit egész, 16bit tört)
+// fixpontos Z indexek (16bit egÃ©sz, 16bit tÃ¶rt)
 #define ZINDEXA  ((65536 * (TOUCHMAXPRESTRG - TOUCHMINPRESTRG)) / (TOUCHMAXPRESSRC - TOUCHMINPRESSRC))
 #define ZINDEXB  (-ZINDEXA * TOUCHMINPRESSRC)
 
@@ -199,13 +199,13 @@ TS_DrvTypeDef   ili9488_ts_drv =
 TS_DrvTypeDef  *ts_drv = &ili9488_ts_drv;
 
 #if (LCD_ORIENTATION == 0)
-int32_t  ts_cindex[] = {3439877, 337591, -670620, 1245329694, -466590, -7307, 1824431420};
+int32_t  ts_cindex[] = TS_CINDEX_0;
 #elif (LCD_ORIENTATION == 1)
-int32_t  ts_cindex[] = {3439877, -466590, -7307, 1824431420, -337591, 670620, -148008931};
+int32_t  ts_cindex[] = TS_CINDEX_1;
 #elif (LCD_ORIENTATION == 2)
-int32_t  ts_cindex[] = {3439877, -337591, 670620, -148008931, 466590, 7307, -176730337};
+int32_t  ts_cindex[] = TS_CINDEX_2;
 #elif (LCD_ORIENTATION == 3)
-int32_t  ts_cindex[] = {3439877, 466590, 7307, -176730337, 337591, -670620, 1245329694};
+int32_t  ts_cindex[] = TS_CINDEX_3;
 #endif
 
 uint16_t tx, ty;
@@ -654,7 +654,7 @@ uint8_t ili9488_ts_DetectTouch(uint16_t DeviceAddr)
         z21 = z22;
       }
     }
-    // sokadik probára sem sikerült stabil koordinátát kiolvasni -> nincs lenyomva
+    // sokadik probÃ¡ra sem sikerÃ¼lt stabil koordinÃ¡tÃ¡t kiolvasni -> nincs lenyomva
     tp = 0;
   }
   else
