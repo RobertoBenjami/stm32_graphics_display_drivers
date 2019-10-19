@@ -11,7 +11,7 @@
 #define  RD(a)   a
 #endif
 
-/* Konstans sz·m b·jtjainak cserÈje, v·ltozÛ b·jtjainak cserÈje */
+/* Konstans sz√°m b√°jtjainak cser√©je, v√°ltoz√≥ b√°jtjainak cser√©je */
 #if LCD_REVERSE16 == 1
 #define  RC(a)   ((((a) & 0xFF) << 8) | (((a) & 0xFF00) >> 8))
 #define  RD(a)   __REVSH(a)
@@ -109,7 +109,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9325_drv;
 #define ILI9325_PANEL_IF_CTRL5     0x97
 #define ILI9325_PANEL_IF_CTRL6     0x98
 
-// entry mode bitjei (16 vs 18 bites szinkÛd, szinsorrend, rajzol·si ir·ny)
+// entry mode bitjei (16 vs 18 bites szink√≥d, szinsorrend, rajzol√°si ir√°ny)
 #define ILI9325_ENTRY_18BITCOLOR   0x8000
 #define ILI9325_ENTRY_18BITBCD     0x4000
 
@@ -128,7 +128,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9325_drv;
 #define ILI9325_ENTRY_COLORMODE    ILI9325_ENTRY_BGR
 #endif
 
-// Az orient·ciokhoz tartozo ENTRY modok jobra/fel Ès jobbra/le rajzol·si ir·nyhoz
+// Az orient√°ciokhoz tartozo ENTRY modok jobra/fel √©s jobbra/le rajzol√°si ir√°nyhoz
 #if (ILI9325_ORIENTATION == 0)
 #define ILI9325_ENTRY_DATA_RIGHT_THEN_UP     ILI9325_ENTRY_COLORMODE | ILI9325_ENTRY_X_RIGHT | ILI9325_ENTRY_Y_UP
 #define ILI9325_ENTRY_DATA_RIGHT_THEN_DOWN   ILI9325_ENTRY_COLORMODE | ILI9325_ENTRY_X_RIGHT | ILI9325_ENTRY_Y_DOWN
@@ -176,8 +176,8 @@ volatile uint8_t io_ts_busy = 0;
 //-----------------------------------------------------------------------------
 #if ILI9325_TOUCH == 1
 
-// Touch paramÈterek
-// nyom·serıssÈg ÈrtÈkek honnan hova konvert·lodjanak
+// Touch param√©terek
+// nyom√°ser√µss√©g √©rt√©kek honnan hova konvert√°lodjanak
 
 #define TOUCHMINPRESSRC    8192
 #define TOUCHMAXPRESSRC    4096
@@ -185,7 +185,7 @@ volatile uint8_t io_ts_busy = 0;
 #define TOUCHMAXPRESTRG     255
 #define TOUCH_FILTER          8
 
-// fixpontos Z indexek (16bit egÈsz, 16bit tˆrt)
+// fixpontos Z indexek (16bit eg√©sz, 16bit t√∂rt)
 #define ZINDEXA  ((65536 * (TOUCHMAXPRESTRG - TOUCHMINPRESTRG)) / (TOUCHMAXPRESSRC - TOUCHMINPRESSRC))
 #define ZINDEXB  (-ZINDEXA * TOUCHMINPRESSRC)
 
@@ -211,29 +211,14 @@ TS_DrvTypeDef   ili9325_ts_drv =
 
 TS_DrvTypeDef  *ts_drv = &ili9325_ts_drv;
 
-// A kÈt kijelzı pÈld·nyom (kissÈ) eltÈr egym·stol
-#if 1
 #if (ILI9325_ORIENTATION == 0)
-int32_t  ts_cindex[] = {-2756000, 210932, -423352, 96135608, 269619, 1366, -1021658814};
+int32_t  ts_cindex[] = TS_CINDEX_0;
 #elif (ILI9325_ORIENTATION == 1)
-int32_t  ts_cindex[] = {-2756000, 269619, 1366, -1021658814, -210932, 423352, -754819608};
+int32_t  ts_cindex[] = TS_CINDEX_1;
 #elif (ILI9325_ORIENTATION == 2)
-int32_t  ts_cindex[] = {-2756000, -210932, 423352, -754819608, -269619, -1366, 142494814};
+int32_t  ts_cindex[] = TS_CINDEX_2;
 #elif (ILI9325_ORIENTATION == 3)
-int32_t  ts_cindex[] = {-2756000, -269619, -1366, 142494814, 210932, -423352, 96135608};
-#endif
-
-#else
-
-#if (ILI9325_ORIENTATION == 0)
-int32_t  ts_cindex[] = {-2800640, -215894, 3667, 108105595, 272088, -543244, 80253780};
-#elif (ILI9325_ORIENTATION == 1)
-int32_t  ts_cindex[] = {-2800640, 272088, -543244, 80253780, 215894, -3667, -777458555};
-#elif (ILI9325_ORIENTATION == 2)
-int32_t  ts_cindex[] = {-2800640, 215894, -3667, -777458555, -272088, 543244, -973657940};
-#elif (ILI9325_ORIENTATION == 3)
-int32_t  ts_cindex[] = {-2800640, -272088, 543244, -973657940, -215894, 3667, 108105595};
-#endif
+int32_t  ts_cindex[] = TS_CINDEX_3;
 #endif
 
 uint16_t tx, ty;
@@ -317,7 +302,7 @@ void ili9325_Init(void)
     LCD_Delay(5);
 
     //------DISPLAY ON------
-    LCD_IO_WriteCmd16(RC(ILI9325_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibr·ljon
+    LCD_IO_WriteCmd16(RC(ILI9325_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibr√°ljon
     LCD_IO_WriteCmd16(RC(ILI9325_DISP_CTRL1)); LCD_IO_WriteData16(RC(0x0133));
   }
 }
@@ -348,7 +333,7 @@ void ili9325_DisplayOn(void)
   LCD_IO_WriteCmd16(RC(ILI9325_POW_CTRL7)); LCD_IO_WriteData16(RC(0x0015));
 
   /* Display On */
-  LCD_IO_WriteCmd16(RC(ILI9325_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibr·ljon
+  LCD_IO_WriteCmd16(RC(ILI9325_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibr√°ljon
   LCD_IO_WriteCmd16(RC(ILI9325_DISP_CTRL1)); LCD_IO_WriteData16(RC(0x0133)); /* display ON */
 
   LCD_IO_Bl_OnOff(1);
@@ -654,7 +639,7 @@ void ili9325_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   #else
   for(uint16_t yp = Ypos; yp < Ypos + Ysize; yp++)
     for(uint16_t xp = Xpos; xp < Xpos + Xsize; xp++)
-    { // mivel memoria olvas·skor nem lÈpteti a memoriacimet automatikusan csak ez a modszer marad :(
+    { // mivel memoria olvas√°skor nem l√©pteti a memoriacimet automatikusan csak ez a modszer marad :(
       ILI9325_SETCURSOR(xp, yp);
       LCD_IO_ReadCmd16MultipleData16(RC(ILI9325_RW_GRAM), (uint16_t *)pdata, 1, 2);
       pdata += 2;
@@ -731,7 +716,7 @@ uint8_t ili9325_ts_DetectTouch(uint16_t DeviceAddr)
         z21 = z22;
       }
     }
-    // ha sokadik prob·ra sem siker¸lt stabil koordin·t·t kiolvasni -> nincs v·ltoz·s
+    // ha sokadik prob√°ra sem siker√ºlt stabil koordin√°t√°t kiolvasni -> nincs v√°ltoz√°s
   }
   else
     tp = 0; // nincs lenyomva
