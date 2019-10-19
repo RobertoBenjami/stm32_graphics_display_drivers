@@ -1,8 +1,8 @@
 /* Orientation:
-   - 0: 320x480 micro-sd in top (portrait)
-   - 1: 480x320 micro-sd in left (landscape)
-   - 2: 320x480 micro-sd in bottom (portrait)
-   - 3: 480x320 micro-sd in right (landscape)
+   - 0: 320x480 micro-sd in the top (portrait)
+   - 1: 480x320 micro-sd in the left (landscape)
+   - 2: 320x480 micro-sd in the bottom (portrait)
+   - 3: 480x320 micro-sd in the right (landscape)
 */
 #define  ILI9488_ORIENTATION       3
 
@@ -13,8 +13,8 @@
 #define  ILI9488_COLORMODE         0
 
 /* Analog touchscreen
-   - 0: Touchscreen disabled
-   - 1: Touchscreen enabled
+   - 0: touchscreen disabled
+   - 1: touchscreen enabled
 */
 #define  ILI9488_TOUCH             0
 
