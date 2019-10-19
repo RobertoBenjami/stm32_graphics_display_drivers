@@ -1,8 +1,8 @@
-/* Orientácio:
-   - 0: 320x480 micro-sd kártya felül (portrait)
-   - 1: 480x320 micro-sd kártya gomb bal oldalt (landscape)
-   - 2: 320x480 micro-sd kártya gomb alul (portrait)
-   - 3: 480x320 micro-sd kártya jobb oldalt (landscape)
+/* Orientation:
+   - 0: 320x480 micro-sd in top (portrait)
+   - 1: 480x320 micro-sd in left (landscape)
+   - 2: 320x480 micro-sd in botton (portrait)
+   - 3: 480x320 micro-sd in right (landscape)
 */
 #define  ILI9488_ORIENTATION       3
 
@@ -13,22 +13,25 @@
 #define  ILI9488_COLORMODE         0
 
 /* Analog touchscreen
-   - 0: Touchscreen tiltva
-   - 1: Touchscreen engedélyezve
+   - 0: Touchscreen disabled
+   - 1: Touchscreen enabled
 */
 #define  ILI9488_TOUCH             0
 
-/* Többszálas vagy megszakításból történö használat miatt az Lcd és a Touchscreen
-   egyidejü használata összeakadást tud okozni (mivel közös I/O eröforrásokat használ)
-   Ezzel a mutex-el ki lehet zárni az összeakadást.
-   Az Lcd függvényei kivárják a Touchscreen fefejeztét,
-   a touchscreen lekérdezés meg nem hajtodik végre, ha az Lcd éppen foglalt.
-   Figyelem: Ha az Lcd prioritása magasabb mint a Touchscreen-é, végtelen ciklusba kerülhet!
-   - 0: nincs védelem az LCD és a touchscreen egyidejüségének kizárására
-   - 1: van védelem az LCD és a touchscreen egyidejüségének kizárására
+/* Touchscreen calibration data for 4 orientations */
+#define  TS_CINDEX_0        {3385020, 333702, -667424, 1243070964, -458484, -13002, 1806391572};
+#define  TS_CINDEX_1        {3385020, -458484, -13002, 1806391572, -333702, 667424, -163249584};
+#define  TS_CINDEX_2        {3385020, -333702, 667424, -163249584, 458484, 13002, -184966992};
+#define  TS_CINDEX_3        {3385020, 458484, 13002, -184966992, 333702, -667424, 1243070964};
+
+/* For multi-threaded or intermittent use, Lcd and Touchscreen simultaneous use can cause confusion (since it uses common I/O resources)
+   Lcd functions wait for the touchscreen header, the touchscreen query is not executed when Lcd is busy.
+Â Â Â Note: If the priority of the Lcd is higher than that of the Touchscreen, it may end up in an infinite loop!
+   - 0: multi-threaded protection disabled
+   - 1: multi-threaded protection enabled
 */
 #define  ILI9488_MULTITASK_MUTEX   0
 
-// ILI9488 Size (fizikai felbontás, az alapértelmezett orientáciora vonatkoztatva)
+/* ILI9488 Size (physical resolution in default orientation) */
 #define  ILI9488_LCD_PIXEL_WIDTH   320
 #define  ILI9488_LCD_PIXEL_HEIGHT  480
