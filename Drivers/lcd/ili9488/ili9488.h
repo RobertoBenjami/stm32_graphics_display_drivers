@@ -1,7 +1,7 @@
 /* Orientation:
    - 0: 320x480 micro-sd in top (portrait)
    - 1: 480x320 micro-sd in left (landscape)
-   - 2: 320x480 micro-sd in botton (portrait)
+   - 2: 320x480 micro-sd in bottom (portrait)
    - 3: 480x320 micro-sd in right (landscape)
 */
 #define  ILI9488_ORIENTATION       3
