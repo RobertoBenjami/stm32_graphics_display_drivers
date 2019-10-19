@@ -233,15 +233,15 @@ volatile uint8_t io_ts_busy = 0;
 //-----------------------------------------------------------------------------
 #if     HX8347G_TOUCH == 1
 
-// Touch paraméterek
-// nyomáserõsség értékek honnan hova konvertálodjanak
+// Touch paramÃ©terek
+// nyomÃ¡serÃµssÃ©g Ã©rtÃ©kek honnan hova konvertÃ¡lodjanak
 #define TOUCHMINPRESSRC    8192
 #define TOUCHMAXPRESSRC    4096
 #define TOUCHMINPRESTRG       0
 #define TOUCHMAXPRESTRG     255
 #define TOUCH_FILTER         16
 
-// fixpontos Z indexek (16bit egész, 16bit tört)
+// fixpontos Z indexek (16bit egÃ©sz, 16bit tÃ¶rt)
 #define ZINDEXA  ((65536 * (TOUCHMAXPRESTRG - TOUCHMINPRESTRG)) / (TOUCHMAXPRESSRC - TOUCHMINPRESSRC))
 #define ZINDEXB  (-ZINDEXA * TOUCHMINPRESSRC)
 
@@ -269,13 +269,13 @@ TS_DrvTypeDef   hx8347g_ts_drv =
 TS_DrvTypeDef  *ts_drv = &hx8347g_ts_drv;
 
 #if (HX8347G_ORIENTATION == 0)
-int32_t  ts_cindex[] = {-2756000, 210932, -423352, 96135608, 269619, 1366, -1021658814};
+int32_t  ts_cindex[] = TS_CINDEX_0;
 #elif (HX8347G_ORIENTATION == 1)
-int32_t  ts_cindex[] = {-2756000, 269619, 1366, -1021658814, -210932, 423352, -754819608};
+int32_t  ts_cindex[] = TS_CINDEX_1;
 #elif (HX8347G_ORIENTATION == 2)
-int32_t  ts_cindex[] = {-2756000, -210932, 423352, -754819608, -269619, -1366, 142494814};
+int32_t  ts_cindex[] = TS_CINDEX_2;
 #elif (HX8347G_ORIENTATION == 3)
-int32_t  ts_cindex[] = {-2756000, -269619, -1366, 142494814, 210932, -423352, 96135608};
+int32_t  ts_cindex[] = TS_CINDEX_3;
 #endif
 
 uint16_t  tx, ty;
@@ -698,7 +698,7 @@ uint8_t hx8347g_ts_DetectTouch(uint16_t DeviceAddr)
         z21 = z22;
       }
     }
-    // sokadik probára sem sikerült stabil koordinátát kiolvasni -> nincs lenyomva
+    // sokadik probÃ¡ra sem sikerÃ¼lt stabil koordinÃ¡tÃ¡t kiolvasni -> nincs lenyomva
     tp = 0;
   }
   else
