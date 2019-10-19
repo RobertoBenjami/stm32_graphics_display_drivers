@@ -11,7 +11,7 @@
 #define  RD(a)   a
 #endif
 
-/* Konstans szám bájtjainak cseréje, változó bájtjainak cseréje */
+/* Konstans szÃ¡m bÃ¡jtjainak cserÃ©je, vÃ¡ltozÃ³ bÃ¡jtjainak cserÃ©je */
 #if LCD_REVERSE16 == 1
 #define  RC(a)   ((((a) & 0xFF) << 8) | (((a) & 0xFF00) >> 8))
 #define  RD(a)   __REVSH(a)
@@ -115,7 +115,7 @@ LCD_DrvTypeDef  *lcd_drv = &st7783_drv;
 #define ST7783_PANEL_IF_CTRL5     0x97
 #define ST7783_PANEL_IF_CTRL6     0x98
 
-// entry mode bitjei (16 vs 18 bites szinkód, szinsorrend, rajzolási irány)
+// entry mode bitjei (16 vs 18 bites szinkÃ³d, szinsorrend, rajzolÃ¡si irÃ¡ny)
 #define ST7783_ENTRY_18BITCOLOR   0x8000
 #define ST7783_ENTRY_18BITBCD     0x4000
 
@@ -189,15 +189,15 @@ volatile uint8_t io_ts_busy = 0;
 //-----------------------------------------------------------------------------
 #if ST7783_TOUCH == 1
 
-// Touch paraméterek
-// nyomáserõsség értékek honnan hova konvertálodjanak
+// Touch paramÃ©terek
+// nyomÃ¡serÃµssÃ©g Ã©rtÃ©kek honnan hova konvertÃ¡lodjanak
 #define TOUCHMINPRESSRC    8192
 #define TOUCHMAXPRESSRC    4096
 #define TOUCHMINPRESTRG       0
 #define TOUCHMAXPRESTRG     255
 #define TOUCH_FILTER         16
 
-// fixpontos Z indexek (16bit egész, 16bit tört)
+// fixpontos Z indexek (16bit egÃ©sz, 16bit tÃ¶rt)
 #define ZINDEXA  ((65536 * (TOUCHMAXPRESTRG - TOUCHMINPRESTRG)) / (TOUCHMAXPRESSRC - TOUCHMINPRESSRC))
 #define ZINDEXB  (-ZINDEXA * TOUCHMINPRESSRC)
 
@@ -220,13 +220,13 @@ TS_DrvTypeDef   st7783_ts_drv =
 TS_DrvTypeDef  *ts_drv = &st7783_ts_drv;
 
 #if (ST7783_ORIENTATION == 0)
-int32_t  ts_cindex[] = {-2756000, 210932, -423352, 96135608, 269619, 1366, -1021658814};
+int32_t  ts_cindex[] = TS_CINDEX_0;
 #elif (ST7783_ORIENTATION == 1)
-int32_t  ts_cindex[] = {-2756000, 269619, 1366, -1021658814, -210932, 423352, -754819608};
+int32_t  ts_cindex[] = TS_CINDEX_1;
 #elif (ST7783_ORIENTATION == 2)
-int32_t  ts_cindex[] = {-2756000, -210932, 423352, -754819608, -269619, -1366, 142494814};
+int32_t  ts_cindex[] = TS_CINDEX_2;
 #elif (ST7783_ORIENTATION == 3)
-int32_t  ts_cindex[] = {-2756000, -269619, -1366, 142494814, 210932, -423352, 96135608};
+int32_t  ts_cindex[] = TS_CINDEX_3;
 #endif
 
 uint16_t tx, ty;
@@ -315,7 +315,7 @@ void st7783_Init(void)
     LCD_Delay(5);
 
     //------DISPLAY ON------
-    LCD_IO_WriteCmd16(RC(ST7783_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibráljon
+    LCD_IO_WriteCmd16(RC(ST7783_FRM_RATE_COL_CTRL)); LCD_IO_WriteData16(RC(0x000E)); // 110Hz, hogy ne vibrÃ¡ljon
     LCD_IO_WriteCmd16(RC(ST7783_DISP_CTRL1)); LCD_IO_WriteData16(RC(0x0133));
   }
 }
@@ -679,7 +679,7 @@ uint8_t st7783_ts_DetectTouch(uint16_t DeviceAddr)
         z21 = z22;
       }
     }
-    // sokadik probára sem sikerült stabil koordinátát kiolvasni -> nincs lenyomva
+    // sokadik probÃ¡ra sem sikerÃ¼lt stabil koordinÃ¡tÃ¡t kiolvasni -> nincs lenyomva
     tp = 0;
   }
   else
