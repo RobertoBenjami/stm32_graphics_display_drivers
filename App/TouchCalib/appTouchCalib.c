@@ -148,7 +148,7 @@ void cindexgen(int32_t dx0, int32_t dy0, int32_t dx1, int32_t dy1, int32_t dx2, 
   Delay(10);
   printf("%d, ", (int)((tx0-tx2)*(dy1-dy2) - (dy0-dy2)*(tx1-tx2)));
   Delay(10);
-  printf("%d};\r\n", (int)(ty0*(tx2*dy1 - tx1*dy2) + ty1*(tx0*dy2 - tx2*dy0) + ty2*(tx1*dy0 - tx0*dy1)));
+  printf("%d}\r\n", (int)(ty0*(tx2*dy1 - tx1*dy2) + ty1*(tx0*dy2 - tx2*dy0) + ty2*(tx1*dy0 - tx0*dy1)));
 }
 
 //-----------------------------------------------------------------------------
