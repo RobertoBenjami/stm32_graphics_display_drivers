@@ -4,7 +4,7 @@
    - 2: 240x320 reset button in the bottom (portrait)
    - 3: 320x240 reset button in the right (landscape)
 */
-#define  ILI9325_ORIENTATION       3
+#define  ILI9325_ORIENTATION       0
 
 /* Color mode
    - 0: RGB565 (R:bit15..11, G:bit10..5, B:bit4..0)

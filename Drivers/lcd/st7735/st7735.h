@@ -4,7 +4,7 @@
    - 2: 128x160 8pin catlakozo alul (portrait)
    - 3: 160x128 8pin catlakozo jobb oldalt (landscape)
 */
-#define  ST7735_ORIENTATION       3
+#define  ST7735_ORIENTATION       0
 
 /* Color mode
    - 0: RGB565 (R:bit15..11, G:bit10..5, B:bit4..0)

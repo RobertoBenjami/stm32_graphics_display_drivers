@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Benjami/Arm/Cube/stm32f103c8t6-bluepill/f103c8t_app/Inc
+HeaderPath=D:/Benjami/Arm/Cube/stm32f103c8t6-bluepill/f103c8t_app/Inc
 HeaderFiles=stm32f1xx_it.h;stm32f1xx_hal_conf.h;main.h;
-SourcePath=C:/Benjami/Arm/Cube/stm32f103c8t6-bluepill/f103c8t_app/Src
+SourcePath=D:/Benjami/Arm/Cube/stm32f103c8t6-bluepill/f103c8t_app/Src
 SourceFiles=stm32f1xx_it.c;stm32f1xx_hal_msp.c;stm32f1xx_hal_timebase_TIM.c;main.c;
 
 [PreviousLibFiles]

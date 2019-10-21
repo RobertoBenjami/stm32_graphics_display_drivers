@@ -3,16 +3,6 @@
 Layer chart, examples circuits and settings:
 - Lcd_drv.pdf
 
-Example (please unzip the app you like):
-- f103c8t_app: (stm32f103c8t HAL applications, cubemx, truestudio)
-- f103c8t_app_rtos: (stm32f103c8t HAL-FreeRtos applications, cubemx, truestudio)
-- f407vet_app: (stm32f407vet HAL-applications, cubemx, truestudio)
-- f407vet_app_rtos: (stm32f407vet HAL-FreeRtos applications, cubemx, truestudio)
-- f407vet_app_fsmc: (stm32f407vet HAL applications, FSMC, cubemx, truestudio)
-- f407vet_app_rtos_fsmc: (stm32f407vet HAL-FreeRtos applications, FSMC, cubemx, truestudio)
-- f407vet_app_fsmc16: (stm32f407vet HAL applications, FSMC 16 bit, cubemx, truestudio)
-- f407zet_app_fsmc16_extsram: (stm32f407zet HAL applications, FSMC 16 bit, external 1MB SRAM, cubemx, truestudio)
-
 LCD I/O driver:
 - stm32f1: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
 - stm32f1: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
@@ -27,6 +17,7 @@ LCD I/O driver:
 - stm32f4: lcdts_io_fsmc8 (8 bit paralell with analog resistive touchscreen + FSMC or FSMC with DMA)
 - stm32f4: lcd_io_gpio16 (16 bit paralell without analog resistive touchscreen)
 - stm32f4: lcd_io_fsmc16 (16 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA)
+- stm32f7: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
 
 LCD driver:
 - st7735  (SPI mode tested)
@@ -74,3 +65,13 @@ How to use starting from zero?
    - add include path : Src/Lcd
    - comple ...
    
+Example (please unzip the app you like):
+- f103c8t_app: (stm32f103c8t HAL applications, cubemx, truestudio)
+- f103c8t_app_rtos: (stm32f103c8t HAL-FreeRtos applications, cubemx, truestudio)
+- f407vet_app: (stm32f407vet HAL-applications, cubemx, truestudio)
+- f407vet_app_rtos: (stm32f407vet HAL-FreeRtos applications, cubemx, truestudio)
+- f407vet_app_fsmc: (stm32f407vet HAL applications, FSMC, cubemx, truestudio)
+- f407vet_app_rtos_fsmc: (stm32f407vet HAL-FreeRtos applications, FSMC, cubemx, truestudio)
+- f407vet_app_fsmc16: (stm32f407vet HAL applications, FSMC 16 bit, cubemx, truestudio)
+- f407zet_app_fsmc16_extsram: (stm32f407zet HAL applications, FSMC 16 bit, external 1MB SRAM, cubemx, truestudio)
+

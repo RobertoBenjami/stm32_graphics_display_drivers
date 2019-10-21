@@ -4,7 +4,7 @@
    - 2: 240x320 catlakozo alul (portrait)
    - 3: 320x240 catlakozo jobb oldalt (landscape)
 */
-#define  ILI9341_ORIENTATION      1
+#define  ILI9341_ORIENTATION      0
 
 /* Color mode
    - 0: RGB565 (R:bit15..11, G:bit10..5, B:bit4..0)
