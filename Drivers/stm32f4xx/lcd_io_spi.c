@@ -1,10 +1,10 @@
 /*
  * SPI LCD driver STM32F4
- * készitö: Roberto Benjami
+ * kÃ©szitÃ¶: Roberto Benjami
  * verzio:  2019.09
  *
- * - hardver és szoftver SPI
- * - 3 féle üzemmód (csak TX, half duplex, full duplex)
+ * - hardver Ã©s szoftver SPI
+ * - 3 fÃ©le Ã¼zemmÃ³d (csak TX, half duplex, full duplex)
 */
 
 //-----------------------------------------------------------------------------
@@ -50,7 +50,7 @@ void  LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t
 //-----------------------------------------------------------------------------
 #define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
 
-// portláb mádok (PP: push-pull, OD: open drain, FF: input floating)
+// portlÃ¡b mÃ¡dok (PP: push-pull, OD: open drain, FF: input floating)
 #define MODE_DIGITAL_INPUT    0x0
 #define MODE_OUT              0x1
 #define MODE_ALTER            0x2
@@ -70,6 +70,9 @@ void  LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t
 
 #define GPIOX_PIN_(a, b)      b
 #define GPIOX_PIN(a)          GPIOX_PIN_(a)
+
+#define GPIOX_AFR_(a,b,c)     GPIO ## b->AFR[c >> 3] = (GPIO ## b->AFR[c >> 3] & ~(0x0F << (4 * (c & 7)))) | (a << (4 * (c & 7)));
+#define GPIOX_AFR(a, b)       GPIOX_AFR_(a, b)
 
 #define GPIOX_MODER_(a,b,c)   GPIO ## b->MODER = (GPIO ## b->MODER & ~(3 << (2 * c))) | (a << (2 * c));
 #define GPIOX_MODER(a, b)     GPIOX_MODER_(a, b)
@@ -346,19 +349,19 @@ typedef struct
 #define DMAX_IFCR_CFEIF(a)              DMAX_IFCR_CFEIF_(a)
 
 //-----------------------------------------------------------------------------
-/* Parancs/adat láb üzemmod */
+/* Parancs/adat lÃ¡b Ã¼zemmod */
 #define LCD_RS_CMD            GPIOX_ODR(LCD_RS) = 0
 #define LCD_RS_DATA           GPIOX_ODR(LCD_RS) = 1
 
-/* Reset láb aktiv/passziv */
+/* Reset lÃ¡b aktiv/passziv */
 #define LCD_RST_ON            GPIOX_ODR(LCD_RST) = 0
 #define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
 
-/* Chip select láb */
+/* Chip select lÃ¡b */
 #define LCD_CS_ON             GPIOX_ODR(LCD_CS) = 0
 #define LCD_CS_OFF            GPIOX_ODR(LCD_CS) = 1
 
-/* Ha az olvasási sebesség ninc smegadva akkor megegyezik az irási sebességgel */
+/* Ha az olvasÃ¡si sebessÃ©g ninc smegadva akkor megegyezik az irÃ¡si sebessÃ©ggel */
 #ifndef LCD_SPI_SPD_READ
 #define LCD_SPI_SPD_READ      LCD_SPI_SPD
 #endif
@@ -371,7 +374,7 @@ volatile uint16_t tmp16;
 #define LCD_DUMMY_READ        {GPIOX_ODR(LCD_SCK) = 0; LCD_READ_DELAY; GPIOX_ODR(LCD_SCK) = 1;}
 
 #if     LCD_SPI_MODE == 1
-/* Kétirányu (halfduplex) SPI esetén az adatirányt váltogatni kell, és MISO láb = MOSI láb */
+/* KÃ©tirÃ¡nyu (halfduplex) SPI esetÃ©n az adatirÃ¡nyt vÃ¡ltogatni kell, Ã©s MISO lÃ¡b = MOSI lÃ¡b */
 #undef  LCD_MISO
 #define LCD_MISO              LCD_MOSI
 
@@ -389,12 +392,12 @@ volatile uint16_t tmp16;
 #define LCD_DIRWRITE(d)        GPIOX_MODER(MODE_OUT, LCD_MOSI)
 
 #else
-/* TX és fullduplex SPI esetén az adatirány fix */
+/* TX Ã©s fullduplex SPI esetÃ©n az adatirÃ¡ny fix */
 #define LCD_DIRREAD(d)
 #define LCD_DIRWRITE(d)
 #endif
 
-/* Write SPI sebesség */
+/* Write SPI sebessÃ©g */
 #if     LCD_SPI_SPD == 0
 #define LCD_WRITE_DELAY
 #elif   LCD_SPI_SPD == 1
@@ -403,7 +406,7 @@ volatile uint16_t tmp16;
 #define LCD_WRITE_DELAY       LCD_IO_Delay(LCD_SPI_SPD - 2)
 #endif
 
-/* Read SPI sebesség */
+/* Read SPI sebessÃ©g */
 #if     LCD_SPI_SPD_READ == 0
 #define LCD_READ_DELAY
 #elif   LCD_SPI_SPD_READ == 1
@@ -628,7 +631,7 @@ volatile uint16_t tmp16;
 #define LCD_SPI_RCC_EN        BITBAND_ACCESS(RCC->APB2ENR, RCC_APB2ENR_SPI6EN_Pos) = 1
 #endif
 
-/* Read SPI sebesség */
+/* Read SPI sebessÃ©g */
 #define LCD_READ_DELAY        LCD_IO_Delay(LCD_SPI_SPD_READ * 4)
 
 #define LCD_DUMMY_READ(d)     {GPIOX_MODER(MODE_OUT, LCD_SCK);          \
@@ -644,8 +647,8 @@ volatile uint16_t tmp16;
 #define LCD_SPI_MODE16        BITBAND_ACCESS(SPIX->CR1, SPI_CR1_DFF_Pos) = 1
 
 #if     LCD_SPI_MODE == 1
-/* Kétirányu (halfduplex) SPI esetén az adatirányt váltogatni kell */
-#if (defined(LCD_SPI_SPD_READ) && (LCD_SPI_SPD != LCD_SPI_SPD_READ)) // Eltérö olvasási/irási sebesség
+/* KÃ©tirÃ¡nyu (halfduplex) SPI esetÃ©n az adatirÃ¡nyt vÃ¡ltogatni kell */
+#if (defined(LCD_SPI_SPD_READ) && (LCD_SPI_SPD != LCD_SPI_SPD_READ)) // EltÃ©rÃ¶ olvasÃ¡si/irÃ¡si sebessÃ©g
 #define LCD_DIRREAD(d)   { LCD_DUMMY_READ(d); SPIX->CR1 = (SPIX->CR1 & ~(SPI_CR1_BR | SPI_CR1_BIDIOE)) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos); }
 #define LCD_DIRWRITE(d8) {                           \
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))   \
@@ -659,7 +662,7 @@ volatile uint16_t tmp16;
     d8 = SPIX->DR;                                   \
   SPIX->CR1 |= SPI_CR1_SPE;                          }
 
-#else   // azonos sebesség, csak LCD_MOSI irányváltás
+#else   // azonos sebessÃ©g, csak LCD_MOSI irÃ¡nyvÃ¡ltÃ¡s
 #define LCD_DIRREAD(d) { LCD_DUMMY_READ(d); BITBAND_ACCESS(SPIX->CR1, SPI_CR1_BIDIOE_Pos) = 0; }
 #define LCD_DIRWRITE(d8) {                           \
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))   \
@@ -673,11 +676,11 @@ volatile uint16_t tmp16;
 #endif
 
 #else   // LCD_SPI_MODE == 1
-// TX és fullduplex SPI esetén az adatirány fix
-#if (defined(LCD_SPI_SPD_READ) && (LCD_SPI_SPD != LCD_SPI_SPD_READ)) // Eltérö olvasási/irási sebesség
+// TX Ã©s fullduplex SPI esetÃ©n az adatirÃ¡ny fix
+#if (defined(LCD_SPI_SPD_READ) && (LCD_SPI_SPD != LCD_SPI_SPD_READ)) // EltÃ©rÃ¶ olvasÃ¡si/irÃ¡si sebessÃ©g
 #define LCD_DIRREAD(d)   { LCD_DUMMY_READ(d); SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos); }
 #define LCD_DIRWRITE(d8) { SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD << SPI_CR1_BR_Pos); }
-#else   // nincs irányváltás
+#else   // nincs irÃ¡nyvÃ¡ltÃ¡s
 #define LCD_DIRREAD(d)   LCD_DUMMY_READ(d)
 #define LCD_DIRWRITE
 #endif
@@ -894,7 +897,7 @@ void LCD_IO_Init(void)
   RCC->AHB1ENR |= GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI);
   #endif
 
-  #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A  // háttérvilágitás
+  #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A  // hÃ¡ttÃ©rvilÃ¡gitÃ¡s
   RCC->AHB1ENR |= GPIOX_CLOCK(LCD_BL);
   GPIOX_MODER(MODE_OUT, LCD_BL);
   LCD_IO_Bl_OnOff(1);
@@ -930,7 +933,7 @@ void LCD_IO_Init(void)
   GPIOX_AFR(LCD_SPI_AFR, LCD_MOSI);
   GPIOX_MODER(MODE_ALTER, LCD_MOSI);
 
-  #if LCD_SPI_MODE == 1     // Half duplex (adatirány váltogatás)
+  #if LCD_SPI_MODE == 1     // Half duplex (adatirÃ¡ny vÃ¡ltogatÃ¡s)
   SPIX->CR1 = SPI_CR1_CPHA | SPI_CR1_CPOL | SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI | (LCD_SPI_SPD << SPI_CR1_BR_Pos) | SPI_CR1_BIDIMODE | SPI_CR1_BIDIOE;
   #else // #if LCD_SPI_MODE == 1  (TX vagy full duplex mod)
   SPIX->CR1 = SPI_CR1_CPHA | SPI_CR1_CPOL | SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI | (LCD_SPI_SPD << SPI_CR1_BR_Pos);
