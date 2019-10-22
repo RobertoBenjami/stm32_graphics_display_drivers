@@ -62,7 +62,7 @@ uint16_t TS_IO_GetZ2(void);
 //-----------------------------------------------------------------------------
 #define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
 
-// portláb mádok (PP: push-pull, OD: open drain, FF: input floating)
+// portláb modok
 #define MODE_DIGITAL_INPUT    0x0
 #define MODE_OUT              0x1
 #define MODE_ALTER            0x2
