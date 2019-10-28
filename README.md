@@ -44,6 +44,8 @@ How to use starting from zero?
    - setting the debug (SYS / serial wire or trace assyn sw)
    - setting the timebase source (i like the basic timer for this)
    - if FSMC : setting the FSMC (chip select, memory type = LCD, Lcd reg select, data = 8 or 16 bits, timing)
+   - if SDCARD : setting the SDIO mode, enabled the FATFS, FATFS: USE_LFN, MAX_SS = 4096, FS_LOCK = 5, RTC enabled
+   - if JPG : enabled the LIBJPEG
    - setting the clock configuration
    - project settings: project name, toolchain = truestudio, stack size = 0x800
    - generate source code
@@ -55,14 +57,16 @@ How to use starting from zero?
    - open main.h
    - add USER CODE BEGIN Includes (#include "stm32f1xx_hal.h" or #include "stm32f4xx_hal.h" or ...)
    - add 2 new folder for Src folder (App, Lcd)
-   - copy files from App/... to App
+   - copy file(s) from App/... to App
    - copy 4 or 7 files from Drivers to Lcd (lcd.h, bmp.h, stm32_adafruit_lcd.h / c, if touch: ts.h, stm32_adafruit_ts.h / c)
    - copy Fonts folder to Lcd folder
    - copy io driver to Lcd folder (lcd_io_...h / c or lcdts_io...h / c or...)
    - copy lcd driver to Lcd folder (st7735.h / c or ili9325.h /c or...)
+   - if printf to SWO : copy syscalls.c to Src folder
    - setting the configuration the io driver header file (pin settings, speed settings etc...)
    - setting the LCD configuration (orientation, touchscreen)
    - add include path : Src/Lcd
+   - setting the compile options (Enable paralell build, optimalization)
    - comple ...
    
 Example (please unzip the app you like):
