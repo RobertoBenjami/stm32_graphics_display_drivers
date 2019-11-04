@@ -8,6 +8,7 @@
 #include "jdata_conf.h"
 
 #define JPG_FILENAMEEXT ".jpg"
+#define STARTFOLDER     "320x240_jpg/"
 
 // ----------------------------------------------------------------------------
 #ifdef  osCMSIS
@@ -121,7 +122,7 @@ void jpg_view(char* pth, char* fn)
     line_counter = 0;
     if(jpeg_decode(&sfile, BSP_LCD_GetXSize(), _aucLine, Jpeg_CallbackFunction))
     {
-      printf("Jpg view: '%s'\r\n", f);
+      printf("Jpg view: '%s'\n", f);
       Delay(5000);
     }
     f_close(&sfile);
@@ -172,22 +173,26 @@ void mainApp(void)
 
   BSP_LCD_Init();
   Delay(500);
-  printf("Start\r\n");
-  printf("SDPath:%s\r\n", SDPath);
+  printf("Start\n");
+  printf("SDPath:%s\n", SDPath);
 
   if(f_mount(&SDFatFS, SDPath, 1) == FR_OK)
   {
-    printf("FatFs ok\r\n");
+    printf("FatFs ok\n");
+
     while(1)
     {
       strcpy(buff, SDPath);
+      #ifdef STARTFOLDER
+      strcpy(buff, STARTFOLDER);
+      #endif
       if(buff[strlen(buff) - 1] == '/')
         buff[strlen(buff) - 1] = 0; // utolso / jelet lecsapjuk, mert egyébként duplázva lesz
       scan_files(buff, JPG_FILENAMEEXT, jpg_view); // jpg view
     }
   }
   else
-    printf("FatFs error !!!\r\n");
+    printf("FatFs error !!!\n");
 
   while(1)
   {
