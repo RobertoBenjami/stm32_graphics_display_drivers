@@ -155,7 +155,7 @@ uint8_t BSP_LCD_Init(void)
   
   /* Default value for draw propriety */
   DrawProp.BackColor = 0xFFFF;
-  DrawProp.pFont     = &Font24;
+  DrawProp.pFont     = &Font8;
   DrawProp.TextColor = 0x0000;
   
   /* LCD Init */   
