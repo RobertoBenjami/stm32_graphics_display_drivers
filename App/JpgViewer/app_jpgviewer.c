@@ -3,12 +3,33 @@
 #include <string.h>
 #include "main.h"
 #include "fatfs.h"
-#include "stm32_adafruit_lcd.h"
 #include "jpeglib.h"
 #include "jdata_conf.h"
+#include "stm32_adafruit_lcd.h"
+#include "multi_heap_4.h"
+
+/* flash drive type (1=SD card, 2=USB pendrive */
+#define FLASHTYPE             1
 
 #define JPG_FILENAMEEXT ".jpg"
+/* If search start folder not is the root folder */
 #define STARTFOLDER     "320x240_jpg/"
+
+#if     FLASHTYPE == 1
+#define FLASHPATH             SDPath
+#define FLASHFATS             SDFatFS
+#define FLASHPROCESS()
+#define FLASHREADY            1
+#endif
+
+#if     FLASHTYPE == 2
+#include "usb_host.h"
+extern  ApplicationTypeDef    Appli_state;
+#define FLASHPATH             USBHPath
+#define FLASHFATS             USBHFatFS
+#define FLASHPROCESS()        MX_USB_HOST_Process()
+#define FLASHREADY            Appli_state == APPLICATION_READY
+#endif
 
 // ----------------------------------------------------------------------------
 #ifdef  osCMSIS
@@ -174,27 +195,30 @@ void mainApp(void)
   BSP_LCD_Init();
   Delay(500);
   printf("Start\n");
-  printf("SDPath:%s\n", SDPath);
-
-  if(f_mount(&SDFatFS, SDPath, 1) == FR_OK)
-  {
-    printf("FatFs ok\n");
-
-    while(1)
-    {
-      strcpy(buff, SDPath);
-      #ifdef STARTFOLDER
-      strcat(buff, STARTFOLDER);
-      #endif
-      if(buff[strlen(buff) - 1] == '/')
-        buff[strlen(buff) - 1] = 0; // utolso / jelet lecsapjuk, mert egyébként duplázva lesz
-      scan_files(buff, JPG_FILENAMEEXT, jpg_view); // jpg view
-    }
-  }
-  else
-    printf("FatFs error !!!\n");
-
+  printf("Flash Path:%s\n", FLASHPATH);
   while(1)
   {
+    FLASHPROCESS();
+    while(FLASHREADY)
+    {
+      if(f_mount(&FLASHFATS, FLASHPATH, 1) == FR_OK)
+      {
+        printf("FatFs ok\n");
+
+        while(FLASHREADY)
+        {
+          FLASHPROCESS();
+          strcpy(buff, FLASHPATH);
+          #ifdef STARTFOLDER
+          strcat(buff, STARTFOLDER);
+          #endif
+          if(buff[strlen(buff) - 1] == '/')
+            buff[strlen(buff) - 1] = 0; // utolso / jelet lecsapjuk, mert egyébként duplázva lesz
+          scan_files(buff, JPG_FILENAMEEXT, jpg_view); // jpg view
+        }
+      }
+      else
+        printf("FatFs error !!!\n");
+    }
   }
 }
