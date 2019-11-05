@@ -184,7 +184,7 @@ void mainApp(void)
     {
       strcpy(buff, SDPath);
       #ifdef STARTFOLDER
-      strcpy(buff, STARTFOLDER);
+      strcat(buff, STARTFOLDER);
       #endif
       if(buff[strlen(buff) - 1] == '/')
         buff[strlen(buff) - 1] = 0; // utolso / jelet lecsapjuk, mert egyébként duplázva lesz
