@@ -1,7 +1,7 @@
 # STM32Fxxx graphics display drivers
 
 Layer chart, examples circuits and settings:
-- Lcd_drv.pdf
+- Lcd_drv.pdf ( https://github.com/RobertoBenjami/stm32_graphics_display_drivers/blob/master/Lcd_drv.pdf )
 
 LCD I/O driver:
 - stm32f1: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
