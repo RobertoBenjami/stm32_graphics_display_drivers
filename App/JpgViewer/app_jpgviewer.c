@@ -6,7 +6,6 @@
 #include "jpeglib.h"
 #include "jdata_conf.h"
 #include "stm32_adafruit_lcd.h"
-#include "multi_heap_4.h"
 
 /* flash drive type (1=SD card, 2=USB pendrive */
 #define FLASHTYPE             1
