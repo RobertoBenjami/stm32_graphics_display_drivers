@@ -12,7 +12,7 @@
 
 #define JPG_FILENAMEEXT ".jpg"
 /* If search start folder not is the root folder */
-#define STARTFOLDER     "320x240_jpg/"
+// #define STARTFOLDER     "320x240_jpg/"
 
 #if     FLASHTYPE == 1
 #define FLASHPATH             SDPath
