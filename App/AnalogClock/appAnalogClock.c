@@ -1,14 +1,14 @@
-/* Analog clock program
+/* Analog clock
  *
  * Roberto Benjami
- * v: 2019.11 (only stm32f4 now)
+ * v: 2019.11
  */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "main.h" // a main.h-ba illesszük be az aktuális #include "stm32fxxx_hal.h"-t, freertos esetén pedig #include "cmsis_os.h"-t is!
+#include "main.h"
 
 #include "lcd.h"
 #include "bmp.h"
@@ -16,6 +16,18 @@
 /* BSP_LCD_... */
 #include "stm32_adafruit_lcd.h"
 
+extern   RTC_HandleTypeDef hrtc;
+
+/* 1:time register contain binary data
+ * 2:time register contain bcd data
+ */
+#define  TIMEREG_MODE            1
+
+/* RTC time register read (f103:CNTL-CNTH, f407:TR) */
+#define  TIMEREG_READ            hrtc.Instance->CNTL | (hrtc.Instance->CNTH << 16)
+// #define  TIMEREG_READ            hrtc.Instance->TR
+
+// CLOCK colors
 #define  CLOCK_COLOR_BACKGROUND  LCD_COLOR_BLACK
 #define  CLOCK_COLOR_FACE        RGB888TORGB565(30, 30, 30)
 #define  CLOCK_COLOR_BORDER      LCD_COLOR_CYAN
@@ -31,16 +43,13 @@
 #define  CLOCK_SIZE_SP           220
 #define  CLOCK_SIZE_NMBCIRC      240
 
-// pointer form
-#define  CLOCK_THICKNESS_HP      0.25
-#define  CLOCK_THICKNESS_MP      0.15
-#define  CLOCK_THICKNESS_SP      0.08
+// Pointer form (width:rad, shape:width position)
+#define  CLOCK_WIDTH_HP          0.25
+#define  CLOCK_WIDTH_MP          0.15
+#define  CLOCK_WIDTH_SP          0.08
 #define  CLOCK_SHAPE_HP          0.4
 #define  CLOCK_SHAPE_MP          0.3
 #define  CLOCK_SHAPE_SP          0.2
-
-extern LCD_DrvTypeDef  *lcd_drv;
-extern RTC_HandleTypeDef hrtc;
 
 typedef union
 {
@@ -63,12 +72,13 @@ typedef union
 #ifdef  osCMSIS
 #define Delay(t)              osDelay(t)
 #define GetTime()             osKernelSysTick()
+uint32_t  task02_run = 0, task02_count = 0;
 #else
 #define Delay(t)              HAL_Delay(t)
 #define GetTime()             HAL_GetTick()
 #endif
 
-// 16bites szin elöállitása RGB (ill. BGR) összetevökböl
+// 16bites szin elÃ¶Ã¡llitÃ¡sa RGB (ill. BGR) Ã¶sszetevÃ¶kbÃ¶l
 #define RGB888TORGB565(r, g, b) ((r & 0b11111000) << 8 | (g & 0b11111100) << 3 | b >> 3)
 #define RGB888TOBGR565(r, g, b) (r >> 3 | (g & 0b11111100) << 3 | (b & 0b11111000) << 8)
 
@@ -77,7 +87,7 @@ typedef union
 #define RD(a)                 a
 #endif
 
-/* Konstans szám bájtjainak cseréje, változó bájtjainak cseréje */
+/* Konstans szÃ¡m bÃ¡jtjainak cserÃ©je, vÃ¡ltozÃ³ bÃ¡jtjainak cserÃ©je */
 #if LCD_REVERSE16 == 1
 #define RD(a)                 __REVSH(a)
 #endif
@@ -127,45 +137,62 @@ void mainApp(void)
     ap[i].X = rx; ap[i].Y = ry;
     lp[i].X = rx; lp[i].Y = ry;
   }
+  lasttime.t = 0;
 
   while(1)
   {
-    // HAL_RTC_GetTime(&hrtc, &st_time, RTC_FORMAT_BIN);
-    nowtime.t = hrtc.Instance->TR;
+    nowtime.t = TIMEREG_READ;
     if(nowtime.t != lasttime.t)
     {
+      #if TIMEREG_MODE == 1 // bin mode
+      sec = nowtime.t % 86400;
+      i = sec / 3600;
+      s[0] = i / 10 + '0';
+      s[1] = i % 10 + '0';
+      i = sec / 60 % 60;
+      s[3] = i / 10 + '0';
+      s[4] = i % 10 + '0';
+      i = sec % 60;
+      s[6] = i / 10 + '0';
+      s[7] = i % 10 + '0';
+      #endif
+
+      #if TIMEREG_MODE == 2 // bcd mode
+      sec = lasttime.hu * 36000 + lasttime.ht * 3600 + lasttime.mu * 600 + lasttime.mt * 60 + lasttime.su * 10 + lasttime.st;
       s[0] = nowtime.hu + '0';
       s[1] = nowtime.ht + '0';
       s[3] = nowtime.mu + '0';
       s[4] = nowtime.mt + '0';
       s[6] = nowtime.su + '0';
       s[7] = nowtime.st + '0';
-
-      sec = lasttime.hu * 36000 + lasttime.ht * 3600 + lasttime.mu * 600 + lasttime.mt * 60 + lasttime.su * 10 + lasttime.st;
+      #endif
 
       fsec = sec * 6.28 / 43200.0;
       ap[2].X = rx + sin(fsec) * hps; ap[2].Y = ry - cos(fsec) * hps;
-      ap[1].X = rx + sin(fsec - CLOCK_THICKNESS_HP) * hps * CLOCK_SHAPE_HP; ap[1].Y = ry - cos(fsec - CLOCK_THICKNESS_HP) * hps * CLOCK_SHAPE_HP;
-      ap[3].X = rx + sin(fsec + CLOCK_THICKNESS_HP) * hps * CLOCK_SHAPE_HP; ap[3].Y = ry - cos(fsec + CLOCK_THICKNESS_HP) * hps * CLOCK_SHAPE_HP;
+      ap[1].X = rx + sin(fsec - CLOCK_WIDTH_HP) * hps * CLOCK_SHAPE_HP; ap[1].Y = ry - cos(fsec - CLOCK_WIDTH_HP) * hps * CLOCK_SHAPE_HP;
+      ap[3].X = rx + sin(fsec + CLOCK_WIDTH_HP) * hps * CLOCK_SHAPE_HP; ap[3].Y = ry - cos(fsec + CLOCK_WIDTH_HP) * hps * CLOCK_SHAPE_HP;
 
       fsec = sec * 6.28 / 3600.0;
       ap[6].X = rx + sin(fsec) * mps; ap[6].Y = ry - cos(fsec) * mps;
-      ap[5].X = rx + sin(fsec - CLOCK_THICKNESS_MP) * mps * CLOCK_SHAPE_MP; ap[5].Y = ry - cos(fsec - CLOCK_THICKNESS_MP) * mps * CLOCK_SHAPE_MP;
-      ap[7].X = rx + sin(fsec + CLOCK_THICKNESS_MP) * mps * CLOCK_SHAPE_MP; ap[7].Y = ry - cos(fsec + CLOCK_THICKNESS_MP) * mps * CLOCK_SHAPE_MP;
+      ap[5].X = rx + sin(fsec - CLOCK_WIDTH_MP) * mps * CLOCK_SHAPE_MP; ap[5].Y = ry - cos(fsec - CLOCK_WIDTH_MP) * mps * CLOCK_SHAPE_MP;
+      ap[7].X = rx + sin(fsec + CLOCK_WIDTH_MP) * mps * CLOCK_SHAPE_MP; ap[7].Y = ry - cos(fsec + CLOCK_WIDTH_MP) * mps * CLOCK_SHAPE_MP;
 
       fsec = (sec % 60) * 6.28 / 60.0;
       ap[10].X = rx + sin(fsec) * sps; ap[10].Y = ry - cos(fsec) * sps;
-      ap[9].X = rx + sin(fsec - CLOCK_THICKNESS_SP) * sps * CLOCK_SHAPE_SP; ap[9].Y = ry - cos(fsec - CLOCK_THICKNESS_SP) * sps * CLOCK_SHAPE_SP;
-      ap[11].X = rx + sin(fsec + CLOCK_THICKNESS_SP) * sps * CLOCK_SHAPE_SP; ap[11].Y = ry - cos(fsec + CLOCK_THICKNESS_SP) * sps * CLOCK_SHAPE_SP;
+      ap[9].X = rx + sin(fsec - CLOCK_WIDTH_SP) * sps * CLOCK_SHAPE_SP; ap[9].Y = ry - cos(fsec - CLOCK_WIDTH_SP) * sps * CLOCK_SHAPE_SP;
+      ap[11].X = rx + sin(fsec + CLOCK_WIDTH_SP) * sps * CLOCK_SHAPE_SP; ap[11].Y = ry - cos(fsec + CLOCK_WIDTH_SP) * sps * CLOCK_SHAPE_SP;
 
+      /* clear the previsous clock pointer */
       BSP_LCD_SetTextColor(CLOCK_COLOR_FACE);
       BSP_LCD_DrawPolygon(&lp[0], 4);
       BSP_LCD_DrawPolygon(&lp[4], 4);
       BSP_LCD_DrawPolygon(&lp[8], 4);
 
+      /* draw the digital clock */
       BSP_LCD_SetTextColor(CLOCK_COLOR_DIGITS);
       BSP_LCD_DisplayStringAt(0, ry - (r >> 1), (uint8_t *)&s, CENTER_MODE);
 
+      /* draw the clock pointer */
       BSP_LCD_SetTextColor(CLOCK_COLOR_SP);
       BSP_LCD_DrawPolygon(&ap[8], 4);
       BSP_LCD_SetTextColor(CLOCK_COLOR_MP);
