@@ -76,16 +76,6 @@ uint32_t  task02_run = 0, task02_count = 0;
 #endif
 
 //-----------------------------------------------------------------------------
-#if LCD_REVERSE16 == 0
-#define RD(a)                 a
-#endif
-
-/* Konstans szám bájtjainak cseréje, változó bájtjainak cseréje */
-#if LCD_REVERSE16 == 1
-#define RD(a)                 __REVSH(a)
-#endif
-
-//-----------------------------------------------------------------------------
 #ifdef osCMSIS
 void StartDefaultTask(void const * argument)
 #else
