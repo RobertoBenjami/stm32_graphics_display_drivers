@@ -24,7 +24,7 @@ extern   RTC_HandleTypeDef hrtc;
 #define  TIMEREG_READ            hrtc.Instance->CNTL | (hrtc.Instance->CNTH << 16)
 // #define  TIMEREG_READ            hrtc.Instance->TR
 
-// CLOCK colors
+/* CLOCK colors */
 #define  CLOCK_COLOR_BACKGROUND  LCD_COLOR_BLACK
 #define  CLOCK_COLOR_FACE        LCD_COLOR(30, 30, 30)
 #define  CLOCK_COLOR_BORDER      LCD_COLOR_CYAN
@@ -34,19 +34,25 @@ extern   RTC_HandleTypeDef hrtc;
 #define  CLOCK_COLOR_MP          LCD_COLOR_BLUE
 #define  CLOCK_COLOR_SP          LCD_COLOR_YELLOW
 
-// CLOCK_SIZE... : 0..256
+/* CLOCK_SIZE... : 0..256 */
 #define  CLOCK_SIZE_HP           120
 #define  CLOCK_SIZE_MP           180
 #define  CLOCK_SIZE_SP           220
 #define  CLOCK_SIZE_NMBCIRC      240
 
-// Pointer form (width:rad, shape:width position)
+/* Pointer form (width:rad, shape:width position) */
 #define  CLOCK_WIDTH_HP          0.25
 #define  CLOCK_WIDTH_MP          0.15
 #define  CLOCK_WIDTH_SP          0.08
 #define  CLOCK_SHAPE_HP          0.4
 #define  CLOCK_SHAPE_MP          0.3
 #define  CLOCK_SHAPE_SP          0.2
+
+/* Clock pointer type
+ * - 0: wireframe
+ * - 1: fill pointer
+ * */
+#define  CLOCK_POINTER_TYPE      1
 
 typedef union
 {
@@ -111,7 +117,7 @@ void mainApp(void)
   BSP_LCD_DrawCircle(rx, ry, r - 1);
   BSP_LCD_SetTextColor(CLOCK_COLOR_NUMBERS);
   for(i = 0; i < 360; i+= 30)
-    BSP_LCD_FillCircle(rx + sin(i * 6.28 / 360) * nps , ry - cos(i * 6.28 / 360) * nps, 2);
+    BSP_LCD_FillCircle(rx + sin(i * M_TWOPI / 360) * nps , ry - cos(i * M_TWOPI / 360) * nps, 2);
 
   BSP_LCD_SetBackColor(CLOCK_COLOR_FACE);
 
@@ -165,6 +171,7 @@ void mainApp(void)
       ap[9].X = rx + sin(fsec - CLOCK_WIDTH_SP) * sps * CLOCK_SHAPE_SP; ap[9].Y = ry - cos(fsec - CLOCK_WIDTH_SP) * sps * CLOCK_SHAPE_SP;
       ap[11].X = rx + sin(fsec + CLOCK_WIDTH_SP) * sps * CLOCK_SHAPE_SP; ap[11].Y = ry - cos(fsec + CLOCK_WIDTH_SP) * sps * CLOCK_SHAPE_SP;
 
+      #if  CLOCK_POINTER_TYPE == 0
       /* clear the previsous clock pointer */
       BSP_LCD_SetTextColor(CLOCK_COLOR_FACE);
       BSP_LCD_DrawPolygon(&lp[0], 4);
@@ -182,6 +189,39 @@ void mainApp(void)
       BSP_LCD_DrawPolygon(&ap[4], 4);
       BSP_LCD_SetTextColor(CLOCK_COLOR_HP);
       BSP_LCD_DrawPolygon(&ap[0], 4);
+
+      #else
+      /* clear the previsous clock pointer */
+      BSP_LCD_SetTextColor(CLOCK_COLOR_FACE);
+      BSP_LCD_FillTriangle(lp[0].X, lp[0].Y, lp[1].X, lp[1].Y, lp[3].X, lp[3].Y);
+      BSP_LCD_FillTriangle(lp[2].X, lp[2].Y, lp[1].X, lp[1].Y, lp[3].X, lp[3].Y);
+      BSP_LCD_FillTriangle(lp[4].X, lp[4].Y, lp[5].X, lp[5].Y, lp[7].X, lp[7].Y);
+      BSP_LCD_FillTriangle(lp[6].X, lp[6].Y, lp[5].X, lp[5].Y, lp[7].X, lp[7].Y);
+      BSP_LCD_FillTriangle(lp[8].X, lp[8].Y, lp[9].X, lp[9].Y, lp[11].X, lp[11].Y);
+      BSP_LCD_FillTriangle(lp[10].X, lp[10].Y, lp[9].X, lp[9].Y, lp[11].X, lp[11].Y);
+      BSP_LCD_DrawPolygon(&lp[0], 4); /* because the thin filled triangle is may be incomplete */
+      BSP_LCD_DrawPolygon(&lp[4], 4);
+      BSP_LCD_DrawPolygon(&lp[8], 4);
+
+      /* draw the digital clock */
+      BSP_LCD_SetTextColor(CLOCK_COLOR_DIGITS);
+      BSP_LCD_DisplayStringAt(0, ry - (r >> 1), (uint8_t *)&s, CENTER_MODE);
+
+      /* draw the clock pointer */
+      BSP_LCD_SetTextColor(CLOCK_COLOR_SP);
+      BSP_LCD_FillTriangle(ap[8].X, ap[8].Y, ap[9].X, ap[9].Y, ap[11].X, ap[11].Y);
+      BSP_LCD_FillTriangle(ap[10].X, ap[10].Y, ap[9].X, ap[9].Y, ap[11].X, ap[11].Y);
+      BSP_LCD_DrawPolygon(&ap[8], 4); /* because the thin filled triangle is may be incomplete */
+      BSP_LCD_SetTextColor(CLOCK_COLOR_MP);
+      BSP_LCD_FillTriangle(ap[4].X, ap[4].Y, ap[5].X, ap[5].Y, ap[7].X, ap[7].Y);
+      BSP_LCD_FillTriangle(ap[6].X, ap[6].Y, ap[5].X, ap[5].Y, ap[7].X, ap[7].Y);
+      BSP_LCD_DrawPolygon(&ap[4], 4);
+      BSP_LCD_SetTextColor(CLOCK_COLOR_HP);
+      BSP_LCD_FillTriangle(ap[0].X, ap[0].Y, ap[1].X, ap[1].Y, ap[3].X, ap[3].Y);
+      BSP_LCD_FillTriangle(ap[2].X, ap[2].Y, ap[1].X, ap[1].Y, ap[3].X, ap[3].Y);
+      BSP_LCD_DrawPolygon(&ap[0], 4);
+
+      #endif
 
       for(i = 0; i < 12; i++)
       {
