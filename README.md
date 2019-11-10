@@ -37,10 +37,11 @@ App:
   (printf: the result, i use the SWO pin for ST-LINK Serial Wire Viewer (SWV). See:examples/Src/syscalls.c)
 
 How to use starting from zero?
-- stm32f103c8 - spi: https://www.youtube.com/watch?v=4NZ1VwuQWhw&feature=youtu.be
-- stm32f103c8 - gpio8: https://www.youtube.com/watch?v=2oP4vGotuJA&feature=youtu.be
-- stm32f103c8 - gpio8 with touchscreen: https://www.youtube.com/watch?v=qyCctzAbD2g&feature=youtu.be
-- stm32f407zet - fsmc16, sdcard, jpg: https://www.youtube.com/watch?v=hfeKMZXt2L8&feature=youtu.be
+- stm32f103c8 - spi: https://www.youtube.com/watch?v=4NZ1VwuQWhw
+- stm32f103c8 - gpio8: https://www.youtube.com/watch?v=2oP4vGotuJA
+- stm32f103c8 - gpio8 with touchscreen: https://www.youtube.com/watch?v=qyCctzAbD2g
+- stm32f407zet - fsmc16, sdcard, jpg: https://www.youtube.com/watch?v=hfeKMZXt2L8
+- stm32f429zi discovery - spi-dma, usbhost pendrive, jpg: https://www.youtube.com/watch?v=Qi8CtNJGWFw
 
 1. Create project for Cubemx
 - setting the RCC (Crystal/ceramic resonator)
