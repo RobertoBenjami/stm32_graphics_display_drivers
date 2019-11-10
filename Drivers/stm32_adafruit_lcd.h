@@ -62,7 +62,6 @@
   * @{
   */ 
 
-
 /** @defgroup STM32_ADAFRUIT_LCD_Exported_Types
   * @{
   */
@@ -75,7 +74,6 @@ typedef struct
   uint32_t TextColor;
   uint32_t BackColor;
   sFONT    *pFont; 
-
 }LCD_DrawPropTypeDef;
 
 /** 
@@ -95,7 +93,6 @@ typedef enum
   CENTER_MODE             = 0x01,    /*!< Center mode */
   RIGHT_MODE              = 0x02,    /*!< Right mode  */
   LEFT_MODE               = 0x03     /*!< Left mode   */
-
 }Line_ModeTypdef;
 
 /**
@@ -115,11 +112,10 @@ typedef enum
 #define LCD_ERROR      0x01
 #define LCD_TIMEOUT    0x02
 
-#if LCD_REVERSE == 0
-#define  RC(a)   a
-#endif
 #if LCD_REVERSE == 1
 #define  RC(a)   ((((a) & 0xFF) << 8) | (((a) & 0xFF00) >> 8))
+#else
+#define  RC(a)   a
 #endif
 
 /** 
@@ -144,8 +140,6 @@ typedef enum
 /**
   * @}
   */
-
-
 
 /** @defgroup STM32_ADAFRUIT_LCD_Exported_Functions
   * @{
