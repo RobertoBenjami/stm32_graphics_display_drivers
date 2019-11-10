@@ -1,5 +1,6 @@
 /*
  * 2019.05. Add v1.1 extension (#ifdef   LCD_DRVTYPE_V1_1)
+ * 2019.11. Add BSP_LCD_FillTriangle
 */
 
 /**
@@ -174,6 +175,7 @@ void     BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t
 void     BSP_LCD_FillCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius);
 void     BSP_LCD_FillPolygon(pPoint Points, uint16_t PointCount);
 void     BSP_LCD_FillEllipse(uint16_t Xpos, uint16_t Ypos, uint16_t XRadius, uint16_t YRadius);
+void     BSP_LCD_FillTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3);
 
 void     BSP_LCD_DisplayOff(void);
 void     BSP_LCD_DisplayOn(void);
