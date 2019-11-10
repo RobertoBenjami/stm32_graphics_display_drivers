@@ -1,3 +1,16 @@
+/*
+ * Modify: Roberto Benjami
+ * date: 2019.11
+ *
+ * - BSP_LCD_DrawCircle : delete the BSP_LCD_SetFont(&LCD_DEFAULT_FONT); (interesting bug)
+ * - BSP_LCD_Init : DrawProp.pFont = &Font24 change to DrawProp.pFont = &LCD_DEFAULT_FONT
+ * - FillTriangle -> BSP_LCD_FillTriangle, change to public, changed to fast algorythm
+ * - Add : BSP_LCD_ReadID
+ * - Add : BSP_LCD_ReadPixel
+ * - Add : BSP_LCD_DrawRGB16Image
+ * - Add : BSP_LCD_ReadRGB16Image
+ * */
+
 /**
   ******************************************************************************
   * @file    stm32_adafruit_lcd.c
@@ -109,7 +122,8 @@ EndDependencies */
 /** @defgroup STM32_ADAFRUIT_LCD_Private_Macros
   * @{
   */
-#define ABS(X) ((X) > 0 ? (X) : -(X)) 
+#define ABS(X) ((X) > 0 ? (X) : -(X))
+#define SWAP16(a, b) {uint16_t t = a; a = b; b = t;}
 
 /**
   * @}
@@ -123,7 +137,7 @@ LCD_DrawPropTypeDef DrawProp;
 extern LCD_DrvTypeDef  *lcd_drv;
 
 /* Max size of bitmap will based on a font24 (17x24) */
-static uint8_t bitmap[MAX_HEIGHT_FONT*MAX_WIDTH_FONT*2+OFFSET_BITMAP] = {0};
+static uint8_t bitmap[MAX_HEIGHT_FONT * MAX_WIDTH_FONT * 2 + OFFSET_BITMAP] = {0};
 
 /**
   * @}
@@ -133,7 +147,6 @@ static uint8_t bitmap[MAX_HEIGHT_FONT*MAX_WIDTH_FONT*2+OFFSET_BITMAP] = {0};
   * @{
   */ 
 static void DrawChar(uint16_t Xpos, uint16_t Ypos, const uint8_t *c);
-static void FillTriangle(uint16_t x1, uint16_t x2, uint16_t x3, uint16_t y1, uint16_t y2, uint16_t y3);
 static void SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height);
 /**
   * @}
@@ -566,19 +579,12 @@ void BSP_LCD_DrawCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
   while (CurX <= CurY)
   {
     BSP_LCD_DrawPixel((Xpos + CurX), (Ypos - CurY), DrawProp.TextColor);
-
     BSP_LCD_DrawPixel((Xpos - CurX), (Ypos - CurY), DrawProp.TextColor);
-
     BSP_LCD_DrawPixel((Xpos + CurY), (Ypos - CurX), DrawProp.TextColor);
-
     BSP_LCD_DrawPixel((Xpos - CurY), (Ypos - CurX), DrawProp.TextColor);
-
     BSP_LCD_DrawPixel((Xpos + CurX), (Ypos + CurY), DrawProp.TextColor);
-
     BSP_LCD_DrawPixel((Xpos - CurX), (Ypos + CurY), DrawProp.TextColor);
-
     BSP_LCD_DrawPixel((Xpos + CurY), (Ypos + CurX), DrawProp.TextColor);
-
     BSP_LCD_DrawPixel((Xpos - CurY), (Ypos + CurX), DrawProp.TextColor);   
 
     if (D < 0)
@@ -807,14 +813,14 @@ void BSP_LCD_FillPolygon(pPoint Points, uint16_t PointCount)
     X2 = Points->X;
     Y2 = Points->Y;    
     
-    FillTriangle(X, X2, X_center, Y, Y2, Y_center);
-    FillTriangle(X, X_center, X2, Y, Y_center, Y2);
-    FillTriangle(X_center, X2, X, Y_center, Y2, Y);   
+    BSP_LCD_FillTriangle(X, Y, X2, Y2, X_center, Y_center);
+    BSP_LCD_FillTriangle(X, Y, X_center, Y_center, X2, Y2);
+    BSP_LCD_FillTriangle(X_center, Y_center, X2, Y2, X, Y);
   }
   
-  FillTriangle(X_first, X2, X_center, Y_first, Y2, Y_center);
-  FillTriangle(X_first, X_center, X2, Y_first, Y_center, Y2);
-  FillTriangle(X_center, X2, X_first, Y_center, Y2, Y_first);   
+  BSP_LCD_FillTriangle(X_first, Y_first, X2, Y2, X_center, Y_center);
+  BSP_LCD_FillTriangle(X_first, Y_first, X_center, Y_center, X2, Y2);
+  BSP_LCD_FillTriangle(X_center, Y_center, X2, Y2, X_first, Y_first);
 }
 
 /**
@@ -940,7 +946,6 @@ static void DrawChar(uint16_t Xpos, uint16_t Ypos, const uint8_t *pChar)
       } 
     }
   }
-  
   BSP_LCD_DrawBitmap(Xpos, Ypos, bitmap);
 }
 
@@ -955,72 +960,84 @@ static void DrawChar(uint16_t Xpos, uint16_t Ypos, const uint8_t *pChar)
   * @param  y3: Point 3 Y position
   * @retval None
   */
-static void FillTriangle(uint16_t x1, uint16_t x2, uint16_t x3, uint16_t y1, uint16_t y2, uint16_t y3)
-{ 
-  int16_t deltax = 0, deltay = 0, x = 0, y = 0, xinc1 = 0, xinc2 = 0, 
-  yinc1 = 0, yinc2 = 0, den = 0, num = 0, numadd = 0, numpixels = 0, 
-  curpixel = 0;
-  
-  deltax = ABS(x2 - x1);        /* The difference between the x's */
-  deltay = ABS(y2 - y1);        /* The difference between the y's */
-  x = x1;                       /* Start x off at the first pixel */
-  y = y1;                       /* Start y off at the first pixel */
-  
-  if (x2 >= x1)                 /* The x-values are increasing */
+void BSP_LCD_FillTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3)
+{
+  int16_t a, b, y, last;
+
+  // Sort coordinates by Y order (y3 >= y2 >= y1)
+  if (y1 > y2)
   {
-    xinc1 = 1;
-    xinc2 = 1;
+    SWAP16(y1, y2); SWAP16(x1, x2);
   }
-  else                          /* The x-values are decreasing */
-  {
-    xinc1 = -1;
-    xinc2 = -1;
+  if (y2 > y3) {
+    SWAP16(y3, y2); SWAP16(x3, x2);
   }
-  
-  if (y2 >= y1)                 /* The y-values are increasing */
-  {
-    yinc1 = 1;
-    yinc2 = 1;
+  if (y1 > y2) {
+    SWAP16(y1, y2); SWAP16(x1, x2);
   }
-  else                          /* The y-values are decreasing */
-  {
-    yinc1 = -1;
-    yinc2 = -1;
+
+  if(y1 == y3)
+  { // Handle awkward all-on-same-line case as its own thing
+    a = b = x1;
+    if(x2 < a)      a = x2;
+    else if(x2 > b) b = x2;
+    if(x3 < a)      a = x3;
+    else if(x3 > b) b = x3;
+    BSP_LCD_DrawHLine(a, y1, b - a + 1);
+    return;
   }
-  
-  if (deltax >= deltay)         /* There is at least one x-value for every y-value */
+
+  int16_t
+  dx12 = x2 - x1,
+  dy12 = y2 - y1,
+  dx13 = x3 - x1,
+  dy13 = y3 - y1,
+  dx23 = x3 - x2,
+  dy23 = y3 - y2;
+  int32_t
+  sa   = 0,
+  sb   = 0;
+
+  // For upper part of triangle, find scanline crossings for segments
+  // 1-2 and 1-3.  If y2=y3 (flat-bottomed triangle), the scanline y2
+  // is included here (and second loop will be skipped, avoiding a /0
+  // error there), otherwise scanline y2 is skipped here and handled
+  // in the second loop...which also avoids a /0 error here if y1=y2
+  // (flat-topped triangle).
+  if(y2 == y3) last = y2;   // Include y2 scanline
+  else         last = y2 - 1; // Skip it
+
+  for(y = y1; y <= last; y++)
   {
-    xinc1 = 0;                  /* Don't change the x when numerator >= denominator */
-    yinc2 = 0;                  /* Don't change the y for every iteration */
-    den = deltax;
-    num = deltax / 2;
-    numadd = deltay;
-    numpixels = deltax;         /* There are more x-values than y-values */
+    a   = x1 + sa / dy12;
+    b   = x1 + sb / dy13;
+    sa += dx12;
+    sb += dx13;
+    /* longhand:
+    a = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+    b = x1 + (x3 - x1) * (y - y2) / (y3 - y1);
+    */
+    if(a > b) SWAP16(a, b);
+    BSP_LCD_DrawHLine(a, y, b - a + 1);
   }
-  else                          /* There is at least one y-value for every x-value */
+
+  // For lower part of triangle, find scanline crossings for segments
+  // 1-3 and 2-3.  This loop is skipped if y1=y2.
+  sa = (int32_t)dx23 * (y - y2);
+  sb = (int32_t)dx13 * (y - y1);
+  for(; y <= y3; y++)
   {
-    xinc2 = 0;                  /* Don't change the x for every iteration */
-    yinc1 = 0;                  /* Don't change the y when numerator >= denominator */
-    den = deltay;
-    num = deltay / 2;
-    numadd = deltax;
-    numpixels = deltay;         /* There are more y-values than x-values */
+    a   = x2 + sa / dy23;
+    b   = x1 + sb / dy13;
+    sa += dx23;
+    sb += dx13;
+    /* longhand:
+    a = x2 + (x3 - x2) * (y - y2) / (y3 - y2);
+    b = x1 + (x3 - x1) * (y - y1) / (y3 - y1);
+    */
+    if(a > b) SWAP16(a, b);
+    BSP_LCD_DrawHLine(a, y, b - a + 1);
   }
-  
-  for (curpixel = 0; curpixel <= numpixels; curpixel++)
-  {
-    BSP_LCD_DrawLine(x, y, x3, y3);
-    
-    num += numadd;              /* Increase the numerator by the top of the fraction */
-    if (num >= den)             /* Check if numerator >= denominator */
-    {
-      num -= den;               /* Calculate the new numerator value */
-      x += xinc1;               /* Change the x as appropriate */
-      y += yinc1;               /* Change the y as appropriate */
-    }
-    x += xinc2;                 /* Change the x as appropriate */
-    y += yinc2;                 /* Change the y as appropriate */
-  } 
 }
 
 /**
