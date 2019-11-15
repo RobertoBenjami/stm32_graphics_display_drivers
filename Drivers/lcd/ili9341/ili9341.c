@@ -156,7 +156,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9341_drv;
 #define YPOS                               Xpos
 #define XSIZE                              Ysize
 #define YSIZE                              Xsize
-#define XSTEP                              FrameBuffer.Xsize
+#define XSTEP                              ILI9341_LCD_PIXEL_WIDTH
 #define YSTEP                              1
 #elif (ILI9341_ORIENTATION == 2)
 #define ILI9341_SIZE_X                     ILI9341_LCD_PIXEL_WIDTH
@@ -169,7 +169,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9341_drv;
 #define XSIZE                              Xsize
 #define YSIZE                              Ysize
 #define XSTEP                              1
-#define YSTEP                              FrameBuffer.Xsize
+#define YSTEP                              ILI9341_LCD_PIXEL_WIDTH
 #elif (ILI9341_ORIENTATION == 3)
 #define ILI9341_SIZE_X                     ILI9341_LCD_PIXEL_HEIGHT
 #define ILI9341_SIZE_Y                     ILI9341_LCD_PIXEL_WIDTH
@@ -180,7 +180,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9341_drv;
 #define YPOS                               Xpos
 #define XSIZE                              Ysize
 #define YSIZE                              Xsize
-#define XSTEP                              FrameBuffer.Xsize
+#define XSTEP                              ILI9341_LCD_PIXEL_WIDTH
 #define YSTEP                              1
 #endif
 
