@@ -1,8 +1,14 @@
-/* Orientácio:
-   - 0: 240x320 catlakozo felül (portrait)
-   - 1: 320x240 catlakozo bal oldalt (landscape)
-   - 2: 240x320 catlakozo alul (portrait)
-   - 3: 320x240 catlakozo jobb oldalt (landscape)
+/* Interface mode
+   - 1: SPI or paralell interface mode
+   - 2: RGB mode (LTDC hardware, HSYNC, VSYNC, pixel clock, RGB bits data, framebuffer memory)
+*/
+#define  ILI9341_INTERFACE_MODE   1
+
+/* Orientation
+   - 0: 240x320 portrait (plug in top)
+   - 1: 320x240 landscape (plug in left)
+   - 2: 240x320 portrait (plug in botton)
+   - 3: 320x240 landscape (plug in right)
 */
 #define  ILI9341_ORIENTATION      0
 
@@ -12,7 +18,21 @@
 */
 #define  ILI9341_COLORMODE        0
 
+#if  ILI9341_INTERFACE_MODE == 2
+
+/* please see in the main.c what is the LTDC_HandleTypeDef name */
+extern   LTDC_HandleTypeDef       hltdc;
+
+/* Frambuffer memory alloc, free */
+#define  ILI9341_MALLOC           malloc
+#define  ILI9341_FREE             free
+
+/* include for memory alloc/free */
+#include <stdlib.h>
+
+#endif  /* #if ILI9341_INTERFACE_MODE == 2 */
+
 //-----------------------------------------------------------------------------
-// ST7735 Size (fizikai felbontás, az alapértelmezett (0) orientáciora vonatkoztatva)
+// ILI9341 physic resolution (in 0 orientation)
 #define  ILI9341_LCD_PIXEL_WIDTH  240
 #define  ILI9341_LCD_PIXEL_HEIGHT 320
