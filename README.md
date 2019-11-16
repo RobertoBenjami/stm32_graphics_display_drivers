@@ -83,3 +83,7 @@ Example (please unzip the app you like):
 - f407vet_app_rtos_fsmc: (stm32f407vet HAL-FreeRtos applications, FSMC, cubemx, truestudio)
 - f407vet_app_fsmc16: (stm32f407vet HAL applications, FSMC 16 bit, cubemx, truestudio)
 - f407zet_app_fsmc16_extsram: (stm32f407zet HAL applications, FSMC 16 bit, external 1MB SRAM, cubemx, truestudio)
+
+How to adding the SWO support to cheap stlink ?
+https://lujji.github.io/blog/stlink-clone-trace/
+
