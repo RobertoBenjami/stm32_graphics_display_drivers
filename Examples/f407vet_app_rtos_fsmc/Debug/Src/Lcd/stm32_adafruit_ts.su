@@ -1,2 +1,0 @@
-stm32_adafruit_ts.c:16:9:BSP_TS_Init	8	static
-stm32_adafruit_ts.c:42:6:BSP_TS_GetState	32	static
