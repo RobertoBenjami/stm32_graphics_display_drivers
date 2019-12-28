@@ -9,7 +9,7 @@
  * - Add : BSP_LCD_ReadPixel
  * - Add : BSP_LCD_DrawRGB16Image
  * - Add : BSP_LCD_ReadRGB16Image
- * - Modify : BSP_LCD_FillTriangle (faster algorithm)
+ * - Add : BSP_LCD_FillTriangle (faster algorithm)
  * - Modify : BSP_LCD_Init (default font from header file, default colors from header file, otptional clear from header file)
  * */
 
