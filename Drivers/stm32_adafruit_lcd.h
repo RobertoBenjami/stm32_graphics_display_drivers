@@ -1,6 +1,7 @@
 /*
- * 2019.05. Add v1.1 extension (#ifdef   LCD_DRVTYPE_V1_1)
- * 2019.11. Add BSP_LCD_FillTriangle
+ * 2019.05 Add v1.1 extension (#ifdef   LCD_DRVTYPE_V1_1)
+ * 2019.11 Add BSP_LCD_FillTriangle
+ * 2019.12 Add LCD_DEFAULT_FONT, LCD_DEFAULT_BACKCOLOR, LCD_DEFAULT_TEXTCOLOR, LCD_INIT_CLEAR
 */
 
 /**
@@ -51,22 +52,16 @@
 #include "lcd.h"
 #include "Fonts/fonts.h"
 
-/** @addtogroup BSP
-  * @{
-  */
+/* LCD default font (Font8 or Font12 or Font16 or Font20 or Font24) */
+#define LCD_DEFAULT_FONT         Font8
 
-/** @addtogroup STM32_ADAFRUIT
-  * @{
-  */
- 
-/** @addtogroup STM32_ADAFRUIT_LCD
-  * @{
-  */ 
+/* LCD default colors */
+#define LCD_DEFAULT_BACKCOLOR    LCD_COLOR_BLACK
+#define LCD_DEFAULT_TEXTCOLOR    LCD_COLOR_WHITE
 
-/** @defgroup STM32_ADAFRUIT_LCD_Exported_Types
-  * @{
-  */
-   
+/* LCD clear in BSP_LCD_Init (0:not clear, 1:clear) */
+#define LCD_INIT_CLEAR           1
+  
 /** 
   * @brief  Draw Properties structures definition
   */ 
@@ -95,15 +90,7 @@ typedef enum
   RIGHT_MODE              = 0x02,    /*!< Right mode  */
   LEFT_MODE               = 0x03     /*!< Left mode   */
 }Line_ModeTypdef;
-
-/**
-  * @}
-  */ 
-
-/** @defgroup STM32_ADAFRUIT_LCD_Exported_Constants
-  * @{
-  */
-  
+ 
 #define __IO    volatile  
 
 /** 
@@ -132,15 +119,6 @@ typedef enum
 #define LCD_COLOR_YELLOW        RC(0xFFE0)
 #define LCD_COLOR_WHITE         RC(0xFFFF)
 #define LCD_COLOR(r, g, b)      RC((r & 0b11111000) << 8 | (g & 0b11111100) << 3 | (b & 0b11111000) >> 3)
-
-/** 
-  * @brief LCD default font 
-  */ 
-#define LCD_DEFAULT_FONT         Font8
-
-/**
-  * @}
-  */
 
 /** @defgroup STM32_ADAFRUIT_LCD_Exported_Functions
   * @{
@@ -186,26 +164,11 @@ uint16_t BSP_LCD_ReadPixel(uint16_t Xpos, uint16_t Ypos);
 void     BSP_LCD_DrawRGB16Image(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
 void     BSP_LCD_ReadRGB16Image(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
 #endif
-
-/**
-  * @}
-  */
-  
+ 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* __STM32_ADAFRUIT_LCD_H */
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-  */ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

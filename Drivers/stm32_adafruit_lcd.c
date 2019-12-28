@@ -9,6 +9,8 @@
  * - Add : BSP_LCD_ReadPixel
  * - Add : BSP_LCD_DrawRGB16Image
  * - Add : BSP_LCD_ReadRGB16Image
+ * - Modify : BSP_LCD_FillTriangle (faster algorithm)
+ * - Modify : BSP_LCD_Init (default font from header file, default colors from header file, otptional clear from header file)
  * */
 
 /**
@@ -85,53 +87,20 @@ EndDependencies */
 #include "stm32_adafruit_lcd.h"
 #include "Fonts/fonts.h"
 
-/** @addtogroup BSP
-  * @{
-  */
-
-/** @addtogroup STM32_ADAFRUIT
-  * @{
-  */
-    
-/** @addtogroup STM32_ADAFRUIT_LCD
-  * @{
-  */ 
-
-/** @defgroup STM32_ADAFRUIT_LCD_Private_TypesDefinitions
-  * @{
-  */ 
-
-/**
-  * @}
-  */ 
-
-/** @defgroup STM32_ADAFRUIT_LCD_Private_Defines
-  * @{
-  */
+/* @defgroup STM32_ADAFRUIT_LCD_Private_Defines */
 #define POLY_X(Z)             ((int32_t)((Points + (Z))->X))
 #define POLY_Y(Z)             ((int32_t)((Points + (Z))->Y))
 #define NULL                  (void *)0
 
-#define MAX_HEIGHT_FONT         17
-#define MAX_WIDTH_FONT          24
-#define OFFSET_BITMAP           54
-/**
-  * @}
-  */ 
+#define MAX_HEIGHT_FONT       17
+#define MAX_WIDTH_FONT        24
+#define OFFSET_BITMAP         54
 
-/** @defgroup STM32_ADAFRUIT_LCD_Private_Macros
-  * @{
-  */
+/* @defgroup STM32_ADAFRUIT_LCD_Private_Macros */
 #define ABS(X) ((X) > 0 ? (X) : -(X))
 #define SWAP16(a, b) {uint16_t t = a; a = b; b = t;}
 
-/**
-  * @}
-  */ 
-    
-/** @defgroup STM32_ADAFRUIT_LCD_Private_Variables
-  * @{
-  */ 
+/* @defgroup STM32_ADAFRUIT_LCD_Private_Variables */ 
 LCD_DrawPropTypeDef DrawProp;
 
 extern LCD_DrvTypeDef  *lcd_drv;
@@ -139,23 +108,9 @@ extern LCD_DrvTypeDef  *lcd_drv;
 /* Max size of bitmap will based on a font24 (17x24) */
 static uint8_t bitmap[MAX_HEIGHT_FONT * MAX_WIDTH_FONT * 2 + OFFSET_BITMAP] = {0};
 
-/**
-  * @}
-  */ 
-
-/** @defgroup STM32_ADAFRUIT_LCD_Private_FunctionPrototypes
-  * @{
-  */ 
+/* @defgroup STM32_ADAFRUIT_LCD_Private_FunctionPrototypes */ 
 static void DrawChar(uint16_t Xpos, uint16_t Ypos, const uint8_t *c);
 static void SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height);
-/**
-  * @}
-  */ 
-
-
-/** @defgroup STM32_ADAFRUIT_LCD_Private_Functions
-  * @{
-  */
   
 /**
   * @brief  Initializes the LCD.
@@ -167,18 +122,17 @@ uint8_t BSP_LCD_Init(void)
   uint8_t ret = LCD_ERROR;
   
   /* Default value for draw propriety */
-  DrawProp.BackColor = 0xFFFF;
-  DrawProp.pFont     = &LCD_DEFAULT_FONT;
+  DrawProp.BackColor = LCD_DEFAULT_BACKCOLOR;
   DrawProp.TextColor = 0x0000;
+  DrawProp.pFont     = &LCD_DEFAULT_FONT;
   
   /* LCD Init */   
   lcd_drv->Init();
   
   /* Clear the LCD screen */
-  BSP_LCD_Clear(0x5AA5 /*LCD_COLOR_WHITE*/);
-  
-  /* Initialize the font */
-  BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
+  #if LCD_INIT_CLEAR == 1
+  BSP_LCD_Clear(LCD_DEFAULT_BACKCOLOR);
+  #endif
   
   ret = LCD_OK;
   
@@ -1086,19 +1040,4 @@ void BSP_LCD_ReadRGB16Image(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16
 
 #endif
 
-/**
-  * @}
-  */  
-  
-/**
-  * @}
-  */ 
-  
-/**
-  * @}
-  */     
-
-/**
-  * @}
-  */  
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
