@@ -44,13 +44,13 @@ A lenti példa a következö lábakhoz optimalizál:
 // datapins setting to output (data direction: STM32 -> LCD)
 #define LCD_DIRWRITE { /* D0..D1, D14..D15, E7..E10 <- 0x3 */ \
 GPIOD->CRH = (GPIOD->CRH & ~0xFF000000) | 0x33000000; \
-GPIOD->CRL = (GPIOD->CRH & ~0x000000FF) | 0x00000033; \
+GPIOD->CRL = (GPIOD->CRL & ~0x000000FF) | 0x00000033; \
 GPIOE->CRL = (GPIOE->CRL & ~0xF0000000) | 0x30000000; \
 GPIOE->CRH = (GPIOE->CRH & ~0x00000FFF) | 0x00000333; }
 // datapins setting to input (data direction: STM32 <- LCD)
 #define LCD_DIRREAD { /* D0..D1, D14..D15, E7..E10 <- 0x4 */ \
 GPIOD->CRH = (GPIOD->CRH & ~0xFF000000) | 0x44000000; \
-GPIOD->CRL = (GPIOD->CRH & ~0x000000FF) | 0x00000044; \
+GPIOD->CRL = (GPIOD->CRL & ~0x000000FF) | 0x00000044; \
 GPIOE->CRL = (GPIOE->CRL & ~0xF0000000) | 0x40000000; \
 GPIOE->CRH = (GPIOE->CRH & ~0x00000FFF) | 0x00000444; }
 // datapins write, STM32 -> LCD (write I/O pins from dt data)
