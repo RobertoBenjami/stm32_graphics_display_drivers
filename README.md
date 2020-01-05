@@ -72,7 +72,7 @@ How to use starting from zero?
 - setting the LCD configuration (orientation, touchscreen)
 - add include path : Src/Lcd
 - setting the compile options (Enable paralell build, optimalization)
-- comple ...
+- compile, run ...
 
 Example (please unzip the app you like):
 - f103c8t_app: (stm32f103c8t HAL applications, cubemx, truestudio)
