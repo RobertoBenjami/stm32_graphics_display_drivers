@@ -4,18 +4,12 @@
  */
 
 /* Készitö: Roberto Benjami
-   verzio:  2019.09
+   verzio:  2020.01
 
    Megj:
    Minden függvány az adatlábak irányát WRITE üzemmodban hagyja, igy nem kell minden irási
    müveletkor állitgatni
 */
-
-/* CS láb vezérlési stratégia
-   - 0: CS láb minden irás/olvasás müvelet során állitva van (igy a touchscreen olvasásakor nem szükséges lekapcsolni
-   - 1: CS láb folyamatosan 0-ba van állitva
-*/
-#define  LCD_CS_MODE          0
 
 #include "main.h"
 #include "lcd.h"
@@ -120,16 +114,8 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define LCD_RST_ON            GPIOX_ODR(LCD_RST) = 0
 #define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
 
-// Chip select láb
-#if  LCD_CS_MODE ==  0
 #define LCD_CS_ON             GPIOX_ODR(LCD_CS) = 0
 #define LCD_CS_OFF            GPIOX_ODR(LCD_CS) = 1
-#endif
-
-#if  LCD_CS_MODE ==  1
-#define LCD_CS_ON
-#define LCD_CS_OFF
-#endif
 
 //-----------------------------------------------------------------------------
 // Ha a 8 adatláb egy PORT 0..7 vagy 8..15 lábain van, automatikusan optimalizál
