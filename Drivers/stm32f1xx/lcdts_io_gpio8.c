@@ -8,18 +8,12 @@
  */
 
 /* Készitö: Roberto Benjami
-   verzio:  2019.05
+   verzio:  2020.01
 
    Megj:
    Minden függvány az adatlábak irányát WRITE üzemmodban hagyja, igy nem kell minden irási
    müveletkor állitgatni
 */
-
-/* CS láb vezérlési stratégia
-   - 0: CS láb minden irás/olvasás müvelet során állitva van (igy a touchscreen olvasásakor nem szükséges lekapcsolni
-   - 1: CS láb folyamatosan 0-ba van állitva (a touchscreen olvasásakor ezért le kell kapcsolni)
-*/
-#define  LCD_CS_MODE          0
 
 /* ADC sample time 
    - 0: 1.5cycles, 1: 7.5c, 2:13.5c, 3:28.5c, 4:41.5c, 5:55.5c, 6:71.5c, 7:239.5cycles)
@@ -142,19 +136,8 @@ uint16_t TS_IO_GetZ2(void);
 #define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
 
 // Chip select láb
-#if  LCD_CS_MODE ==  0
 #define LCD_CS_ON             GPIOX_ODR(LCD_CS) = 0
 #define LCD_CS_OFF            GPIOX_ODR(LCD_CS) = 1
-#define LCD_TS_ON
-#define LCD_TS_OFF
-#endif
-
-#if  LCD_CS_MODE ==  1
-#define LCD_CS_ON
-#define LCD_CS_OFF
-#define LCD_TS_ON             GPIOX_ODR(LCD_CS) = 1
-#define LCD_TS_OFF            GPIOX_ODR(LCD_CS) = 0
-#endif
 
 //-----------------------------------------------------------------------------
 // Ha a 8 adatláb egy PORT 0..7 vagy 8..15 lábain van, automatikusan optimalizál
@@ -649,8 +632,6 @@ uint8_t TS_IO_DetectToch(void)
 {
   uint8_t  ret;
 
-  LCD_TS_ON;
-
   GPIOX_MODE(MODE_PU_DIGITAL_INPUT, TS_YP);// YP = D_INPUT PULL
   GPIOX_MODE(MODE_FF_DIGITAL_INPUT, TS_YM);// YM = D_INPUT
   GPIOX_ODR(TS_XP) = 0;                 // XP = 0
@@ -671,8 +652,6 @@ uint8_t TS_IO_DetectToch(void)
   GPIOX_MODE(MODE_PP_OUT_50MHZ, TS_YP); // YP = OUT
   GPIOX_MODE(MODE_PP_OUT_50MHZ, TS_YM); // YM = OUT
 
-  LCD_TS_OFF;
-
   return ret;
 }
 
@@ -681,8 +660,6 @@ uint8_t TS_IO_DetectToch(void)
 uint16_t TS_IO_GetX(void)
 {
   uint16_t ret;
-
-  LCD_TS_ON;
 
   GPIOX_MODE(MODE_FF_DIGITAL_INPUT, TS_YM);// YM = D_INPUT
   GPIOX_MODE(MODE_ANALOG_INPUT, TS_YP);    // YP = AN_INPUT
@@ -700,8 +677,6 @@ uint16_t TS_IO_GetX(void)
   GPIOX_MODE(MODE_PP_OUT_50MHZ, TS_YP);
   GPIOX_MODE(MODE_PP_OUT_50MHZ, TS_YM);
 
-  LCD_TS_OFF;
-
   return ret;
 }
 
@@ -710,8 +685,6 @@ uint16_t TS_IO_GetX(void)
 uint16_t TS_IO_GetY(void)
 {
   uint16_t ret;
-
-  LCD_TS_ON;
 
   GPIOX_MODE(MODE_FF_DIGITAL_INPUT, TS_XP);// XP = D_INPUT
   GPIOX_MODE(MODE_ANALOG_INPUT, TS_XM);    // XM = AN_INPUT
@@ -729,8 +702,6 @@ uint16_t TS_IO_GetY(void)
   GPIOX_MODE(MODE_PP_OUT_50MHZ, TS_XP);
   GPIOX_MODE(MODE_PP_OUT_50MHZ, TS_XM);
 
-  LCD_TS_OFF;
-
   return ret;
 }
 
@@ -740,16 +711,10 @@ uint16_t TS_IO_GetZ1(void)
 {
   uint16_t ret;
 
-  LCD_TS_ON;
-
   GPIOX_MODE(MODE_ANALOG_INPUT, TS_XM); // XM = AN_INPUT
   GPIOX_MODE(MODE_ANALOG_INPUT, TS_YP); // YP = AN_INPUT
   GPIOX_ODR(TS_XP) = 0;                 // XP = 0
   GPIOX_ODR(TS_YM) = 1;                 // YM = 1
-
-  #ifdef LCD_CS_OPT
-  GPIOX_ODR(LCD_CS) = 1;                // CS = 1
-  #endif
 
   ADCX->SQR3 = TS_YP_ADCCH;
   CLEAR_BIT(ADCX->SR, ADC_SR_EOC);
@@ -762,8 +727,6 @@ uint16_t TS_IO_GetZ1(void)
   GPIOX_MODE(MODE_PP_OUT_50MHZ, TS_XM);
   GPIOX_MODE(MODE_PP_OUT_50MHZ, TS_YP);
 
-  LCD_TS_OFF;
-
   return ret;
 }
 
@@ -772,8 +735,6 @@ uint16_t TS_IO_GetZ1(void)
 uint16_t TS_IO_GetZ2(void)
 {
   uint16_t ret;
-
-  LCD_TS_ON;
 
   GPIOX_MODE(MODE_ANALOG_INPUT, TS_XM); // XM = AN_INPUT
   GPIOX_MODE(MODE_ANALOG_INPUT, TS_YP); // YP = AN_INPUT
@@ -790,8 +751,6 @@ uint16_t TS_IO_GetZ2(void)
   GPIOX_ODR(TS_XP) = 1;
   GPIOX_MODE(MODE_PP_OUT_50MHZ, TS_XM);
   GPIOX_MODE(MODE_PP_OUT_50MHZ, TS_YP);
-
-  LCD_TS_OFF;
 
   return ret;
 }
