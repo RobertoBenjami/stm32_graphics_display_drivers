@@ -21,8 +21,6 @@ uint8_t BSP_TS_Init(uint16_t XSize, uint16_t YSize)
   TsXBoundary = XSize;
   TsYBoundary = YSize;
 
-  // TsDrv = &st7783_ts_drv;
-  // TsDrv = &hx8347g_ts_drv;
   if(ts_drv)
     ret = TS_OK;
 
