@@ -385,8 +385,6 @@ void LCD_IO_Init(void)
   ADCX->CR2 |= ADC_CR2_CAL;
   while(ADCX->CR2 & ADC_CR2_CAL);
   #endif // #if TS_ADC > 0
-
-  LCD_TS_OFF;
 }
 
 //-----------------------------------------------------------------------------
