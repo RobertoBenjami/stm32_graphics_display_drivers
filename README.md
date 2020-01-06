@@ -7,6 +7,7 @@ LCD I/O driver:
 - stm32f1: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
 - stm32f1: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
 - stm32f1: lcdts_io_gpio8 (8 bit paralell with analog resistive touchscreen)
+- stm32f1: lcd_io_gpio16 (16 bit paralell without analog resistive touchscreen)
 - stm32f3: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
 - stm32f3: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
 - stm32f3: lcdts_io_gpio8 (8 bit paralell with analog resistive touchscreen)
@@ -25,6 +26,7 @@ LCD driver:
 - ili9325 (8 bit paralell mode tested)
 - ili9328 (8 bit paralell mode tested)
 - ili9341 (SPI, 8 bit and 16 bit paralell mode, SPI with LTDC mode tested)
+- ili9486 (8 bit paralell mode tested)
 - ili9488 (8 bit paralell mode tested)
 - hx8347g (8 bit paralell mode tested)
 

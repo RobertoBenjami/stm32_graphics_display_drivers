@@ -8,3 +8,6 @@
 
 - lcdts_io_gpio8.h / c
   paralell 8 bits GPIO driver with analog resistiv touchscreen
+
+- lcd_io_gpio16.h / c
+  paralell 16 bits GPIO driver
