@@ -10,12 +10,12 @@ ezért ezek ki kell zárni az Lcd és a Touchscreen egyidejü használatát!
 Többszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások megelözéséröl! */
 
 //=============================================================================
-/* Lcd vezérlö lábak hozzárendelése (A..M, 0..15, LCD_CS helye az FSMC által kötött) */
+/* Lcd vezérlö lábak hozzárendelése (A..K, 0..15, LCD_CS helye az FSMC által kötött) */
 #define LCD_CS            X, 0
 #define LCD_RST           X, 0
 
 /* Háttérvilágitás vezérlés
-   - BL: A..M, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
+   - BL: A..K, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
    - BL_ON: 0 vagy 1, a bekapcsolt állapothoz tartozó logikai szint */
 #define LCD_BL            X, 0
 #define LCD_BLON          0

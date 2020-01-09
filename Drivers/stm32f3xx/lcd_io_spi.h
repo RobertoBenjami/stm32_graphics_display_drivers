@@ -26,7 +26,7 @@
 /* SPI láb melyik alternativ funkciohoz tartozik (0..15), (csak hardver SPI) */
 #define LCD_SPI_AFR       5
 
-/* Lcd vezérlö lábak hozzárendelése ((A..M, 0..15)
+/* Lcd vezérlö lábak hozzárendelése ((A..K, 0..15)
    - LCD_RST megadása nem kötelezö (X, 0)
    - LCD_MISO megadása csak full duplex (LCD_SPI_MODE 2) üzemmodban szükséges
    - hardver SPI esetén az SCK, MOSI, MISO lábak hozzárendelése kötött */
@@ -39,7 +39,7 @@
 #define LCD_MISO          X, 0
 
 /* Háttérvilágitás vezérlés
-   - BL: A..M, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
+   - BL: A..K, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
    - BL_ON: 0 vagy 1, a bekapcsolt állapothoz tartozó logikai szint */
 #define LCD_BL            X, 0   // ha nem akarjuk használni X, 0 -t adjunk
 #define LCD_BLON          0

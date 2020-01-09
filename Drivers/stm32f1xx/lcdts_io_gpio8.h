@@ -8,14 +8,14 @@
  */
 
 //=============================================================================
-// Lcd vezérlö lábak hozzárendelése (A..M, 0..15)
+// Lcd vezérlö lábak hozzárendelése (A..K, 0..15)
 #define LCD_CS            X, 0
 #define LCD_RS            X, 0
 #define LCD_WR            X, 0
 #define LCD_RD            X, 0
 #define LCD_RST           X, 0
 
-// Lcd adat lábak hozzárendelése (A..M, 0..15)
+// Lcd adat lábak hozzárendelése (A..K, 0..15)
 #define LCD_D0            X, 0
 #define LCD_D1            X, 0
 #define LCD_D2            X, 0

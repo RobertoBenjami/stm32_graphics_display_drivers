@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32F4
  * készitö: Roberto Benjami
- * verzio:  2019.09
+ * verzio:  2020.01
  *
  * - hardver és szoftver SPI
  * - 3 féle üzemmód (csak TX, half duplex, full duplex)
@@ -110,10 +110,9 @@ void  LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t
 #define GPIOX_PORTNUM_F       6
 #define GPIOX_PORTNUM_G       7
 #define GPIOX_PORTNUM_H       8
-#define GPIOX_PORTNUM_J       9
-#define GPIOX_PORTNUM_K       10
-#define GPIOX_PORTNUM_L       11
-#define GPIOX_PORTNUM_M       12
+#define GPIOX_PORTNUM_I       9
+#define GPIOX_PORTNUM_J       10
+#define GPIOX_PORTNUM_K       11
 #define GPIOX_PORTNUM_(a, b)  GPIOX_PORTNUM_ ## a
 #define GPIOX_PORTNUM(a)      GPIOX_PORTNUM_(a)
 

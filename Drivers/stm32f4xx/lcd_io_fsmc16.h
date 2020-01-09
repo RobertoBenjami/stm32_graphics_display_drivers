@@ -8,11 +8,11 @@ FSMC_D8<-LCD_D8, FSMC_D9<-LCD_D9, FSMC_D10<-LCD_D10, FSMC_D11<-LCD_D11
 FSMC_D12<-LCD_D12, FSMC_D13<-LCD_D13, FSMC_D14<-LCD_D14, FSMC_D15<-LCD_D15 */
 
 //=============================================================================
-/* Lcd vezérlö lábak hozzárendelése (A..M, 0..15) */
+/* Lcd vezérlö lábak hozzárendelése (A..K, 0..15) */
 #define LCD_RST           X, 0
 
 /* Háttérvilágitás vezérlés
-   - BL: A..M, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
+   - BL: A..K, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
    - BL_ON: 0 vagy 1, a bekapcsolt állapothoz tartozó logikai szint */
 #define LCD_BL            X, 0
 #define LCD_BLON          0

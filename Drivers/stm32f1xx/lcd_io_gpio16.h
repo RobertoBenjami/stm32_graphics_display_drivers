@@ -6,14 +6,14 @@
 #define __LCD_IO_GPIO16_H
 
 //=============================================================================
-/* Lcd controll pins (A..M, 0..15) (if LCD_RST not used -> X, 0) */
+/* Lcd controll pins (A..K, 0..15) (if LCD_RST not used -> X, 0) */
 #define LCD_CS            X, 0
 #define LCD_RS            X, 0
 #define LCD_WR            X, 0
 #define LCD_RD            X, 0
 #define LCD_RST           X, 0
 
-/* Lcd data pins (A..M, 0..15) */
+/* Lcd data pins (A..K, 0..15) */
 #define LCD_D0            X, 0
 #define LCD_D1            X, 0
 #define LCD_D2            X, 0
@@ -32,7 +32,7 @@
 #define LCD_D15           X, 0
 
 /* Backlight pin
-   - BL: A..M, 0..15 (if not used -> X, 0)
+   - BL: A..K, 0..15 (if not used -> X, 0)
    - BL_ON: 0 -> backlight on = low level, 1 -> backlight on = high level */
 #define LCD_BL            X, 0
 #define LCD_BLON          0

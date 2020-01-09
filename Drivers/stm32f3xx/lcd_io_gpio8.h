@@ -4,14 +4,14 @@
  */
 
 //=============================================================================
-// Lcd vezérlö lábak hozzárendelése (A..M, 0..15)
+// Lcd vezérlö lábak hozzárendelése (A..K, 0..15)
 #define LCD_CS            X, 0
 #define LCD_RS            X, 0
 #define LCD_WR            X, 0
 #define LCD_RD            X, 0
 #define LCD_RST           X, 0
 
-// Lcd adat lábak hozzárendelése (A..M, 0..15)
+// Lcd adat lábak hozzárendelése (A..K, 0..15)
 #define LCD_D0            X, 0
 #define LCD_D1            X, 0
 #define LCD_D2            X, 0
@@ -22,7 +22,7 @@
 #define LCD_D7            X, 0
 
 /* Háttérvilágitás vezérlés
-   - BL: A..M, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
+   - BL: A..K, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
    - BL_ON: 0 vagy 1, a bekapcsolt állapothoz tartozó logikai szint */
 #define LCD_BL            X, 0
 #define LCD_BLON          0

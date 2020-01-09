@@ -6,7 +6,7 @@ ezért ezek ki kell zárni az Lcd és a Touchscreen egyidejü használatát!
 Tábbszálas/megszakitásos környezetben igy gondoskodni kell az összeakadások megelözéséröl!
 
 Kászitö: Roberto Benjami
-verzio:  2019.02 */
+verzio:  2020.01 */
 
 // ADC sample time (0:3cycles, 1:15c, 2:28c, 3:55c, 4:84c, 5:112c, 6:144c, 7:480cycles)
 #define TS_SAMPLETIME         2
@@ -122,10 +122,9 @@ uint16_t TS_IO_GetZ2(void);
 #define GPIOX_PORTNUM_F       6
 #define GPIOX_PORTNUM_G       7
 #define GPIOX_PORTNUM_H       8
-#define GPIOX_PORTNUM_J       9
-#define GPIOX_PORTNUM_K       10
-#define GPIOX_PORTNUM_L       11
-#define GPIOX_PORTNUM_M       12
+#define GPIOX_PORTNUM_I       9
+#define GPIOX_PORTNUM_J       10
+#define GPIOX_PORTNUM_K       11
 #define GPIOX_PORTNUM_(a, b)  GPIOX_PORTNUM_ ## a
 #define GPIOX_PORTNUM(a)      GPIOX_PORTNUM_(a)
 
