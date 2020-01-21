@@ -812,10 +812,8 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
                           DMAX_IFCR_CFEIF(LCD_DMA_TX)  ; }
 
 //-----------------------------------------------------------------------------
-volatile static uint32_t dma_cnt = 0;
 void DMAX_STREAMX_IRQHANDLER(LCD_DMA_TX)(void)
 {
-  dma_cnt++;
   if(DMAX_ISR(LCD_DMA_TX) & DMAX_ISR_TCIF(LCD_DMA_TX))
   {
     DMAX_IFCR(LCD_DMA_TX) = DMAX_IFCR_CTCIF(LCD_DMA_TX);
