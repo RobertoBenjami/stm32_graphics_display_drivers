@@ -17,7 +17,7 @@
 #define LCD_SPI_MODE      0
 
 /* SPI write and read speed
-   - software SPI: 0=none delay, 1=nop, 2=CLK pin double write, 3..=CD_IO_Delay(LCD_SPI_SPD - 3)
+   - software SPI: 0=none delay, 1=nop, 2=CLK pin double write, 3.. = LCD_IO_Delay(LCD_SPI_SPD - 3)
    - hardware SPI clock div fPCLK: 0=/2, 1=/4, 2=/8, 3=/16, 4=/32, 5=/64, 6=/128, 7=/256 */
 #define LCD_SPI_SPD_WRITE 1
 #define LCD_SPI_SPD_READ  4

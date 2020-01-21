@@ -43,16 +43,15 @@ volatile uint32_t task02_power = 0, cpuusage, refcpuusage = 1;
 
 #if     POWERMETER == 1
 #define POWERMETER_START      task02_count = 0; task02_run = 1;
-#define POWERMETER_STOP       {                    \
-  task02_power = task02_count;                     \
-  task02_run = 0;                                  \
+#define POWERMETER_STOP       {                      \
+  task02_power = task02_count;                       \
+  task02_run = 0;                                    \
   cpuusage = (100 * task02_power / t) / refcpuusage; \
   if(cpuusage > 100) cpuusage = 100;                 \
   cpuusage = 100 - cpuusage;                         }
 #define POWERMETER_REF        refcpuusage = task02_power / t
 
-/*#define POWERMETER_PRINT      Delay(10); printf(", idletask power: %d (%d/ms), cpu usage:%d%%", (unsigned int)task02_power, (int)(task02_power / t), (int)cpuusage) */
-#define POWERMETER_PRINT      Delay(10); printf(", cpu usage:%d%%\r\n", (int)cpuusage)
+#define POWERMETER_PRINT      Delay(10); if(t) printf(", cpu usage:%d%%\r\n", (int)cpuusage); else printf("\r\n")
 #endif
 
 osTimerId myTimer01Handle;
@@ -370,7 +369,7 @@ void mainApp(void)
   Delay(100);
   printf("Display ID = %X\r\n", (unsigned int)BSP_LCD_ReadID());
 
-  #if 0
+  #if 1
   BSP_LCD_Clear(LCD_COLOR_BLACK);
   Delay(DELAY_CHAPTER);
   t = ReadPixelTest(1);

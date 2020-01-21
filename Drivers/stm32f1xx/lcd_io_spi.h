@@ -1,35 +1,35 @@
-  /*
+/*
  * SPI LCD driver STM32F1
- * készitö: Roberto Benjami
- * verzio:  2019.06
-*/
+ * author: Roberto Benjami
+ * v.2020.01.21
+ */
 
 //=============================================================================
-/* SPI kiválasztása (0, 1, 2 3)
-   - 0: szoftveres SPI driver (a lábhozzárendelés szabadon kiválaszthato)
-   - 1..3: hardver SPI driver (az LCD_SCK, LCD_MOSI, LCD_MISO lábak kötöttek) */
+/* SPI select (0, 1, 2, 3)
+   - 0: software SPI driver (the pins assign are full free)
+   - 1..3: hardware SPI driver (the LCD_SCK, LCD_MOSI, LCD_MISO pins are lock to hardware) */
 #define LCD_SPI           0
 
-/* SPI üzemmod
-   - 0: csak SPI TX (csak irni lehet a kijelzöt, LCD_MISO lábat nem szükséges megadni, nem lesz használatban)
-   - 1: half duplex (LCD_MOSI láb két irányban lesz müködtetve, LCD_MISO láb nem lesz használva)
+/* SPI mode
+   - 0: only TX (only to write on the display, LCD_MISO is not used)
+   - 1: half duplex (LCD_MOSI is bidirectional pin, LCD_MISO is not used)
    - 2: full duplex (SPI TX: LCD_MOSI, SPI RX: LCD_MISO) */
 #define LCD_SPI_MODE      0
 
-/* SPI sebessége
-   - szoftver SPI: 0..
-     - 0: semmi várakozás nem lesz
-     - 1: GPIOX_ODR(LCD_SCK) = 0 idönyi várakozás
-     - 2..: LCD_IO_Delay(LCD_SPI_SPD - 2)
-   - hardver SPI: 0..7 oszto: fPCLK/oszto, 0=/2, 1=/4, 2=/8, 3=/16, 4=/32, 5=/64, 6=/128, 7=/256 */
-#define LCD_SPI_SPD       1
-/* Megadhato az olvasáshoz tartozo orajel (ha azonos vagy nincs megadva akkor nem vált sebességet olvasáskor) */
+/* SPI write and read speed
+   - software SPI: 0=none delay, 1=nop, 2=CLK pin double write, 3.. = LCD_IO_Delay(LCD_SPI_SPD - 3)
+   - hardware SPI clock div fPCLK: 0=/2, 1=/4, 2=/8, 3=/16, 4=/32, 5=/64, 6=/128, 7=/256 */
+#define LCD_SPI_SPD_WRITE 1
 #define LCD_SPI_SPD_READ  3
 
-/* Lcd vezérlö lábak hozzárendelése ((A..K, 0..15)
-   - LCD_RST megadása nem kötelezö (X, 0)
-   - LCD_MISO megadása csak full duplex (LCD_SPI_MODE 2) üzemmodban szükséges
-   - hardver SPI esetén az SCK, MOSI, MISO lábak hozzárendelése kötött */
+/* If hardware SPI pins don't are on default pins -> please setting and this macro
+   (will be set at LCD_IO_Init, and set the RCC_APB2ENR_AFIOEN) */
+// #define LCD_SPI_ALTERSET  AFIO->MAPR |= 1 << AFIO_MAPR_SPI1_REMAP_Pos
+
+/* Lcd control pins assign (A..K, 0..15)
+   - if LCD_RST pin not used -> X, 0
+   - if LCD_MISO pin not used -> X, 0
+   - if hardware SPI: SCK, MOSI, MISO pins assign is lock to hardware */
 #define LCD_RST           X, 0
 #define LCD_RS            X, 0
 
@@ -38,28 +38,45 @@
 #define LCD_MOSI          X, 0
 #define LCD_MISO          X, 0
 
-/* Háttérvilágitás vezérlés
-   - BL: A..K, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
-   - BL_ON: 0 vagy 1, a bekapcsolt állapothoz tartozó logikai szint */
-#define LCD_BL            X, 0   // ha nem akarjuk használni X, 0 -t adjunk
+/* Backlight control
+   - BL: A..K, 0..15 (if not used -> X, 0)
+   - BL_ON: the logical level of the active state */
+#define LCD_BL            X, 0
 #define LCD_BLON          0
 
-/* Adatirány váltáskor (OUT->IN) van olyan kijelzõ, amelyik extra órajele(ke)t kér az SCK lábra
-   - 0.. (ST7735: 1,  ILI9341: 0) */
+/* When data direction change (OUT->IN) there is a display that requires extra clock
+   example ST7735: 1, ILI9341: 0 */
 #define LCD_SCK_EXTRACLK  0
 
-/* DMA beállitások
-   - 0..2: 0 = nincs DMA, 1 = DMA1, 2 = DMA2 (DMA request mapping)
-   - 0..7: DMA csatorna (DMA request mapping)
-   - 1..3: DMA prioritás (0=low..3=very high) */
+/* DMA settings (only hardware SPI)
+   - 0..2: 0 = no DMA, 1 = DMA1, 2 = DMA2
+   - 0..7: DMA channel (DMA request mapping)
+   - 1..3: DMA priority (0=low..3=very high) */
 #define LCD_DMA_TX        0, 0, 0
 #define LCD_DMA_RX        0, 0, 0
 
-/* DMA RX buffer [byte] (csak a ...24to16 függvények esetében lesz használatban)
-   (2 egész számu hatványa legyen: 16, 32, 64, 128, 256, 512, 1024...  32768) */
-#define LCD_DMA_RX_BUFSIZE 128
+/* In dma mode the bitmap drawing function is completed before the actual drawing.
+ * If the content of the image changes (because it is in a stack), the drawing will be corrupted.
+ * If you want to wait for the drawing operation to complete, set it here.
+ * This will slow down the program, but will not cause a bad drawing.
+ * When drawing a non-bitmap (example: FillRect), you do not wait for the end of the drawing
+ * because it stores the drawing color in a static variable.
+ * The "LCD_IO_DmaTransferStatus" variable is content this status (if 0 -> DMA transfers are completed)
+   - 0: bitmap drawing function end wait off
+   - 1: bitmap drawing function end wait on */
+#define LCD_DMA_TXWAIT      0
 
-/* DMA RX buffer helye
+/* DMA RX buffer [byte] (only in ...24to16 function) */
+#define LCD_DMA_RX_BUFSIZE  256
+
+/* DMA RX buffer place (only in ...24to16 function)
    - 0: stack
-   - 1: static buffer */
-#define LCD_DMA_RX_BUFMODE 0
+   - 1: static buffer
+   - 2: memory manager (malloc/free) */
+#define LCD_DMA_RX_BUFMODE  1
+
+/* If LCD_DMA_RX_BUFMODE == 2 : memory management functions name */
+#define LCD_DMA_RX_MALLOC   malloc
+#define LCD_DMA_RX_FREE     free
+/* Inlude for malloc/free functions */
+#include <stdlib.h>
