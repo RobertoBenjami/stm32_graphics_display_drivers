@@ -46,10 +46,10 @@ volatile uint32_t task02_power = 0, cpuusage, refcpuusage = 1;
 #define POWERMETER_STOP       {                    \
   task02_power = task02_count;                     \
   task02_run = 0;                                  \
-  cpuusage = (100 * task02_count / t) / refcpuusage; \
+  cpuusage = (100 * task02_power / t) / refcpuusage; \
   if(cpuusage > 100) cpuusage = 100;                 \
   cpuusage = 100 - cpuusage;                         }
-#define POWERMETER_REF        refcpuusage = task02_count / t
+#define POWERMETER_REF        refcpuusage = task02_power / t
 
 /*#define POWERMETER_PRINT      Delay(10); printf(", idletask power: %d (%d/ms), cpu usage:%d%%", (unsigned int)task02_power, (int)(task02_power / t), (int)cpuusage) */
 #define POWERMETER_PRINT      Delay(10); printf(", cpu usage:%d%%\r\n", (int)cpuusage)
