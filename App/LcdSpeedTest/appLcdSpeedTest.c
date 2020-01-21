@@ -1,25 +1,28 @@
-/* LCD sebesség test program
- * Az eredmény a printf-el lesz kiiratva.
- * A printf átirányithato SWO ra, vagy soros portra
+/* LCD speed test program
+ * The results displayed in printf.
+ * The printf is redirected to SWO or UART.
  *
- * készitö: Roberto Benjami
- * verzio:  2019.05
+ * author: Roberto Benjami
+ * version:  2020.01
  */
 
-/* Freertos alatt lehetséges Task02 teljesitményének mérése
-   - 0: mérés ki
-   - 1: mérés be */
+/* Freertos also measures cpu usage
+   - 0: measure off
+   - 1: measure on */
 #define POWERMETER    1
 
-/* Tesztfoto */
+/* Test photo */
 #define rombitmap  beer_60x100_16
 #define ROMBITMAP_WIDTH  60
 #define ROMBITMAP_HEIGHT 100
 
+/* Chapter delays */
+#define DELAY_CHAPTER    1000
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "main.h" // a main.h-ba illesszük be az aktuális #include "stm32fxxx_hal.h"-t, freertos esetén pedig #include "cmsis_os.h"-t is!
+#include "main.h"
 
 #include "lcd.h"
 #include "bmp.h"
@@ -36,12 +39,20 @@ extern LCD_DrvTypeDef  *lcd_drv;
 #define GetTime()             osKernelSysTick()
 
 volatile uint32_t task02_count = 0, task02_run = 0;
-volatile uint32_t task02_power = 0;
+volatile uint32_t task02_power = 0, cpuusage, refcpuusage = 1;
 
 #if     POWERMETER == 1
 #define POWERMETER_START      task02_count = 0; task02_run = 1;
-#define POWERMETER_STOP       task02_power = task02_count; task02_run = 0;
-#define POWERMETER_PRINT      Delay(10); printf("Idletask power: %d (%d/ms)\r\n\r\n", (unsigned int)task02_power, (int)(task02_power / t))
+#define POWERMETER_STOP       {                    \
+  task02_power = task02_count;                     \
+  task02_run = 0;                                  \
+  cpuusage = (100 * task02_count / t) / refcpuusage; \
+  if(cpuusage > 100) cpuusage = 100;                 \
+  cpuusage = 100 - cpuusage;                         }
+#define POWERMETER_REF        refcpuusage = task02_count / t
+
+/*#define POWERMETER_PRINT      Delay(10); printf(", idletask power: %d (%d/ms), cpu usage:%d%%", (unsigned int)task02_power, (int)(task02_power / t), (int)cpuusage) */
+#define POWERMETER_PRINT      Delay(10); printf(", cpu usage:%d%%\r\n", (int)cpuusage)
 #endif
 
 osTimerId myTimer01Handle;
@@ -55,10 +66,11 @@ void cbTimer(void const * argument);
 #ifndef POWERMETER_START
 #define POWERMETER_START
 #define POWERMETER_STOP
-#define POWERMETER_PRINT
+#define POWERMETER_REF
+#define POWERMETER_PRINT      Delay(10); printf("\r\n")
 #endif
 
-// 16bites szin elöállitása RGB (ill. BGR) összetevökböl
+// create 16bits color from RGB888 or BGR888
 #define RGB888TORGB565(r, g, b) ((r & 0b11111000) << 8 | (g & 0b11111100) << 3 | b >> 3)
 #define RGB888TOBGR565(r, g, b) (r >> 3 | (g & 0b11111100) << 3 | (b & 0b11111000) << 8)
 
@@ -67,7 +79,7 @@ void cbTimer(void const * argument);
 #define RD(a)                 a
 #endif
 
-/* Konstans szám bájtjainak cseréje, változó bájtjainak cseréje */
+/* 16bit data byte change */
 #if LCD_REVERSE16 == 1
 #define RD(a)                 __REVSH(a)
 #endif
@@ -360,10 +372,10 @@ void mainApp(void)
 
   #if 0
   BSP_LCD_Clear(LCD_COLOR_BLACK);
-  Delay(1000);
+  Delay(DELAY_CHAPTER);
   t = ReadPixelTest(1);
   t = ReadImageTest(1);
-  Delay(1000);
+  Delay(DELAY_CHAPTER);
   #endif 
 
   while(1)
@@ -375,100 +387,100 @@ void mainApp(void)
     POWERMETER_START;
     Delay(t);
     POWERMETER_STOP;
-    printf("\r\nDelay 300\r\n");
-    POWERMETER_PRINT;
-    Delay(1000);
+    POWERMETER_REF;
+    printf("Delay 300\r\n");
+    Delay(DELAY_CHAPTER);
 
     POWERMETER_START;
     t = ClearTest();
     POWERMETER_STOP;
-    printf("Clear Test: %d ms\r\n", (int)t);
+    printf("Clear Test: %d ms", (int)t);
     POWERMETER_PRINT;
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
 
     POWERMETER_START;
     t = PixelTest(100000);
     POWERMETER_STOP;
-    printf("Pixel Test: %d ms\r\n", (int)t);
+    printf("Pixel Test: %d ms", (int)t);
     POWERMETER_PRINT;
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
     t = LineTest(1000);
     POWERMETER_STOP;
-    printf("Line Test: %d ms\r\n", (int)t);
+    printf("Line Test: %d ms", (int)t);
     POWERMETER_PRINT;
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
     t = FillRectTest(250);
     POWERMETER_STOP;
-    printf("Fill Rect Test: %d ms\r\n", (int)t);
+    printf("Fill Rect Test: %d ms", (int)t);
     POWERMETER_PRINT;
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
-    t = CircleTest(1000);
+    t = CircleTest(DELAY_CHAPTER);
     POWERMETER_STOP;
-    printf("Circle Test: %d ms\r\n", (int)t);
+    printf("Circle Test: %d ms", (int)t);
     POWERMETER_PRINT;
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
     t = FillCircleTest(250);
     POWERMETER_STOP;
-    printf("Fill Circle Test: %d ms\r\n", (int)t);
+    printf("Fill Circle Test: %d ms", (int)t);
     POWERMETER_PRINT;
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
     t = CharTest(5000);
     POWERMETER_STOP;
-    printf("Char Test: %d ms\r\n", (int)t);
+    printf("Char Test: %d ms", (int)t);
     POWERMETER_PRINT;
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
     t = BitmapTest(100);
     POWERMETER_STOP;
-    printf("Bitmap Test: %d ms\r\n", (int)t);
+    printf("Bitmap Test: %d ms", (int)t);
     POWERMETER_PRINT;
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
     t = ReadPixelTest(20);
     POWERMETER_STOP;
-    printf("ReadPixel Test: %d ms\r\n", (int)t);
+    printf("ReadPixel Test: %d ms", (int)t);
     POWERMETER_PRINT;
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
     t = ReadImageTest(20);
     POWERMETER_STOP;
-    printf("ReadImage Test: %d ms\r\n", (int)t);
+    printf("ReadImage Test: %d ms", (int)t);
     POWERMETER_PRINT;
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
     t = ColorTest();
     POWERMETER_STOP;
-    printf("Color Test: %d ms\r\n", (int)t);
+    printf("Color Test: %d ms", (int)t);
     POWERMETER_PRINT;
-    Delay(3000);
+    Delay(3 * DELAY_CHAPTER);
 
     BSP_LCD_DisplayOff();
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
     BSP_LCD_DisplayOn();
-    Delay(1000);
+    Delay(DELAY_CHAPTER);
 
     printf("\r\n");
   }
@@ -477,6 +489,7 @@ void mainApp(void)
 #ifdef osCMSIS
 
 //-----------------------------------------------------------------------------
+/* The other task constantly increases one counter */
 void StartTask02(void const * argument)
 {
   for(;;)
