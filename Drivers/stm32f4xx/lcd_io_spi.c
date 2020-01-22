@@ -971,8 +971,8 @@ void LCD_IO_ReadMultiData8(uint8_t * pData, uint32_t Size)
     *pData = d8;
     pData++;
   }
-  LcdDirWrite();
   LCD_CS_OFF;
+  LcdDirWrite();
 }
 
 //-----------------------------------------------------------------------------
@@ -985,8 +985,8 @@ void LCD_IO_ReadMultiData16(uint16_t * pData, uint32_t Size)
     *pData = d16;
     pData++;
   }
-  LcdDirWrite();
   LCD_CS_OFF;
+  LcdDirWrite();
 }
 
 //-----------------------------------------------------------------------------
@@ -1001,8 +1001,8 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
     *pData = (rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3;
     pData++;
   }
-  LcdDirWrite();
   LCD_CS_OFF;
+  LcdDirWrite();
 }
 
 #elif DMANUM(LCD_DMA_RX) > 0 && LCD_SPI > 0
@@ -1090,6 +1090,7 @@ void LCD_IO_ReadMultiData8(uint8_t * pData, uint32_t Size)
     WaitForDmaEnd();
   }
   LCD_CS_OFF;
+  LcdDirWrite();
 }
 
 //-----------------------------------------------------------------------------
@@ -1119,6 +1120,7 @@ void LCD_IO_ReadMultiData16(uint16_t * pData, uint32_t Size)
     WaitForDmaEnd();
   }
   LCD_CS_OFF;
+  LcdDirWrite();
 }
 
 //-----------------------------------------------------------------------------
@@ -1176,6 +1178,7 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
   DMAX_STREAMX(LCD_DMA_RX)->CR = 0;
   while(DMAX_STREAMX(LCD_DMA_RX)->CR & DMA_SxCR_EN);
   LCD_CS_OFF;
+  LcdDirWrite();
   #if LCD_DMA_RX_BUFMODE == 2
   LCD_DMA_RX_FREE(dmadata);
   #endif
