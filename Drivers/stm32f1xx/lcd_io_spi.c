@@ -916,8 +916,8 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
   DMAX_CHANNEL(LCD_DMA_RX)->CPAR = (uint32_t)&SPIX->DR;
   DMAX_CHANNEL(LCD_DMA_RX)->CNDTR = LCD_DMA_RX_BUFSIZE;
   ntdr_follower = LCD_DMA_RX_BUFSIZE;
-  DMAX_CHANNEL(LCD_DMA_RX)->CCR = (0b00 << DMA_CCR_MSIZE_Pos) |                 \
-      (0b00 << DMA_CCR_PSIZE_Pos) | DMA_CCR_MINC |                                \
+  DMAX_CHANNEL(LCD_DMA_RX)->CCR = (0b00 << DMA_CCR_MSIZE_Pos) |                 
+      (0b00 << DMA_CCR_PSIZE_Pos) | DMA_CCR_MINC |                                
       (DMAPRIORITY(LCD_DMA_RX) << DMA_CCR_PL_Pos) | DMA_CCR_CIRC;
   DMAX_CHANNEL(LCD_DMA_RX)->CCR |= DMA_CCR_EN;
   BITBAND_ACCESS(SPIX->CR2, SPI_CR2_RXDMAEN_Pos) = 1;
