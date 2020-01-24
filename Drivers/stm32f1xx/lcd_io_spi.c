@@ -557,7 +557,8 @@ inline void WaitForDmaEnd(void)
   if(LCD_IO_DmaTransferStatus)
   {
     osSemaphoreWait(spiDmaBinSemHandle, 500);
-    LCD_IO_DmaTransferStatus = 0;
+    if(LCD_IO_DmaTransferStatus == 1)
+      LCD_IO_DmaTransferStatus = 0;
   }
 }
 
