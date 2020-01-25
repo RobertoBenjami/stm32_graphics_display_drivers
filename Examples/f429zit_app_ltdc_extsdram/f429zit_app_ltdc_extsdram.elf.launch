@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launchConfiguration type="com.atollic.hardwaredebug.launch.launchConfigurationType">
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.cpu_core" value="Cortex-M" />
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.device" value="STM32F429ZI" />
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.endian" value="little" />
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.init_speed" value="4000" />
+<booleanAttribute key="com.atollic.hardwaredebug.jlink_common.jlink_check_serial_number" value="false" />
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.jlink_script_path" value="" />
+<booleanAttribute key="com.atollic.hardwaredebug.jlink_common.jlink_script_used" value="false" />
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.jlink_txt_serial_number" value="" />
+<booleanAttribute key="com.atollic.hardwaredebug.jlink_common.scan_chain_auto" value="true" />
+<intAttribute key="com.atollic.hardwaredebug.jlink_common.scan_chain_irpre" value="0" />
+<intAttribute key="com.atollic.hardwaredebug.jlink_common.scan_chain_pos" value="0" />
+<stringAttribute key="com.atollic.hardwaredebug.jlink_common.selected_rtos" value="No RTOS" />
+<stringAttribute key="com.atollic.hardwaredebug.launch.analyzeCommands" value="# Set flash parallelism mode to 32, 16, or 8 bit when using STM32 F2/F4 microcontrollers&#xD;&#xA;# 2=32 bit, 1=16 bit and 0=8 bit parallelism mode&#xD;&#xA;monitor flash set_parallelism_mode 2&#xD;&#xA;&#xD;&#xA;# Load the program executable&#xD;&#xA;load&#x9;&#x9;&#xD;&#xA;&#xD;&#xA;# Enable Debug connection in low power modes (DBGMCU-&gt;CR)&#xD;&#xA;set *0xE0042004 = (*0xE0042004) | 0x7&#xD;&#xA;# Start the executable&#xD;&#xA;continue" />
+<booleanAttribute key="com.atollic.hardwaredebug.launch.enable_live_expr" value="true" />
+<intAttribute key="com.atollic.hardwaredebug.launch.formatVersion" value="2" />
+<stringAttribute key="com.atollic.hardwaredebug.launch.hwinitCommands" value="# Initialize your hardware here&#xA;" />
+<stringAttribute key="com.atollic.hardwaredebug.launch.ipAddress" value="localhost" />
+<stringAttribute key="com.atollic.hardwaredebug.launch.jtagDevice" value="SEGGER J-LINK" />
+<intAttribute key="com.atollic.hardwaredebug.launch.portNumber" value="2331" />
+<stringAttribute key="com.atollic.hardwaredebug.launch.remoteCommand" value="target extended-remote" />
+<stringAttribute key="com.atollic.hardwaredebug.launch.runCommands" value="# Default GDB command file (FLASH) for SEGGER J-LINK and STMicroelectronics STM32F429ZI microcontroller.&#xA;&#xA;# Set character encoding&#xA;set host-charset CP1252&#xA;set target-charset CP1252&#xA;&#xA;# Set JTAG speed to 30 kHz&#xA;monitor speed 30&#xA;&#xA;# Set GDBServer to little endian&#xA;monitor endian little&#xA;&#xA;# Reset the chip to get to a known state.&#xA;monitor reset&#xA;&#xA;# Set auto JTAG speed&#xA;monitor speed auto&#xA;&#xA;# Setup GDB FOR FASTER DOWNLOADS&#xA;set remote memory-write-packet-size 1024&#xA;set remote memory-write-packet-size fixed&#xA;&#xA;# Enable flash download&#xA;monitor flash download = 1&#xA;&#xA;# Load the program executable&#xA;load&#x9;&#x9;&#xA;&#xA;# Reset the chip to get to a known state. Remove &quot;monitor reset&quot; command &#xA;#  if the code is not located at default address and does not run by reset. &#xA;monitor reset&#xA;# Set a breakpoint at main().&#xA;tbreak main&#xA;&#xA;# Run to the breakpoint.&#xA;continue" />
+<stringAttribute key="com.atollic.hardwaredebug.launch.serverParam" value="-port 2331 -s -CPU Cortex-M -device STM32F429ZI -endian little -speed 4000 -if swd -vd -swoport 2332" />
+<booleanAttribute key="com.atollic.hardwaredebug.launch.startServer" value="true" />
+<booleanAttribute key="com.atollic.hardwaredebug.launch.swd_mode" value="true" />
+<stringAttribute key="com.atollic.hardwaredebug.launch.swv_port" value="2332" />
+<stringAttribute key="com.atollic.hardwaredebug.launch.swv_trace_div" value="0" />
+<stringAttribute key="com.atollic.hardwaredebug.launch.swv_trace_hclk" value="168000000" />
+<intAttribute key="com.atollic.hardwaredebug.launch.trace_system" value="1" />
+<booleanAttribute key="com.atollic.hardwaredebug.launch.useRemoteTarget" value="true" />
+<stringAttribute key="com.atollic.hardwaredebug.launch.verifyCommands" value="# Set flash parallelism mode to 32, 16, or 8 bit when using STM32 F2/F4 microcontrollers&#xD;&#xA;# 2=32 bit, 1=16 bit and 0=8 bit parallelism mode&#xD;&#xA;monitor flash set_parallelism_mode 2&#xD;&#xA;&#xD;&#xA;# Load the program executable&#xD;&#xA;load&#x9;&#x9;&#xD;&#xA;&#xD;&#xA;# Enable Debug connection in low power modes (DBGMCU-&gt;CR)&#xD;&#xA;set *0xE0042004 = (*0xE0042004) | 0x7&#xD;&#xA;# The executable starts automatically" />
+<booleanAttribute key="com.atollic.hardwaredebug.launch.verify_flash_download" value="true" />
+<booleanAttribute key="com.atollic.hardwaredebug.stlink.enable_external_loader" value="false" />
+<booleanAttribute key="com.atollic.hardwaredebug.stlink.enable_logging" value="false" />
+<stringAttribute key="com.atollic.hardwaredebug.stlink.external_loader" value="" />
+<stringAttribute key="com.atollic.hardwaredebug.stlink.log_file" value="D:/Benjami/Arm/Cube/graphics_driver/f429zit_app_ltdc_extsdram/\Debug\st-link_gdbserver_log.txt" />
+<booleanAttribute key="com.atollic.hardwaredebug.stlink.stlink_check_serial_number" value="false" />
+<stringAttribute key="com.atollic.hardwaredebug.stlink.stlink_txt_serial_number" value="" />
+<booleanAttribute key="com.atollic.hardwaredebug.stlink.verify_flash" value="false" />
+<stringAttribute key="com.atollic.truestudio.swv.core.datatrace_0" value="Enabled=false:Address=0x0:Access=Read/Write:Size=Word:Function=Data Value" />
+<stringAttribute key="com.atollic.truestudio.swv.core.datatrace_1" value="Enabled=false:Address=0x0:Access=Read/Write:Size=Word:Function=Data Value" />
+<stringAttribute key="com.atollic.truestudio.swv.core.datatrace_2" value="Enabled=false:Address=0x0:Access=Read/Write:Size=Word:Function=Data Value" />
+<stringAttribute key="com.atollic.truestudio.swv.core.datatrace_3" value="Enabled=false:Address=0x0:Access=Read/Write:Size=Word:Function=Data Value" />
+<stringAttribute key="com.atollic.truestudio.swv.core.itmports" value="1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0" />
+<stringAttribute key="com.atollic.truestudio.swv.core.itmports_priv" value="0:0:0:0" />
+<stringAttribute key="com.atollic.truestudio.swv.core.pc_sample" value="0:16384" />
+<stringAttribute key="com.atollic.truestudio.swv.core.timestamps" value="1:1" />
+<stringAttribute key="com.atollic.truestudio.swv.core.trace_events" value="Cpi=0:Exc=0:Sleep=0:Lsu=0:Fold=0:Exetrc=0" />
+<stringAttribute key="org.eclipse.cdt.debug.mi.core.DEBUG_NAME" value="${TOOLCHAIN_PATH}/arm-atollic-eabi-gdb" />
+<stringAttribute key="org.eclipse.cdt.debug.mi.core.commandFactory" value="Standard (Windows)" />
+<stringAttribute key="org.eclipse.cdt.debug.mi.core.protocol" value="mi" />
+<booleanAttribute key="org.eclipse.cdt.debug.mi.core.verboseMode" value="false" />
+<stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="${TOOLCHAIN_PATH}/arm-atollic-eabi-gdb" />
+<intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2" />
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_REGISTER_GROUPS" value="" />
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug/f429zit_app_ltdc_extsdram.elf" />
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="f429zit_app_ltdc_extsdram" />
+<booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false" />
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="" />
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/f429zit_app_ltdc_extsdram" />
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="4" />
+</listAttribute>
+<stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#xD;&#xA;&lt;memoryBlockExpressionList context=&quot;reserved-for-future-use&quot;/&gt;&#xD;&#xA;" />
+<stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory" />
+</launchConfiguration>
