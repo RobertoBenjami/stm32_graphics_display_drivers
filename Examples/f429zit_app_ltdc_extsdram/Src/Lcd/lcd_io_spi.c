@@ -1351,31 +1351,6 @@ void LCD_IO_Init(void)
   osSemaphoreWait(spiDmaBinSemHandle, 1);
   #endif
   #endif  // #if DMANUM(LCD_DMA_RX) > 0
-
-
-  /*GPIOX_MODER_(MODE_OUT, D, 6);
-  GPIOX_MODER_(MODE_OUT, G, 11);
-  GPIOX_MODER_(MODE_OUT, G, 12);
-  GPIOX_MODER_(MODE_OUT, A, 3);
-  GPIOX_MODER_(MODE_OUT, B, 8);
-  GPIOX_MODER_(MODE_OUT, B, 9);
-
-  GPIOX_MODER_(MODE_OUT, A, 6);
-  GPIOX_MODER_(MODE_OUT, G, 10);
-  GPIOX_MODER_(MODE_OUT, B, 10);
-  GPIOX_MODER_(MODE_OUT, B, 11);
-  GPIOX_MODER_(MODE_OUT, C, 7);
-  GPIOX_MODER_(MODE_OUT, D, 3);
-
-  GPIOX_MODER_(MODE_OUT, C, 10);
-  GPIOX_MODER_(MODE_OUT, B, 0);
-  GPIOX_MODER_(MODE_OUT, A, 11);
-  GPIOX_MODER_(MODE_OUT, A, 12);*/
-
-  //GPIOX_AFR_(9, B, 1);
-  //GPIOX_MODER_(MODE_OUT, B, 1);
-  //GPIOX_ODR_(B, 1) = 1;
-  //GPIOX_MODER_(MODE_OUT, G, 6);
 } // void LCD_IO_Init(void)
 
 //-----------------------------------------------------------------------------
