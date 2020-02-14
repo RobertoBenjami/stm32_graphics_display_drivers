@@ -1,7 +1,8 @@
 /*
- * ILI9341 LCD driver v1.2
+ * ILI9341 LCD driver v1.21
  * 2019.07. Add v1.1 extension (#ifdef LCD_DRVTYPE_V1_1)
  * 2019.11. Add RGB mode with memory frame buffer (in sram or sdram)
+ * 2020.02. Add analog touchscreen (only 8bit paralell mode)
 */
 
 #include <string.h>
@@ -9,6 +10,10 @@
 #include "lcd.h"
 #include "bmp.h"
 #include "ili9341.h"
+
+#if  ILI9341_TOUCH == 1
+#include "ts.h"
+#endif
 
 void     ili9341_Init(void);
 uint16_t ili9341_ReadID(void);
@@ -194,9 +199,82 @@ static  uint8_t   Is_ili9341_Initialized = 0;
 
 #if ILI9341_INTERFACE_MODE == 1
 static  uint16_t  yStart, yEnd;
+
+#if      ILI9341_MULTITASK_MUTEX == 1 && ILI9341_TOUCH == 1
+volatile uint8_t io_lcd_busy = 0;
+volatile uint8_t io_ts_busy = 0;
+#define  ILI9341_LCDMUTEX_PUSH()    while(io_ts_busy); io_lcd_busy++;
+#define  ILI9341_LCDMUTEX_POP()     io_lcd_busy--
+#else
+#define  ILI9341_LCDMUTEX_PUSH()
+#define  ILI9341_LCDMUTEX_POP()
 #endif
 
+//-----------------------------------------------------------------------------
+#if ILI9341_TOUCH == 1
+
+// Touch parameters
+
+#define TOUCHMINPRESSRC    8192
+#define TOUCHMAXPRESSRC    4096
+#define TOUCHMINPRESTRG       0
+#define TOUCHMAXPRESTRG     255
+#define TOUCH_FILTER          8
+
+// fixpoints Z index
+#define ZINDEXA  ((65536 * (TOUCHMAXPRESTRG - TOUCHMINPRESTRG)) / (TOUCHMAXPRESSRC - TOUCHMINPRESSRC))
+#define ZINDEXB  (-ZINDEXA * TOUCHMINPRESSRC)
+
+#define ABS(N)   (((N)<0) ? (-(N)) : (N))
+
+void     ili9341_ts_Init(uint16_t DeviceAddr);
+uint8_t  ili9341_ts_DetectTouch(uint16_t DeviceAddr);
+void     ili9341_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y);
+
+TS_DrvTypeDef   ili9341_ts_drv =
+{
+  ili9341_ts_Init,
+  0,
+  0,
+  0,
+  ili9341_ts_DetectTouch,
+  ili9341_ts_GetXY,
+  0,
+  0,
+  0,
+  0,
+};
+
+TS_DrvTypeDef  *ts_drv = &ili9341_ts_drv;
+
+#if (ILI9341_ORIENTATION == 0)
+int32_t  ts_cindex[] = TS_CINDEX_0;
+#elif (ILI9341_ORIENTATION == 1)
+int32_t  ts_cindex[] = TS_CINDEX_1;
+#elif (ILI9341_ORIENTATION == 2)
+int32_t  ts_cindex[] = TS_CINDEX_2;
+#elif (ILI9341_ORIENTATION == 3)
+int32_t  ts_cindex[] = TS_CINDEX_3;
+#endif
+
+uint16_t tx, ty;
+
+/* Link function for Touchscreen */
+uint8_t  TS_IO_DetectToch(void);
+uint16_t TS_IO_GetX(void);
+uint16_t TS_IO_GetY(void);
+uint16_t TS_IO_GetZ1(void);
+uint16_t TS_IO_GetZ2(void);
+
+#endif   // #if ILI9341_TOUCH == 1
+
+#endif   // #if ILI9341_INTERFACE_MODE == 1
+
 #if ILI9341_INTERFACE_MODE == 2
+
+#define  ILI9341_LCDMUTEX_PUSH()
+#define  ILI9341_LCDMUTEX_POP()
+
 typedef struct
 {
   uint16_t   Xsize;
@@ -527,6 +605,93 @@ void ili9341_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   LCD_IO_ReadCmd8MultipleData24to16(ILI9341_RAMRD, (uint16_t *)pData, Xsize * Ysize, 1);
   LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x55", 1); // Return to 16bit pixel mode
 }
+
+//=============================================================================
+#if ILI9341_TOUCH == 1
+void ili9341_ts_Init(uint16_t DeviceAddr)
+{
+  if((Is_ili9341_Initialized & ILI9341_IO_INITIALIZED) == 0)
+    LCD_IO_Init();
+  Is_ili9341_Initialized |= ILI9341_IO_INITIALIZED;
+}
+
+//-----------------------------------------------------------------------------
+uint8_t ili9341_ts_DetectTouch(uint16_t DeviceAddr)
+{
+  static uint8_t tp = 0;
+  int32_t x1, x2, y1, y2, z11, z12, z21, z22, i, tpr;
+
+  #if  ILI9341_MULTITASK_MUTEX == 1
+  io_ts_busy = 1;
+
+  if(io_lcd_busy)
+  {
+    io_ts_busy = 0;
+    return tp;
+  }
+  #endif
+
+  if(TS_IO_DetectToch())
+  {
+    x1 = TS_IO_GetX();
+    y1 = TS_IO_GetY();
+    z11 = TS_IO_GetZ1();
+    z21 = TS_IO_GetZ2();
+    i = 32;
+    while(i--)
+    {
+      x2 = TS_IO_GetX();
+      y2 = TS_IO_GetY();
+      z12 = TS_IO_GetZ1();
+      z22 = TS_IO_GetZ2();
+
+      if((ABS(x1 - x2) < TOUCH_FILTER) && (ABS(y1 - y2) < TOUCH_FILTER) && (ABS(z11 - z12) < TOUCH_FILTER) && (ABS(z21 - z22) < TOUCH_FILTER))
+      {
+        x1 = (x1 + x2) >> 1;
+        y1 = (x1 + y2) >> 1;
+        z11 = (z11 + z12) >> 1;
+        z21 = (z21 + z22) >> 1;
+
+        tpr = (((4096 - x1) * ((z21 << 10) / z11 - 1024)) >> 10);
+        tpr = (tpr * ZINDEXA + ZINDEXB) >> 16;
+        if(tpr > TOUCHMAXPRESTRG)
+          tpr = TOUCHMAXPRESTRG;
+        if(tpr < TOUCHMINPRESTRG)
+          tpr = TOUCHMINPRESTRG;
+        tx = x1;
+        ty = y1;
+        tp = tpr;
+        #if  ILI9341_MULTITASK_MUTEX == 1
+        io_ts_busy = 0;
+        #endif
+        return tp;
+      }
+      else
+      {
+        x1 = x2;
+        y1 = y2;
+        z11 = z12;
+        z21 = z22;
+      }
+    }
+  }
+  else
+    tp = 0;
+
+  #if  ILI9341_MULTITASK_MUTEX == 1
+  io_ts_busy = 0;
+  #endif
+
+  return tp;
+}
+
+//-----------------------------------------------------------------------------
+void ili9341_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y)
+{
+  *X = tx,
+  *Y = ty;
+}
+#endif // #if ILI9341_TOUCH == 1
 
 #endif /* #if ILI9341_INTERFACE_MODE == 1 */
 

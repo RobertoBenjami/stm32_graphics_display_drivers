@@ -18,6 +18,18 @@
 */
 #define  ILI9341_COLORMODE        0
 
+/* Analog touchscreen (only INTERFACE_MODE == 1, 8bit paralell IO mode)
+   - 0: touchscreen disabled
+   - 1: touchscreen enabled
+*/
+#define  ILI9341_TOUCH            0
+
+/* Touchscreen calibration data for 4 orientations */
+#define  TS_CINDEX_0        {-2756000, 210932, -423352, 96135608, 269619, 1366, -1021658814}
+#define  TS_CINDEX_1        {-2756000, 269619, 1366, -1021658814, -210932, 423352, -754819608}
+#define  TS_CINDEX_2        {-2756000, -210932, 423352, -754819608, -269619, -1366, 142494814}
+#define  TS_CINDEX_3        {-2756000, -269619, -1366, 142494814, 210932, -423352, 96135608}
+
 #if  ILI9341_INTERFACE_MODE == 2
 
 /* please see in the main.c what is the LTDC_HandleTypeDef name */
