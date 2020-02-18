@@ -30,6 +30,14 @@
 #define  TS_CINDEX_2        {-2756000, -210932, 423352, -754819608, -269619, -1366, 142494814}
 #define  TS_CINDEX_3        {-2756000, -269619, -1366, 142494814, 210932, -423352, 96135608}
 
+/* For multi-threaded or intermittent use, Lcd and Touchscreen simultaneous use can cause confusion (since it uses common I/O resources)
+   Lcd functions wait for the touchscreen header, the touchscreen query is not executed when Lcd is busy.
+   Note: If the priority of the Lcd is higher than that of the Touchscreen, it may end up in an infinite loop!
+   - 0: multi-threaded protection disabled
+   - 1: multi-threaded protection enabled
+*/
+#define  ILI9341_MULTITASK_MUTEX   0
+
 #if  ILI9341_INTERFACE_MODE == 2
 
 /* please see in the main.c what is the LTDC_HandleTypeDef name */

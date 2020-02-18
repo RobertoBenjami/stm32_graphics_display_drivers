@@ -321,7 +321,9 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 void ili9341_DisplayOn(void)
 {
   LCD_IO_Bl_OnOff(1);
+  ILI9341_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8(ILI9341_SLPOUT);    // Exit Sleep
+  ILI9341_LCDMUTEX_POP();
 }
 
 //-----------------------------------------------------------------------------
@@ -332,7 +334,9 @@ void ili9341_DisplayOn(void)
   */
 void ili9341_DisplayOff(void)
 {
+  ILI9341_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8(ILI9341_SLPIN);    // Sleep
+  ILI9341_LCDMUTEX_POP();
   LCD_IO_Bl_OnOff(0);
 }
 
@@ -368,7 +372,9 @@ uint16_t ili9341_GetLcdPixelHeight(void)
 uint16_t ili9341_ReadID(void)
 {
   uint32_t dt = 0;
+  ILI9341_LCDMUTEX_PUSH();
   LCD_IO_ReadCmd8MultipleData8(0xD3, (uint8_t *)&dt, 3, 1);
+  ILI9341_LCDMUTEX_POP();
   if(dt == 0x419300)
     return 0x9341;
   else
@@ -446,7 +452,9 @@ void ili9341_Init(void)
   */
 void ili9341_SetCursor(uint16_t Xpos, uint16_t Ypos)
 {
+  ILI9341_LCDMUTEX_PUSH();
   ILI9341_SETCURSOR(Xpos, Ypos);
+  ILI9341_LCDMUTEX_POP();
 }
 
 //-----------------------------------------------------------------------------
@@ -459,8 +467,10 @@ void ili9341_SetCursor(uint16_t Xpos, uint16_t Ypos)
   */
 void ili9341_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGBCode)
 {
+  ILI9341_LCDMUTEX_PUSH();
   ILI9341_SETCURSOR(Xpos, Ypos);
   LCD_IO_WriteCmd8(ILI9341_RAMWR); LCD_IO_WriteData16(RGBCode);
+  ILI9341_LCDMUTEX_POP();
 }
 
 
@@ -473,10 +483,12 @@ void ili9341_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGBCode)
 uint16_t ili9341_ReadPixel(uint16_t Xpos, uint16_t Ypos)
 {
   uint16_t ret;
+  ILI9341_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x66", 1); // Read: only 24bit pixel mode
   ILI9341_SETCURSOR(Xpos, Ypos);
   LCD_IO_ReadCmd8MultipleData24to16(ILI9341_RAMRD, (uint16_t *)&ret, 1, 1);
   LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x55", 1); // Return to 16bit pixel mode
+  ILI9341_LCDMUTEX_POP();
   return(ret);
 }
 
@@ -492,8 +504,10 @@ uint16_t ili9341_ReadPixel(uint16_t Xpos, uint16_t Ypos)
 void ili9341_SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
   yStart = Ypos; yEnd = Ypos + Height - 1;
+  ILI9341_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8(ILI9341_CASET); LCD_IO_WriteData16_to_2x8(Xpos); LCD_IO_WriteData16_to_2x8(Xpos + Width - 1);
   LCD_IO_WriteCmd8(ILI9341_PASET); LCD_IO_WriteData16_to_2x8(Ypos); LCD_IO_WriteData16_to_2x8(Ypos + Height - 1);
+  ILI9341_LCDMUTEX_POP();
 }
 
 //-----------------------------------------------------------------------------
@@ -507,9 +521,11 @@ void ili9341_SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint
   */
 void ili9341_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length)
 {
+  ILI9341_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8(ILI9341_CASET); LCD_IO_WriteData16_to_2x8(Xpos); LCD_IO_WriteData16_to_2x8(Xpos + Length - 1);
   LCD_IO_WriteCmd8(ILI9341_PASET); LCD_IO_WriteData16_to_2x8(Ypos); LCD_IO_WriteData16_to_2x8(Ypos);
   LCD_IO_WriteCmd8DataFill16(ILI9341_RAMWR, RGBCode, Length);
+  ILI9341_LCDMUTEX_POP();
 }
 
 //-----------------------------------------------------------------------------
@@ -523,9 +539,11 @@ void ili9341_DrawHLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t 
   */
 void ili9341_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t Length)
 {
+  ILI9341_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8(ILI9341_CASET); LCD_IO_WriteData16_to_2x8(Xpos); LCD_IO_WriteData16_to_2x8(Xpos);
   LCD_IO_WriteCmd8(ILI9341_PASET); LCD_IO_WriteData16_to_2x8(Ypos); LCD_IO_WriteData16_to_2x8(Ypos + Length - 1);
   LCD_IO_WriteCmd8DataFill16(ILI9341_RAMWR, RGBCode, Length);
+  ILI9341_LCDMUTEX_POP();
 }
 
 //-----------------------------------------------------------------------------
@@ -540,9 +558,11 @@ void ili9341_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint16_t 
   */
 void ili9341_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t RGBCode)
 {
+  ILI9341_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8(ILI9341_CASET); LCD_IO_WriteData16_to_2x8(Xpos); LCD_IO_WriteData16_to_2x8(Xpos + Xsize - 1);
   LCD_IO_WriteCmd8(ILI9341_PASET); LCD_IO_WriteData16_to_2x8(Ypos); LCD_IO_WriteData16_to_2x8(Ypos + Ysize - 1);
   LCD_IO_WriteCmd8DataFill16(ILI9341_RAMWR, RGBCode, Xsize * Ysize);
+  ILI9341_LCDMUTEX_POP();
 }
 
 //-----------------------------------------------------------------------------
@@ -564,10 +584,12 @@ void ili9341_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   size = (size - index) / 2;
   pbmp += index;
 
+  ILI9341_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8(ILI9341_MADCTL); LCD_IO_WriteData8(ILI9341_MAD_DATA_RIGHT_THEN_UP);
   LCD_IO_WriteCmd8(ILI9341_PASET); LCD_IO_WriteData16_to_2x8(ILI9341_SIZE_Y - 1 - yEnd); LCD_IO_WriteData16_to_2x8(ILI9341_SIZE_Y - 1 - yStart);
   LCD_IO_WriteCmd8MultipleData16(ILI9341_RAMWR, (uint16_t *)pbmp, size);
   LCD_IO_WriteCmd8(ILI9341_MADCTL); LCD_IO_WriteData8(ILI9341_MAD_DATA_RIGHT_THEN_DOWN);
+  ILI9341_LCDMUTEX_POP();
 }
 
 //-----------------------------------------------------------------------------
@@ -584,7 +606,9 @@ void ili9341_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
 void ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData)
 {
   ili9341_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
+  ILI9341_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8MultipleData16(ILI9341_RAMWR, (uint16_t *)pData, Xsize * Ysize);
+  ILI9341_LCDMUTEX_POP();
 }
 
 //-----------------------------------------------------------------------------
@@ -601,9 +625,11 @@ void ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
 void ili9341_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData)
 {
   ili9341_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
+  ILI9341_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x66", 1); // Read: only 24bit pixel mode
   LCD_IO_ReadCmd8MultipleData24to16(ILI9341_RAMRD, (uint16_t *)pData, Xsize * Ysize, 1);
   LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x55", 1); // Return to 16bit pixel mode
+  ILI9341_LCDMUTEX_POP();
 }
 
 //=============================================================================
