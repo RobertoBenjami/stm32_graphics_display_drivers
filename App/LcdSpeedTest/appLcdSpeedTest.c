@@ -6,6 +6,12 @@
  * version:  2020.01
  */
 
+
+/* Pixel and Image read test and verify
+   - 0: test off
+   - 1: test on */
+#define READ_TEST     1
+
 /* Freertos also measures cpu usage
    - 0: measure off
    - 1: measure on */
@@ -84,7 +90,9 @@ void cbTimer(void const * argument);
 #endif
 
 extern const BITMAPSTRUCT rombitmap;
+#if READ_TEST == 1
 uint16_t bitmap[ROMBITMAP_WIDTH * ROMBITMAP_HEIGHT];
+#endif
 
 //-----------------------------------------------------------------------------
 uint32_t ClearTest(void)
@@ -280,6 +288,7 @@ uint32_t BitmapTest(uint32_t n)
 }
 
 //-----------------------------------------------------------------------------
+#if READ_TEST == 1
 uint32_t ReadPixelTest(uint32_t n)
 {
   uint16_t x, y, x0, y0, xsize, ysize;
@@ -350,6 +359,7 @@ uint32_t ReadImageTest(uint32_t n)
   BSP_LCD_DrawRGB16Image(x0 - 15, y0 + 20, xsize, ysize, &bitmap[0]);
   return(ctStartT);
 }
+#endif
 
 //-----------------------------------------------------------------------------
 #ifdef osCMSIS
@@ -369,7 +379,7 @@ void mainApp(void)
   Delay(100);
   printf("Display ID = %X\r\n", (unsigned int)BSP_LCD_ReadID());
 
-  #if 1
+  #if 0
   BSP_LCD_Clear(LCD_COLOR_BLACK);
   Delay(DELAY_CHAPTER);
   t = ReadPixelTest(1);
@@ -452,6 +462,7 @@ void mainApp(void)
     POWERMETER_PRINT;
     Delay(DELAY_CHAPTER);
 
+    #if READ_TEST == 1
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
     t = ReadPixelTest(20);
@@ -467,6 +478,7 @@ void mainApp(void)
     printf("ReadImage Test: %d ms", (int)t);
     POWERMETER_PRINT;
     Delay(DELAY_CHAPTER);
+    #endif
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
