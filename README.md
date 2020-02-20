@@ -4,20 +4,21 @@ Layer chart, examples circuits and settings:
 - Lcd_drv.pdf ( https://github.com/RobertoBenjami/stm32_graphics_display_drivers/blob/master/Lcd_drv.pdf )
 
 LCD I/O driver:
+- stm32f0: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
 - stm32f1: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
 - stm32f1: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
-- stm32f1: lcdts_io_gpio8 (8 bit paralell with analog resistive touchscreen)
 - stm32f1: lcd_io_gpio16 (16 bit paralell without analog resistive touchscreen)
+- stm32f1: lcdts_io_gpio8 (8 bit paralell with analog resistive touchscreen)
 - stm32f3: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
 - stm32f3: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
 - stm32f3: lcdts_io_gpio8 (8 bit paralell with analog resistive touchscreen)
 - stm32f4: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
 - stm32f4: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
-- stm32f4: lcdts_io_gpio8 (8 bit paralell with analog resistive touchscreen)
 - stm32f4: lcd_io_fsmc8 (8 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA)
-- stm32f4: lcdts_io_fsmc8 (8 bit paralell with analog resistive touchscreen + FSMC or FSMC with DMA)
 - stm32f4: lcd_io_gpio16 (16 bit paralell without analog resistive touchscreen)
 - stm32f4: lcd_io_fsmc16 (16 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA)
+- stm32f4: lcdts_io_gpio8 (8 bit paralell with analog resistive touchscreen)
+- stm32f4: lcdts_io_fsmc8 (8 bit paralell with analog resistive touchscreen + FSMC or FSMC with DMA)
 - stm32f7: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
 
 LCD driver:
