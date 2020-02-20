@@ -50,7 +50,7 @@
 
 /* DMA settings (only hardware SPI)
    - 0..2: 0 = no DMA, 1 = DMA1, 2 = DMA2
-   - 0..7: DMA channel (DMA request mapping)
+   - 1..7: DMA channel (DMA request mapping)
    - 1..3: DMA priority (0=low..3=very high) */
 #define LCD_DMA_TX        0, 0, 0
 #define LCD_DMA_RX        0, 0, 0
