@@ -866,7 +866,7 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
     rgb888[0] = LcdRead8();
     rgb888[1] = LcdRead8();
     rgb888[2] = LcdRead8();
-    *pData = (rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3;
+    *pData = (rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0cFC) << 3 | rgb888[2] >> 3;
     pData++;
   }
   LCD_CS_OFF;
@@ -1023,8 +1023,8 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
   DMAX_CHANNEL(LCD_DMA_RX)->CPAR = (uint32_t)&SPIX->DR;
   DMAX_CHANNEL(LCD_DMA_RX)->CNDTR = LCD_DMA_RX_BUFSIZE;
   ntdr_follower = LCD_DMA_RX_BUFSIZE;
-  DMAX_CHANNEL(LCD_DMA_RX)->CCR = (0b00 << DMA_CCR_MSIZE_Pos) |                 
-      (0b00 << DMA_CCR_PSIZE_Pos) | DMA_CCR_MINC |                                
+  DMAX_CHANNEL(LCD_DMA_RX)->CCR = (0 << DMA_CCR_MSIZE_Pos) |                 
+      (0 << DMA_CCR_PSIZE_Pos) | DMA_CCR_MINC |                                
       (DMAPRIORITY(LCD_DMA_RX) << DMA_CCR_PL_Pos) | DMA_CCR_CIRC;
   DMAX_CHANNEL(LCD_DMA_RX)->CCR |= DMA_CCR_EN;
   SPIX->CR2 |= SPI_CR2_RXDMAEN;
@@ -1041,7 +1041,7 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
       {
         rgb888cnt = 0;
         Size--;
-        *pData++ = (rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3;
+        *pData++ = (rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3;
       }
     }
   }

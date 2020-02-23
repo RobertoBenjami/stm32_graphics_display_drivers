@@ -368,7 +368,7 @@ typedef struct
     DMAX_STREAMX(LCD_DMA)->CR = TCIE |                                          \
       (c << DMA_SxCR_PINC_Pos) | (d << DMA_SxCR_MINC_Pos) |                     \
       (f << DMA_SxCR_PSIZE_Pos) | (f << DMA_SxCR_MSIZE_Pos) |                   \
-      (0b10 << DMA_SxCR_DIR_Pos) | (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |    \
+      (2 << DMA_SxCR_DIR_Pos) | (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |       \
       (DMAPRIORITY(LCD_DMA) << DMA_SxCR_PL_Pos);                                \
     DMAX_STREAMX(LCD_DMA)->CR |= DMA_SxCR_EN;                                   \
     WAIT_FOR_DMA_END;                                                           \
@@ -656,9 +656,9 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
     rgb888[1] = *(volatile uint8_t*)LCD_ADDR_DATA;
     rgb888[2] = *(volatile uint8_t*)LCD_ADDR_DATA;
     #if LCD_REVERSE16 == 0
-    *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = ((rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3);
     #else
-    *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = __REVSH((rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
   }
@@ -736,9 +736,9 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
     rgb888[1] = *(volatile uint8_t*)LCD_ADDR_DATA;
     rgb888[2] = *(volatile uint8_t*)LCD_ADDR_DATA;
     #if LCD_REVERSE16 == 0
-    *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = ((rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3);
     #else
-    *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = __REVSH((rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
   }

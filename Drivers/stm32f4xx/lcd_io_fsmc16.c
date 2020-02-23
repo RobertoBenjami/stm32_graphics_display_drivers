@@ -359,7 +359,7 @@ typedef struct
     DMAX_STREAMX(LCD_DMA)->CR = TCIE |                                          \
       (c << DMA_SxCR_PINC_Pos) | (d << DMA_SxCR_MINC_Pos) |                     \
       (f << DMA_SxCR_PSIZE_Pos) | (f << DMA_SxCR_MSIZE_Pos) |                   \
-      (0b10 << DMA_SxCR_DIR_Pos) | (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |    \
+      (2 << DMA_SxCR_DIR_Pos) | (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |       \
       (DMAPRIORITY(LCD_DMA) << DMA_SxCR_PL_Pos);                                \
     DMAX_STREAMX(LCD_DMA)->CR |= DMA_SxCR_EN;                                   \
     WAIT_FOR_DMA_END;                                                           \
@@ -650,19 +650,19 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
     u.rgb888_16[2] = *(volatile uint16_t*)LCD_ADDR_DATA;
 
     #if LCD_REVERSE16 == 0
-    *pData = ((u.rgb888[1] & 0b11111000) << 8 | (u.rgb888[0] & 0b11111100) << 3 | u.rgb888[3] >> 3);
+    *pData = ((u.rgb888[1] & 0xF8) << 8 | (u.rgb888[0] & 0xFC) << 3 | u.rgb888[3] >> 3);
     #endif
     #if LCD_REVERSE16 == 1
-    *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = __REVSH((rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
     if(Size)
     {
       #if LCD_REVERSE16 == 0
-      *pData = ((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      *pData = ((u.rgb888[2] & 0xF8) << 8 | (u.rgb888[5] & 0xFC) << 3 | u.rgb888[4] >> 3);
       #endif
       #if LCD_REVERSE16 == 1
-      *pData = __REVSH((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      *pData = __REVSH((u.rgb888[2] & 0xF8) << 8 | (u.rgb888[5] & 0xFC) << 3 | u.rgb888[4] >> 3);
       #endif
       pData++;
       Size--;
@@ -747,17 +747,17 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
     u.rgb888_16[2] = *(volatile uint16_t*)LCD_ADDR_DATA;
 
     #if LCD_REVERSE16 == 0
-    *pData = ((u.rgb888[1] & 0b11111000) << 8 | (u.rgb888[0] & 0b11111100) << 3 | u.rgb888[3] >> 3);
+    *pData = ((u.rgb888[1] & 0xF8) << 8 | (u.rgb888[0] & 0xFC) << 3 | u.rgb888[3] >> 3);
     #else
-    *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = __REVSH((rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
     if(Size)
     {
       #if LCD_REVERSE16 == 0
-      *pData = ((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      *pData = ((u.rgb888[2] & 0xF8) << 8 | (u.rgb888[5] & 0xFC) << 3 | u.rgb888[4] >> 3);
       #else
-      *pData = __REVSH((u.rgb888[2] & 0b11111000) << 8 | (u.rgb888[5] & 0b11111100) << 3 | u.rgb888[4] >> 3);
+      *pData = __REVSH((u.rgb888[2] & 0xF8) << 8 | (u.rgb888[5] & 0xFC) << 3 | u.rgb888[4] >> 3);
       #endif
       pData++;
       Size--;

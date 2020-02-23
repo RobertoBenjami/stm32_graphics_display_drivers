@@ -12,7 +12,8 @@
 #define  RDN(a)  __REVSH(a)
 #if ILI9328_COLORMODE == 0
 // RGB 5-6-5 <-> BGR 5-6-5 (vörös - kék összetevök felcserélése)
-#define  RGB565TOBGR565(rgb16)  rgb16 = __REVSH((rgb16 & 0b1110000000000111) | ((rgb16 & 0b0000000011111000) << 5) | ((rgb16 & 0b0001111100000000) >> 5))
+// #define  RGB565TOBGR565(rgb16)  rgb16 = __REVSH((rgb16 & 0b1110000000000111) | ((rgb16 & 0b0000000011111000) << 5) | ((rgb16 & 0b0001111100000000) >> 5))
+#define  RGB565TOBGR565(rgb16)  rgb16 = __REVSH((rgb16 & 0xE007) | ((rgb16 & 0x00F8) << 5) | ((rgb16 & 0x1F00) >> 5))
 #else
 #define  RGB565TOBGR565(rgb16)  rgb16 = __REVSH(rgb16)
 #endif
@@ -25,7 +26,8 @@
 #define  RDN(a)  a
 #if ILI9328_COLORMODE == 0
 // RGB 5-6-5 <-> BGR 5-6-5 (vörös - kék összetevök felcserélése)
-#define  RGB565TOBGR565(rgb16)  rgb16 = (rgb16 & 0b11111100000) | (rgb16 & 0b11111 << 11) | (rgb16 & 0b1111100000000000 >> 11)
+// #define  RGB565TOBGR565(rgb16)  rgb16 = (rgb16 & 0b11111100000) | (rgb16 & 0b11111 << 11) | (rgb16 & 0b1111100000000000 >> 11)
+#define  RGB565TOBGR565(rgb16)  rgb16 = (rgb16 & 0x7E0) | (rgb16 & 0x1F << 11) | (rgb16 & 0xF800 >> 11)
 #else
 #define  RGB565TOBGR565(rgb16)
 #endif

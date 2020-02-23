@@ -8,8 +8,8 @@
 #include "stm32_adafruit_ts.h"
 
 // 16bites szin elöállitása RGB (ill. BGR) összetevökböl
-#define RGB888TORGB565(r, g, b)  ((r & 0b11111000) << 8 | (g & 0b11111100) << 3 | b >> 3)
-#define RGB888TOBGR565(r, g, b)  (r >> 3 | (g & 0b11111100) << 3 | (b & 0b11111000) << 8)
+#define RGB888TORGB565(r, g, b)  ((r & 0xF8) << 8 | (g & 0xFC) << 3 | b >> 3)
+#define RGB888TOBGR565(r, g, b)  (r >> 3 | (g & 0xFC) << 3 | (b & 0xF8) << 8)
 
 #ifdef osCMSIS
 void StartDefaultTask(void const * argument)

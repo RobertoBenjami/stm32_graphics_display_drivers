@@ -118,7 +118,7 @@ typedef enum
 #define LCD_COLOR_MAGENTA       RC(0xF81F)
 #define LCD_COLOR_YELLOW        RC(0xFFE0)
 #define LCD_COLOR_WHITE         RC(0xFFFF)
-#define LCD_COLOR(r, g, b)      RC((r & 0b11111000) << 8 | (g & 0b11111100) << 3 | (b & 0b11111000) >> 3)
+#define LCD_COLOR(r, g, b)      RC((r & 0xF8) << 8 | (g & 0xFC) << 3 | (b & 0xF8) >> 3)
 
 /** @defgroup STM32_ADAFRUIT_LCD_Exported_Functions
   * @{

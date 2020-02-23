@@ -370,7 +370,7 @@ void LCD_IO_Init(void)
   RCC->APB2ENR |= RCC_APB2ENR_ADCXEN;
   LCD_Delay(1);
   ADCX->CR1 = ADC_CR1_DISCEN;
-  ADCX->CR2 = (0b111 << ADC_CR2_EXTSEL_Pos) | ADC_CR2_EXTTRIG | ADC_CR2_ADON;
+  ADCX->CR2 = (7 << ADC_CR2_EXTSEL_Pos) | ADC_CR2_EXTTRIG | ADC_CR2_ADON;
   #if TS_XM_ADCCH >= 10
   ADCX->SMPR1 |= TS_SAMPLETIME << (3 * (TS_XM_ADCCH - 10));
   #else
@@ -549,9 +549,9 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
     LCD_DATA8_READ(rgb888[1]);
     LCD_DATA8_READ(rgb888[2]);
     #if LCD_REVERSE16 == 0
-    *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = ((rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3);
     #else
-    *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = __REVSH((rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
   }
@@ -612,9 +612,9 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
     LCD_DATA8_READ(rgb888[1]);
     LCD_DATA8_READ(rgb888[2]);
     #if LCD_REVERSE16 == 0
-    *pData = ((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = ((rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3);
     #else
-    *pData = __REVSH((rgb888[0] & 0b11111000) << 8 | (rgb888[1] & 0b11111100) << 3 | rgb888[2] >> 3);
+    *pData = __REVSH((rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3);
     #endif
     pData++;
   }
