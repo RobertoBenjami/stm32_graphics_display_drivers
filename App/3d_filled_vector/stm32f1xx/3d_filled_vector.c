@@ -203,7 +203,7 @@ void setup()
   initStars();
 }
 
-unsigned int ms, msMin = 1000, msMax = 0, stats = 1, optim = 1; // optim=1 for ST7735, 0 for ST7789
+unsigned int ms, msMin = 1000, msMax = 0, stats = 1, optim = 0; // optim=1 for ST7735, 0 for ST7789
 
 void showStats()
 {
