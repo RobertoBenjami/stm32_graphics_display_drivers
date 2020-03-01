@@ -1,4 +1,4 @@
 # 3D Filled Vector
 
-Original author:
+Author:
 https://github.com/cbm80amiga/ST7789_3D_Filled_Vector_Ext
