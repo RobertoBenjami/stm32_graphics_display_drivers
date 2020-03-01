@@ -38,6 +38,7 @@ App:
 - JpgViewer: JPG file viewer from SD card or pendrive
 - AnalogClock: Analog Clock demo
   (printf: the result, i use the SWO pin for ST-LINK Serial Wire Viewer (SWV). See:examples/Src/syscalls.c)
+- 3d_filled_vector (from https://github.com/cbm80amiga/ST7789_3D_Filled_Vector_Ext)  
 
 How to use starting from zero?
 - stm32f103c8 - spi: https://www.youtube.com/watch?v=4NZ1VwuQWhw
