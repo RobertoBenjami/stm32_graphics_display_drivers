@@ -17,7 +17,7 @@
 
 /* Double buffer (if DMA transfer used -> speed inc)
    - 0 Double buffer disabled
-   - 1 Double buffer disabled */
+   - 1 Double buffer enabled */
 #define DOUBLEBUF 1
 
 /* Button pin assign */
