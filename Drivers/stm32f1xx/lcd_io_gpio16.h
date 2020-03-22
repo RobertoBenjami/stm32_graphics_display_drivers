@@ -2,8 +2,6 @@
  * 16 bit paralell LCD GPIO driver for STM32F1
  * 5 controll pins (CS, RS, WR, RD, RST) + 16 data pins + 1 backlight pin
  */
-#ifndef __LCD_IO_GPIO16_H
-#define __LCD_IO_GPIO16_H
 
 //=============================================================================
 /* Lcd controll pins (A..K, 0..15) (if LCD_RST not used -> X, 0) */
@@ -75,5 +73,3 @@ The example optimizes for the following pins:
   dt = ((GPIOD->IDR & 0b1100000000000000) >> 14) | ((GPIOD->IDR & 0b0000000000000011) << 2) | \
        ((GPIOD->IDR & 0b0000011100000000) << 5)  | ((GPIOE->IDR & 0b1111111110000000) >> 3); }
 #endif
-
-#endif // __LCD_IO_GPIO16_H

@@ -1,19 +1,17 @@
 /*
- * 16 bites párhuzamos LCD GPIO driver STM32F4-re
- * 5 vezárlöláb (CS, RS, WR, RD, RST) + 16 adatláb + háttérvilágitás vezérlés
+ * 16 bit paralell LCD GPIO driver for STM32F4
+ * 5 controll pins (CS, RS, WR, RD, RST) + 16 data pins + backlight pin
  */
-#ifndef __LCD_IO16P_GPIO_H
-#define __LCD_IO16P_GPIO_H
 
 //=============================================================================
-/* Lcd vezérlö lábak hozzárendelése (A..K, 0..15) */
+/* Lcd controll pins assign (A..K, 0..15) */
 #define LCD_CS            X, 0
 #define LCD_RS            X, 0
 #define LCD_WR            X, 0
 #define LCD_RD            X, 0
-#define LCD_RST           X, 0
+#define LCD_RST           X, 0  /* If not used leave it that way */
 
-/* Lcd adat lábak hozzárendelése (A..K, 0..15) */
+/* Lcd controll pins assign (A..K, 0..15) */
 #define LCD_D0            X, 0
 #define LCD_D1            X, 0
 #define LCD_D2            X, 0
@@ -31,25 +29,22 @@
 #define LCD_D14           X, 0
 #define LCD_D15           X, 0
 
-/* Háttérvilágitás vezérlés
-   - BL: A..K, 0..15 (ha nem használjuk, akkor rendeljük hozzá az X, 0 értéket)
-   - BL_ON: 0 vagy 1, a bekapcsolt állapothoz tartozó logikai szint */
-#define LCD_BL            X, 0
+/* Backlight control
+   - BL: A..K, 0..15 (if not used -> X, 0)
+   - BL_ON: 0 = active low level, 1 = active high level */
+#define LCD_BL            X, 0  /* If not used leave it that way */
 #define LCD_BLON          0
 
-/* nsec nagyságrendü várakozás az LCD irási és az olvasási impulzus
-   - kezdö értéknek érdemes 10 illetve 20-bol elindulni, aztán lehet csökkenteni a sebesség növelése érdekében
-     (az értékek függnek a processzor orajelétöl és az LCD kijelzö sebességétöl is)
-*/
+/* wait time for LCD write and read pulse
+   - First, give 10, 20 values, then lower them to speed up the program.
+     (values also depend on processor speed and LCD display speed) */
 #define LCD_WRITE_DELAY   10
 #define LCD_READ_DELAY    20
 
 /*=============================================================================
-I/O csoport optimalizáció, hogy ne bitenként történjenek a GPIO mûveletek:
-Megj: ha az adat lábakat egy porton belül emelkedö sorrendben definiáljuk
-      automatikusan optimalizálva fognak történni a GPIO mûveletek akkor is, ha
-      itt nem definiáljuk az optimalizált müködéshez szükséges eljárásokat
-A lenti példa a következö lábakhoz optimalizál:
+I/O group optimization so that GPIO operations are not performed bit by bit:
+Note: If the pins are in order, they will automatically optimize.
+The example belongs to the following pins:
       LCD_D0<-D14,  LCD_D1<-D15,  LCD_D2<-D0,   LCD_D3<-D1
       LCD_D4<-E7,   LCD_D5<-E8,   LCD_D6<-E9,   LCD_D7<-E10
       LCD_D8<-E11,  LCD_D9<-E12,  LCD_D10<-E13, LCD_D11<-E14
@@ -71,6 +66,5 @@ GPIOE->ODR = (GPIOE->ODR & ~0b1111111110000000) | ((dt & 0b0001111111110000) << 
 #define LCD_READ(dt) { /* dt0..1 <- D14..15, dt2..3 <- D0..1, dt13..15 <- D8..10, dt4..12 <- E7..15 */ \
 dt = ((GPIOD->IDR & 0b1100000000000000) >> 14) | ((GPIOD->IDR & 0b0000000000000011) << 2) | \
      ((GPIOD->IDR & 0b0000011100000000) << 5)  | ((GPIOE->IDR & 0b1111111110000000) >> 3); }
+/* Note: the keil compiler cannot use binary numbers, convert it to hexadecimal */	 
 #endif
-
-#endif // __LCD_IO16P_GPIO_H
