@@ -457,7 +457,7 @@ void render3D(int mode)
   int cos0, sin0, cos1, sin1;
   int i, x0, y0, z0, fac, distToObj;
   int camZ = 200;
-  int scaleFactor = HT_3D / 4;
+  int scaleFactor = HT_3D / 3; // HT_3D / 4;
   int near = 300;
 
   if(t++ > 360)
