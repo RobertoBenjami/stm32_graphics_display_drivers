@@ -12,6 +12,10 @@
 #define WD_3D   128
 #define HT_3D   128
 
+/* Statistic character size */
+#define CHARSIZEX 6
+#define CHARSIZEY 8
+
 /* Frame Buffer lines */
 #define NLINES   16
 

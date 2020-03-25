@@ -214,44 +214,44 @@ void showStats()
   {
     snprintf(txt, 30, "%d ms     %d fps ", ms, 1000 / ms);
     BSP_LCD_SetTextColor(LCD_COLOR_YELLOW);
-    BSP_LCD_DisplayStringAt(0, SCR_HT - 24, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(0, SCR_HT - 3 * CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
     snprintf(txt, 30, "%d-%d ms  %d-%d fps   ", msMin, msMax, 1000 / msMax, 1000 / msMin);
     BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
-    BSP_LCD_DisplayStringAt(0, SCR_HT - 16, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(0, SCR_HT - 2 * CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
     snprintf(txt, 30, "total/vis %d / %d   ", numPolys, numVisible);
     BSP_LCD_SetTextColor(LCD_COLOR_MAGENTA);
-    BSP_LCD_DisplayStringAt(0, SCR_HT - 8, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(0, SCR_HT - CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
   }
   else if(optim == 1)
   {
     optim = 2;
     snprintf(txt, 30, "00 ms     00 fps");
     BSP_LCD_SetTextColor(LCD_COLOR_YELLOW);
-    BSP_LCD_DisplayStringAt(0, SCR_HT - 24, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(0, SCR_HT - 3 * CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
     snprintf(txt, 30, "00-00 ms  00-00 fps");
     BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
-    BSP_LCD_DisplayStringAt(0, SCR_HT - 16, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(0, SCR_HT - 2 * CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
     snprintf(txt, 30, "total/vis 000 / 000");
     BSP_LCD_SetTextColor(LCD_COLOR_MAGENTA);
-    BSP_LCD_DisplayStringAt(0, SCR_HT - 8, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(0, SCR_HT - CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
   }
   else
   {
     snprintf(txt, 30, "%2d", ms);
     BSP_LCD_SetTextColor(LCD_COLOR_YELLOW);
-    BSP_LCD_DisplayStringAt(0, SCR_HT - 24, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(0, SCR_HT - 3 * CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
     snprintf(txt, 30,"%2d", 1000 / ms);
-    BSP_LCD_DisplayStringAt(10 * 6, SCR_HT - 24, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(10 * CHARSIZEX, SCR_HT - 3 * CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
     snprintf(txt, 30,"%2d-%2d", msMin, msMax);
     BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
-    BSP_LCD_DisplayStringAt(0, SCR_HT - 16, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(0, SCR_HT - 2 * CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
     snprintf(txt, 30, "%2d-%2d", 1000 / msMax, 1000 / msMin);
-    BSP_LCD_DisplayStringAt(10 * 6, SCR_HT - 16, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(10 * CHARSIZEX, SCR_HT - 2 * CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
     snprintf(txt, 30, "%3d", numPolys);
     BSP_LCD_SetTextColor(LCD_COLOR_MAGENTA);
-    BSP_LCD_DisplayStringAt(10 * 6, SCR_HT - 8, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(10 * CHARSIZEX, SCR_HT - CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
     snprintf(txt, 30, "%3d", numVisible);
-    BSP_LCD_DisplayStringAt(16 * 6, SCR_HT - 8, (uint8_t *)txt, LEFT_MODE);
+    BSP_LCD_DisplayStringAt(16 * CHARSIZEX, SCR_HT - CHARSIZEY, (uint8_t *)txt, LEFT_MODE);
   }
 }
 
