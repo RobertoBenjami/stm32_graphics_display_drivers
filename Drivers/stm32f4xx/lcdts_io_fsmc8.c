@@ -369,7 +369,7 @@ typedef struct
     DMAX_IFCR(LCD_DMA) = DMAX_IFCR_CTCIF(LCD_DMA);                              \
     DMAX_STREAMX(LCD_DMA)->PAR = (uint32_t)a;                                   \
     DMAX_STREAMX(LCD_DMA)->M0AR = (uint32_t)b;                                  \
-    if(e > DMA_MAXSIZEF)                                                        \
+    if(e > DMA_MAXSIZE)                                                         \
     {                                                                           \
       DMAX_STREAMX(LCD_DMA)->NDTR = DMA_MAXSIZE;                                \
       e -= DMA_MAXSIZE;                                                         \

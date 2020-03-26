@@ -1,8 +1,8 @@
-/* 8 bites párhuzamos LCD FSMC driver STM32F4-re
+/* 8 bites párhuzamos LCD FSMC driver STM32F2-re
 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb
 
 Kászitö: Roberto Benjami
-verzio:  2020.01 */
+verzio:  2020.03 */
 
 #include "main.h"
 #include "lcd.h"
