@@ -18,26 +18,19 @@ extern LCD_DrvTypeDef  *lcd_drv;
 
 //=============================================================================
 
-#define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
+#define MODE_DIGITAL_INPUT    0x0
+#define MODE_OUT              0x1
+#define MODE_ALTER            0x2
+#define MODE_ANALOG_INPUT     0x3
 
-//-----------------------------------------------------------------------------
-/* GPIO mode */
-#define MODE_ANALOG_INPUT     0x0
-#define MODE_PP_OUT_10MHZ     0x1
-#define MODE_PP_OUT_2MHZ      0x2
-#define MODE_PP_OUT_50MHZ     0x3
-#define MODE_FF_DIGITAL_INPUT 0x4
-#define MODE_OD_OUT_10MHZ     0x5
-#define MODE_OD_OUT_2MHZ      0x6
-#define MODE_OD_OUT_50MHZ     0x7
-#define MODE_PU_DIGITAL_INPUT 0x8
-#define MODE_PP_ALTER_10MHZ   0x9
-#define MODE_PP_ALTER_2MHZ    0xA
-#define MODE_PP_ALTER_50MHZ   0xB
-#define MODE_RESERVED         0xC
-#define MODE_OD_ALTER_10MHZ   0xD
-#define MODE_OD_ALTER_2MHZ    0xE
-#define MODE_OD_ALTER_50MHZ   0xF
+#define MODE_SPD_LOW          0x0
+#define MODE_SPD_MEDIUM       0x1
+#define MODE_SPD_HIGH         0x2
+#define MODE_SPD_VHIGH        0x3
+
+#define MODE_PU_NONE          0x0
+#define MODE_PU_UP            0x1
+#define MODE_PU_DOWN          0x2
 
 #define GPIOX_PORT_(a, b)     GPIO ## a
 #define GPIOX_PORT(a)         GPIOX_PORT_(a)
@@ -45,13 +38,22 @@ extern LCD_DrvTypeDef  *lcd_drv;
 #define GPIOX_PIN_(a, b)      b
 #define GPIOX_PIN(a)          GPIOX_PIN_(a)
 
-#define GPIOX_MODE_(a,b,c)    ((GPIO_TypeDef*)(((c & 8) >> 1) + GPIO ## b ## _BASE))->CRL = (((GPIO_TypeDef*)(((c & 8) >> 1) + GPIO ## b ## _BASE))->CRL & ~(0xF << ((c & 7) << 2))) | (a << ((c & 7) << 2))
-#define GPIOX_MODE(a, b)      GPIOX_MODE_(a, b)
+#define GPIOX_MODER_(a,b,c)   GPIO ## b->MODER = (GPIO ## b->MODER & ~(3 << (2 * c))) | (a << (2 * c));
+#define GPIOX_MODER(a, b)     GPIOX_MODER_(a, b)
 
-#define GPIOX_ODR_(a, b)      BITBAND_ACCESS(GPIO ## a ->ODR, b)
-#define GPIOX_ODR(a)          GPIOX_ODR_(a)
+#define GPIOX_OSPEEDR_(a,b,c) GPIO ## b->OSPEEDR = (GPIO ## b->OSPEEDR & ~(3 << (2 * c))) | (a << (2 * c));
+#define GPIOX_OSPEEDR(a, b)   GPIOX_OSPEEDR_(a, b)
 
-#define GPIOX_IDR_(a, b)      BITBAND_ACCESS(GPIO ## a ->IDR, b)
+#define GPIOX_PUPDR_(a,b,c)   GPIO ## b->PUPDR = (GPIO ## b->PUPDR & ~(3 << (2 * c))) | (a << (2 * c));
+#define GPIOX_PUPDR(a, b)     GPIOX_PUPDR_(a, b)
+
+#define GPIOX_SET_(a, b)      GPIO ## a ->BSRR = 1 << b
+#define GPIOX_SET(a)          GPIOX_SET_(a)
+
+#define GPIOX_CLR_(a, b)      GPIO ## a ->BSRR = 1 << (b + 16)
+#define GPIOX_CLR(a)          GPIOX_CLR_(a)
+
+#define GPIOX_IDR_(a, b)      (GPIO ## a ->IDR & (1 << b))
 #define GPIOX_IDR(a)          GPIOX_IDR_(a)
 
 #define GPIOX_LINE_(a, b)     EXTI_Line ## b
@@ -63,7 +65,8 @@ extern LCD_DrvTypeDef  *lcd_drv;
 #define GPIOX_PINSRC_(a, b)   GPIO_PinSource ## b
 #define GPIOX_PINSRC(a)       GPIOX_PINSRC_(a)
 
-#define GPIOX_CLOCK_(a, b)    RCC_APB2ENR_IOP ## a ## EN
+// GPIO Ports Clock Enable
+#define GPIOX_CLOCK_(a, b)    RCC_AHB1ENR_GPIO ## a ## EN
 #define GPIOX_CLOCK(a)        GPIOX_CLOCK_(a)
 
 #define GPIOX_PORTNUM_A       1
@@ -193,15 +196,12 @@ void setup()
   Delay(300);
 
   #if GPIOX_PORTNUM(BUTTON) >= GPIOX_PORTNUM_A
-  RCC->APB2ENR |= GPIOX_CLOCK(BUTTON);
-  #if BUTTON_PU == 0
-  GPIOX_MODE(MODE_FF_DIGITAL_INPUT, BUTTON);
-  #elif BUTTON_PU == 1
-  GPIOX_MODE(MODE_PU_DIGITAL_INPUT, BUTTON);
-  GPIOX_ODR(BUTTON) = 1;
+  RCC->AHB1ENR |= GPIOX_CLOCK(BUTTON);
+  GPIOX_MODER(MODE_DIGITAL_INPUT, BUTTON);
+  #if BUTTON_PU == 1
+  GPIOX_PUPDR(MODE_PU_UP, BUTTON);
   #elif BUTTON_PU == 2
-  GPIOX_MODE(MODE_PU_DIGITAL_INPUT, BUTTON);
-  GPIOX_ODR(BUTTON) = 0;
+  GPIOX_PUPDR(MODE_PU_DOWN, BUTTON);
   #endif
   #endif
 

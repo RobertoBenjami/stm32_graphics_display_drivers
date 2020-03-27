@@ -22,7 +22,11 @@
 /* Double buffer (if DMA transfer used -> speed inc)
    - 0 Double buffer disabled
    - 1 Double buffer enabled */
-#define DOUBLEBUF 1
+#define DOUBLEBUF 0
 
 /* Button pin assign */
-#define BUTTON  B, 8
+#define BUTTON    X, 0    /* If not used leave it that way */
+/* Button active level (0 or 1) */
+#define BUTTON_ON    0
+/* Button input mode (0 = pull none, 1 = pull up, 2 = pull down) */
+#define BUTTON_PU    0

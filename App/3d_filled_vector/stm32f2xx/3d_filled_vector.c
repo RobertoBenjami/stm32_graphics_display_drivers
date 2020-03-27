@@ -127,10 +127,14 @@ int checkButton()
 {
   int state;
   millis = GetTime();
+  #if GPIOX_PORTNUM(BUTTON) >= GPIOX_PORTNUM_A
   if(GPIOX_IDR(BUTTON))
-    state = 1;
+    state = 1 - BUTTON_ON;
   else
-    state = 0;
+    state = BUTTON_ON;
+  #else
+  state = 1;
+  #endif
 
   if(state == 0 && prevState == 1)
   {
@@ -195,9 +199,15 @@ void setup()
   uint8_t  e;
   Delay(300);
 
+  #if GPIOX_PORTNUM(BUTTON) >= GPIOX_PORTNUM_A
   RCC->APB2ENR |= GPIOX_CLOCK(BUTTON);
   GPIOX_MODER(MODE_DIGITAL_INPUT, BUTTON);
+  #if BUTTON_PU == 1
   GPIOX_PUPDR(MODE_PU_UP, BUTTON);
+  #elif BUTTON_PU == 2
+  GPIOX_PUPDR(MODE_PU_DOWN, BUTTON);
+  #endif
+  #endif
 
   e = BSP_LCD_Init();
   if(e == LCD_ERROR)
