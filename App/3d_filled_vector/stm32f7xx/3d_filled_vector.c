@@ -14,8 +14,6 @@
 /* BSP_LCD_... */
 #include "stm32_adafruit_lcd.h"
 
-extern LCD_DrvTypeDef  *lcd_drv;
-
 //=============================================================================
 
 #define MODE_DIGITAL_INPUT    0x0

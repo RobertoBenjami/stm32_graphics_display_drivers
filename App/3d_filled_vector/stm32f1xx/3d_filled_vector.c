@@ -14,8 +14,6 @@
 /* BSP_LCD_... */
 #include "stm32_adafruit_lcd.h"
 
-extern LCD_DrvTypeDef  *lcd_drv;
-
 //=============================================================================
 
 #define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
