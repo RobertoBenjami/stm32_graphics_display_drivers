@@ -588,7 +588,7 @@ void BSP_LCD_DrawPolygon(pPoint Points, uint16_t PointCount)
   * @param  YRadius: Ellipse Y radius
   * @retval None
   */
-void BSP_LCD_DrawEllipse(int Xpos, int Ypos, int XRadius, int YRadius)
+void BSP_LCD_DrawEllipse(uint16_t Xpos, uint16_t Ypos, uint16_t XRadius, uint16_t YRadius)
 {
   int x = 0, y = -YRadius, err = 2-2*XRadius, e2;
   float K = 0, rad1 = 0, rad2 = 0;
