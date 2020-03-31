@@ -39,7 +39,7 @@
 extern LCD_DrvTypeDef  *lcd_drv;
 
 #ifdef  __CC_ARM
-#define random(a)   rand(a)
+#define random()   rand()
 #endif
 
 //-----------------------------------------------------------------------------
@@ -393,7 +393,9 @@ void mainApp(void)
 
   while(1)
   {
+    #ifdef  __GNUC__
     _impure_ptr->_r48->_rand_next = 0;
+	#endif
 
     Delay(100);
     t = 300;
