@@ -38,6 +38,10 @@
 
 extern LCD_DrvTypeDef  *lcd_drv;
 
+#ifdef  __CC_ARM
+#define random(a)   rand(a)
+#endif
+
 //-----------------------------------------------------------------------------
 // freertos vs HAL
 #ifdef  osCMSIS

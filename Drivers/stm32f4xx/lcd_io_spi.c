@@ -1189,13 +1189,22 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
 #endif // #if LCD_SPI_MODE != 0
 
 //=============================================================================
+#ifdef  __GNUC__
 #pragma GCC push_options
 #pragma GCC optimize("O0")
+#elif   defined(__CC_ARM)
+#pragma push
+#pragma O0
+#endif
 void LCD_IO_Delay(uint32_t c)
 {
   while(c--);
 }
+#ifdef  __GNUC__
 #pragma GCC pop_options
+#elif   defined(__CC_ARM)
+#pragma pop
+#endif
 
 //=============================================================================
 /* Public functions */

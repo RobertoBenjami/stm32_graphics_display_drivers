@@ -308,13 +308,22 @@ uint16_t TS_IO_GetZ2(void);
 uint8_t  lcd_data8;
 
 //-----------------------------------------------------------------------------
+#ifdef  __GNUC__
 #pragma GCC push_options
 #pragma GCC optimize("O0")
-void LCD_IO_Delay(volatile uint32_t c)
+#elif   defined(__CC_ARM)
+#pragma push
+#pragma O0
+#endif
+void LCD_IO_Delay(uint32_t c)
 {
   while(c--);
 }
+#ifdef  __GNUC__
 #pragma GCC pop_options
+#elif   defined(__CC_ARM)
+#pragma pop
+#endif
 
 //-----------------------------------------------------------------------------
 void LCD_Delay(uint32_t Delay)

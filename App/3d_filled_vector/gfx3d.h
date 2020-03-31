@@ -21,7 +21,12 @@
 */
 
 #define swap(a, b) {int t = a; a = b; b = t;}
+
+#ifdef  __GNUC__
 #define ardu_random(min, max)   (random() % (max - min) + min)
+#elif   defined(__CC_ARM)
+#define ardu_random(min, max)   (rand() % (max - min) + min)
+#endif
 
 #if DOUBLEBUF == 0
 uint16_t frBuf[SCR_WD * NLINES];

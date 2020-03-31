@@ -455,13 +455,22 @@ void DMAX_STREAMX_IRQHANDLER(LCD_DMA)(void)
 #endif
 
 //-----------------------------------------------------------------------------
+#ifdef  __GNUC__
 #pragma GCC push_options
 #pragma GCC optimize("O0")
-void LCD_IO_Delay(volatile uint32_t c)
+#elif   defined(__CC_ARM)
+#pragma push
+#pragma O0
+#endif
+void LCD_IO_Delay(uint32_t c)
 {
   while(c--);
 }
+#ifdef  __GNUC__
 #pragma GCC pop_options
+#elif   defined(__CC_ARM)
+#pragma pop
+#endif
 
 //-----------------------------------------------------------------------------
 void LCD_Delay(uint32_t Delay)
@@ -677,10 +686,14 @@ void LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Siz
 //-----------------------------------------------------------------------------
 void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize)
 {
+  #ifdef  __GNUC__
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
   uint8_t DummyData;
   #pragma GCC diagnostic pop
+  #elif   defined(__CC_ARM)
+  uint8_t DummyData;
+  #endif
 
   *(volatile uint8_t *)LCD_ADDR_BASE = Cmd;
 
@@ -702,10 +715,14 @@ void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, ui
 //-----------------------------------------------------------------------------
 void LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
 {
+  #ifdef  __GNUC__
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
   uint8_t DummyData;
   #pragma GCC diagnostic pop
+  #elif   defined(__CC_ARM)
+  uint8_t DummyData;
+  #endif
 
   *(volatile uint8_t *)LCD_ADDR_BASE = Cmd;
 
@@ -732,10 +749,14 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
 {
   uint8_t rgb888[3];
 
+  #ifdef  __GNUC__
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
   uint8_t DummyData;
   #pragma GCC diagnostic pop
+  #elif   defined(__CC_ARM)
+  uint8_t DummyData;
+  #endif
 
   *(volatile uint8_t *)LCD_ADDR_BASE = Cmd;
 
@@ -759,10 +780,14 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
 //-----------------------------------------------------------------------------
 void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize)
 {
+  #ifdef  __GNUC__
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
   uint8_t DummyData;
   #pragma GCC diagnostic pop
+  #elif   defined(__CC_ARM)
+  uint8_t DummyData;
+  #endif
 
   *(volatile uint16_t *)LCD_ADDR_BASE = RD(Cmd);
 
@@ -784,10 +809,14 @@ void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, 
 //-----------------------------------------------------------------------------
 void LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize)
 {
+  #ifdef  __GNUC__
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
   uint8_t DummyData;
   #pragma GCC diagnostic pop
+  #elif   defined(__CC_ARM)
+  uint8_t DummyData;
+  #endif
 
   *(volatile uint16_t *)LCD_ADDR_BASE = RD(Cmd);
 
@@ -812,10 +841,14 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
 {
   uint8_t rgb888[3];
 
+  #ifdef  __GNUC__
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
   uint8_t DummyData;
   #pragma GCC diagnostic pop
+  #elif   defined(__CC_ARM)
+  uint8_t DummyData;
+  #endif
 
   *(volatile uint16_t *)LCD_ADDR_BASE = RD(Cmd);
 

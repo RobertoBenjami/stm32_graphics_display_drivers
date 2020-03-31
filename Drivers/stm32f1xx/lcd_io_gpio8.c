@@ -258,13 +258,22 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 uint8_t  lcd_data8;
 
 //-----------------------------------------------------------------------------
+#ifdef  __GNUC__
 #pragma GCC push_options
 #pragma GCC optimize("O0")
-void LCD_IO_Delay(volatile uint32_t c)
+#elif   defined(__CC_ARM)
+#pragma push
+#pragma O0
+#endif
+void LCD_IO_Delay(uint32_t c)
 {
   while(c--);
 }
+#ifdef  __GNUC__
 #pragma GCC pop_options
+#elif   defined(__CC_ARM)
+#pragma pop
+#endif
 
 //-----------------------------------------------------------------------------
 void LCD_Delay(uint32_t Delay)

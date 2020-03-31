@@ -12,10 +12,16 @@
 #define  RC(a)   ((((a) & 0xFF) << 8) | (((a) & 0xFF00) >> 8))
 #endif
 
-// struct packing, pragma for GCC !!!
+// struct packing
+#ifdef  __GNUC__
 #pragma pack(push, 1)
+#elif   defined(__CC_ARM)
+#pragma push
+#pragma pack(1)
+#endif
 
-  const BITMAPSTRUCT beer_60x100_16 __attribute__((aligned)) = {
+const BITMAPSTRUCT beer_60x100_16 __attribute__((aligned)) =
+{
   {
     0x4d42u,
     sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER) + (WIDTH * HEIGHT * 2),
@@ -140,5 +146,9 @@
   }
 };  
 
-// struct packing, pragma for GCC !!!
+#ifdef  __GNUC__
 #pragma pack (pop)
+#elif   defined(__CC_ARM)
+#pragma pop
+#endif
+
