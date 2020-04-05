@@ -47,8 +47,8 @@ In the lcd board are paralell pins
 /* If you use different pins for touch AD conversion than for lcd control, specify it
    (When using the same pins or not using a touchscreen -> X, 0
     in this case, LCD_RS and LCD_WR will be the selected AD pin on the touchscreen) */
-#define TS_XM_AN          X, 0
-#define TS_YP_AN          X, 0
+#define TS_XM_AN          X, 0  /* If not used leave it that way */
+#define TS_YP_AN          X, 0  /* If not used leave it that way */
 
 /* Select the AD channels */
 #define TS_XM_ADCCH       0

@@ -52,14 +52,14 @@ In the lcd board are paralell pins
 #define TS_ADC            0
 
 /* This pins specified the FSMC controller (f407: D13, D5, E9, E10) */
-#define TS_XM             X, 0
-#define TS_YP             X, 0
-#define TS_XP             X, 0
-#define TS_YM             X, 0
+#define TS_XM             X, 0  /* If not used leave it that way */
+#define TS_YP             X, 0  /* If not used leave it that way */
+#define TS_XP             X, 0  /* If not used leave it that way */
+#define TS_YM             X, 0  /* If not used leave it that way */
 
 /* Because FSMC pins cannot be used as AD inputs, they must be connected in parallel to one of the pins that can be used in AD */
-#define TS_XM_AN          X, 0
-#define TS_YP_AN          X, 0
+#define TS_XM_AN          X, 0  /* If not used leave it that way */
+#define TS_YP_AN          X, 0  /* If not used leave it that way */
 
 /* Select the AD channels */
 #define TS_XM_ADCCH       0

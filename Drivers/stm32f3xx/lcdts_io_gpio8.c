@@ -222,7 +222,7 @@ uint16_t TS_IO_GetZ2(void);
   if(GPIOX_IDR(LCD_D2)) dt |= 0x04;          \
   if(GPIOX_IDR(LCD_D3)) dt |= 0x08;          \
   if(GPIOX_IDR(LCD_D4)) dt |= 0x10;          \
-  if(GPIOX_IDR(LCD_D5)) dt |= 0x24;          \
+  if(GPIOX_IDR(LCD_D5)) dt |= 0x20;          \
   if(GPIOX_IDR(LCD_D6)) dt |= 0x40;          \
   if(GPIOX_IDR(LCD_D7)) dt |= 0x80;          }
 #endif

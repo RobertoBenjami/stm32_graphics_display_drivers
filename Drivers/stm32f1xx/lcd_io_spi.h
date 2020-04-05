@@ -27,21 +27,19 @@
 // #define LCD_SPI_ALTERSET  AFIO->MAPR |= 1 << AFIO_MAPR_SPI1_REMAP_Pos
 
 /* Lcd control pins assign (A..K, 0..15)
-   - if LCD_RST pin not used -> X, 0
-   - if LCD_MISO pin not used -> X, 0
    - if hardware SPI: SCK, MOSI, MISO pins assign is lock to hardware */
-#define LCD_RST           X, 0
+#define LCD_RST           X, 0  /* If not used leave it that way */
 #define LCD_RS            X, 0
 
 #define LCD_CS            X, 0
 #define LCD_SCK           X, 0
 #define LCD_MOSI          X, 0
-#define LCD_MISO          X, 0
+#define LCD_MISO          X, 0  /* If not used leave it that way */
 
 /* Backlight control
    - BL: A..K, 0..15 (if not used -> X, 0)
    - BL_ON: the logical level of the active state */
-#define LCD_BL            X, 0
+#define LCD_BL            X, 0  /* If not used leave it that way */
 #define LCD_BLON          0
 
 /* When data direction change (OUT->IN) there is a display that requires extra clock
@@ -64,7 +62,7 @@
  * The "LCD_IO_DmaTransferStatus" variable is content this status (if 0 -> DMA transfers are completed)
    - 0: bitmap drawing function end wait off
    - 1: bitmap drawing function end wait on */
-#define LCD_DMA_TXWAIT      0
+#define LCD_DMA_TXWAIT      1
 
 /* DMA RX buffer [byte] (only in ...24to16 function) */
 #define LCD_DMA_RX_BUFSIZE  256
