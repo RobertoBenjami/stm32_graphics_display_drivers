@@ -866,7 +866,7 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
     rgb888[0] = LcdRead8();
     rgb888[1] = LcdRead8();
     rgb888[2] = LcdRead8();
-    *pData = (rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0cFC) << 3 | rgb888[2] >> 3;
+    *pData = (rgb888[0] & 0xF8) << 8 | (rgb888[1] & 0xFC) << 3 | rgb888[2] >> 3;
     pData++;
   }
   LCD_CS_OFF;
