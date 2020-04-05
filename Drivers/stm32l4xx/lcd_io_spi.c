@@ -1044,16 +1044,16 @@ void LCD_IO_Init(void)
   #define DMA1_CLOCK_RX         0
   #else // #if LCD_SPI == 0
   #if DMANUM(LCD_DMA_TX) == 1
-  #define DMA1_CLOCK_TX         RCC_AHBENR_DMA1EN
+  #define DMA1_CLOCK_TX         RCC_AHB1ENR_DMA1EN
   #elif DMANUM(LCD_DMA_TX) == 2
-  #define DMA1_CLOCK_TX         RCC_AHBENR_DMA2EN
+  #define DMA1_CLOCK_TX         RCC_AHB1ENR_DMA2EN
   #else
   #define DMA1_CLOCK_TX         0
   #endif
   #if DMANUM(LCD_DMA_RX) == 1
-  #define DMA1_CLOCK_RX         RCC_AHBENR_DMA1EN
+  #define DMA1_CLOCK_RX         RCC_AHB1ENR_DMA1EN
   #elif DMANUM(LCD_DMA_RX) == 2
-  #define DMA1_CLOCK_RX         RCC_AHBENR_DMA2EN
+  #define DMA1_CLOCK_RX         RCC_AHB1ENR_DMA2EN
   #else
   #define DMA1_CLOCK_RX         0
   #endif
@@ -1062,7 +1062,8 @@ void LCD_IO_Init(void)
   /* GPIO, DMA Clocks */
   RCC->AHB2ENR |= GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI) |
                   GPIOX_CLOCK_LCD_RST | GPIOX_CLOCK_LCD_BL  | GPIOX_CLOCK_LCD_MISO;
-  #if (DMANUM(LCD_DMA_TX) > 1) || (DMANUM(LCD_DMA_RX) > 1)
+
+  #if (DMANUM(LCD_DMA_TX) >= 1) || (DMANUM(LCD_DMA_RX) >= 1)
   RCC->AHB1ENR |= DMA1_CLOCK_TX | DMA1_CLOCK_RX;
   #endif
 

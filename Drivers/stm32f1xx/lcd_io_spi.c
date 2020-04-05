@@ -1051,7 +1051,9 @@ void LCD_IO_Init(void)
   #endif
   #endif  // #else LCD_SPI == 0
 
+  #if (DMANUM(LCD_DMA_TX) >= 1) || (DMANUM(LCD_DMA_RX) >= 1)
   RCC->AHBENR |= DMA1_CLOCK_TX | DMA1_CLOCK_RX;
+  #endif
 
   #ifdef  LCD_SPI_ALTERSET
   LCD_SPI_ALTERSET;
