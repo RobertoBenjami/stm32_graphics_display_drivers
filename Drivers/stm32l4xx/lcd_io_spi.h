@@ -26,21 +26,19 @@
 #define LCD_SPI_AFR       5
 
 /* Lcd control pins assign (A..K, 0..15)
-   - if LCD_RST pin not used -> X, 0
-   - if LCD_MISO pin not used -> X, 0
    - if hardware SPI: SCK, MOSI, MISO pins assign is lock to hardware */
-#define LCD_RST           X, 0
+#define LCD_RST           X, 0  /* If not used leave it that way */
 #define LCD_RS            X, 0
 
 #define LCD_CS            X, 0
 #define LCD_SCK           X, 0
 #define LCD_MOSI          X, 0
-#define LCD_MISO          X, 0
+#define LCD_MISO          X, 0  /* If not used leave it that way */
 
 /* Backlight control
    - BL: A..K, 0..15 (if not used -> X, 0)
    - BL_ON: the logical level of the active state */
-#define LCD_BL            X, 0
+#define LCD_BL            X, 0  /* If not used leave it that way */
 #define LCD_BLON          0
 
 /* When data direction change (OUT->IN) there is a display that requires extra clock
