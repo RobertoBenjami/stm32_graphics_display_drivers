@@ -1,15 +1,12 @@
 /*
- * 8 bites párhuzamos LCD GPIO driver STM32F0
- * 5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb + háttérvilágitás vezérlés
+ * 8 bit paralell LCD GPIO driver for STM32F0
+ * 5 controll pins (CS, RS, WR, RD, RST) + 8 data pins + backlight pin
  */
 
-/* Készitö: Roberto Benjami
-   verzio:  2020.04
-
-   Megj:
-   Minden függvány az adatlábak irányát WRITE üzemmodban hagyja, igy nem kell minden irási
-   müveletkor állitgatni
-*/
+/* 
+ * Author: Roberto Benjami
+ * version:  2020.04
+ */
 
 #include "main.h"
 #include "lcd.h"
@@ -112,20 +109,20 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define GPIOX_PORTNAME(a)     GPIOX_PORTNAME_(a)
 
 //-----------------------------------------------------------------------------
-// Parancs/adat láb üzemmod
+/* command/data pin setting */
 #define LCD_RS_CMD            GPIOX_CLR(LCD_RS)
 #define LCD_RS_DATA           GPIOX_SET(LCD_RS)
 
-// Reset láb aktiv/passziv
+/* reset pin setting */
 #define LCD_RST_ON            GPIOX_CLR(LCD_RST)
 #define LCD_RST_OFF           GPIOX_SET(LCD_RST)
 
-// Chip select láb
+/* chip select pin setting */
 #define LCD_CS_ON             GPIOX_CLR(LCD_CS)
 #define LCD_CS_OFF            GPIOX_SET(LCD_CS)
 
 //-----------------------------------------------------------------------------
-// Ha a 8 adatláb egy porton belül emelkedö sorrendben van -> automatikusan optimalizál
+/* if the 8 data pins are in order -> automatic optimalization */
 #if ((GPIOX_PORTNUM(LCD_D0) == GPIOX_PORTNUM(LCD_D1))\
   && (GPIOX_PORTNUM(LCD_D1) == GPIOX_PORTNUM(LCD_D2))\
   && (GPIOX_PORTNUM(LCD_D2) == GPIOX_PORTNUM(LCD_D3))\
@@ -140,31 +137,31 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
   && (GPIOX_PIN(LCD_D4) + 1 == GPIOX_PIN(LCD_D5))\
   && (GPIOX_PIN(LCD_D5) + 1 == GPIOX_PIN(LCD_D6))\
   && (GPIOX_PIN(LCD_D6) + 1 == GPIOX_PIN(LCD_D7)))
-// LCD_D0..LCD_D7 lábak azonos porton ás növekvö sorrendben vannak vannak
+/* LCD_D0..LCD_D7 pins are in order */
 #define LCD_AUTOOPT
-#endif // D0..D7 portláb folytonosság ?
-#endif // D0..D7 port azonosság ?
+#endif /* D0..D7 pin order */
+#endif /* D0..D7 port same */
 
 //-----------------------------------------------------------------------------
-// adat lábak kimenetre állitása
+/* data pins set to output direction */
 #ifndef LCD_DIRWRITE
 #ifdef  LCD_AUTOOPT
 #define LCD_DIRWRITE  GPIOX_PORT(LCD_D0)->MODER = (GPIOX_PORT(LCD_D0)->MODER & ~(0xFFFF << (2 * GPIOX_PIN(LCD_D0)))) | (0x5555 << (2 * GPIOX_PIN(LCD_D0)));
-#else   // #ifdef  LCD_AUTOOPT
+#else   /* #ifdef  LCD_AUTOOPT */
 #define LCD_DIRWRITE { \
   GPIOX_MODER(MODE_OUT, LCD_D0); GPIOX_MODER(MODE_OUT, LCD_D1);\
   GPIOX_MODER(MODE_OUT, LCD_D2); GPIOX_MODER(MODE_OUT, LCD_D3);\
   GPIOX_MODER(MODE_OUT, LCD_D4); GPIOX_MODER(MODE_OUT, LCD_D5);\
   GPIOX_MODER(MODE_OUT, LCD_D6); GPIOX_MODER(MODE_OUT, LCD_D7);}
-#endif  // #else  LCD_AUTOOPT
-#endif  // #ifndef LCD_DATA_DIROUT
+#endif  /* #else  LCD_AUTOOPT */
+#endif  /* #ifndef LCD_DATA_DIROUT */
 
 //-----------------------------------------------------------------------------
-// adat lábak bemenetre állitása
+/* data pins set to input direction */
 #ifndef LCD_DIRREAD
 #ifdef  LCD_AUTOOPT
 #define LCD_DIRREAD  GPIOX_PORT(LCD_D0)->MODER = (GPIOX_PORT(LCD_D0)->MODER & ~(0xFFFF << (2 * GPIOX_PIN(LCD_D0)))) | (0x0000 << (2 * GPIOX_PIN(LCD_D0)));
-#else   // #ifdef  LCD_AUTOOPT
+#else   /* #ifdef  LCD_AUTOOPT */
 #define LCD_DIRREAD { \
   GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_D0); GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_D1);\
   GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_D2); GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_D3);\
@@ -174,12 +171,12 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #endif
 
 //-----------------------------------------------------------------------------
-// adat lábakra 8 bites adat kiirása
+/* 8 bit data write to the data pins */
 #ifndef LCD_WRITE
 #ifdef  LCD_AUTOOPT
 #define LCD_WRITE(dt) { \
   GPIOX_PORT(LCD_D0)->BSRR = (dt << GPIOX_PIN(LCD_D0)) | (0xFF << (GPIOX_PIN(LCD_D0) + 16));}
-#else   // #ifdef  LCD_AUTOOPT
+#else   /* #ifdef  LCD_AUTOOPT */
 #define LCD_WRITE(dt) {;                                   \
   if(dt & 0x01) GPIOX_SET(LCD_D0); else GPIOX_CLR(LCD_D0); \
   if(dt & 0x02) GPIOX_SET(LCD_D1); else GPIOX_CLR(LCD_D1); \
@@ -193,12 +190,12 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #endif
 
 //-----------------------------------------------------------------------------
-// adat lábakrol 8 bites adat beolvasása
+/* 8 bit data read from the data pins */
 #ifndef LCD_READ
 #ifdef  LCD_AUTOOPT
 #define LCD_READ(dt) {                          \
   dt = GPIOX_PORT(LCD_D0)->IDR >> GPIOX_PIN(LCD_D0); }
-#else   // #ifdef  LCD_AUTOOPT
+#else   /* #ifdef  LCD_AUTOOPT */
 #define LCD_READ(dt) {                       \
   if(GPIOX_IDR(LCD_D0)) dt = 1; else dt = 0; \
   if(GPIOX_IDR(LCD_D1)) dt |= 0x02;          \
@@ -220,7 +217,6 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #else
 #define LCD_WR_DELAY          LCD_IO_Delay(LCD_WRITE_DELAY - 2)
 #endif
-
 #if     LCD_READ_DELAY == 0
 #define LCD_RD_DELAY
 #elif   LCD_READ_DELAY == 1
@@ -244,7 +240,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define LCD_DATA16_READ(dh, dl) {LCD_DATA8_READ(dl); LCD_DATA8_READ(dh); }
 #endif
 
-// 8 bites lábakra másolando adat, illetve olvasáskor ide kerül az aktuális adat
+/* 8 bit data variable */
 uint8_t  lcd_data8;
 
 //-----------------------------------------------------------------------------
@@ -316,20 +312,19 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_LOW, LCD_BL);
   #endif
 
-  // disable the LCD
-  GPIOX_SET(LCD_CS);                    // CS = 1
-  LCD_RS_DATA;                          // RS = 1
-  GPIOX_SET(LCD_WR);                    // WR = 1
-  GPIOX_SET(LCD_RD);                    // RD = 1
+  GPIOX_SET(LCD_CS);                    /* CS = 1 */
+  LCD_RS_DATA;                          /* RS = 1 */
+  GPIOX_SET(LCD_WR);                    /* WR = 1 */
+  GPIOX_SET(LCD_RD);                    /* RD = 1 */
 
   GPIOX_MODER(MODE_OUT, LCD_CS);
   GPIOX_MODER(MODE_OUT, LCD_RS);
   GPIOX_MODER(MODE_OUT, LCD_WR);
   GPIOX_MODER(MODE_OUT, LCD_RD);
 
-  LCD_DIRWRITE;                         // adatlábak kimenetre állitása
+  LCD_DIRWRITE;                         /* data pins set the output direction */
 
-  // GPIO sebesság MAX
+  /* GPIO speed */
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_CS);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_RS);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_WR);
@@ -346,9 +341,9 @@ void LCD_IO_Init(void)
   /* Set or Reset the control line */
   #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
   LCD_Delay(1);
-  LCD_RST_ON;                           // RST = 0
+  LCD_RST_ON;                           /* RST = 0 */
   LCD_Delay(1);
-  LCD_RST_OFF;                          // RST = 1
+  LCD_RST_OFF;                          /* RST = 1 */
   #endif
   LCD_Delay(1);
 }
