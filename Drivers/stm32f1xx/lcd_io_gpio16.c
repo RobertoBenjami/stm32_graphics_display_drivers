@@ -153,7 +153,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #ifndef LCD_DIRWRITE
 #ifdef  LCD_AUTOOPT
 #define LCD_DIRWRITE  {GPIOX_PORT(LCD_D0)->CRL = 0x33333333, GPIOX_PORT(LCD_D0)->CRH = 0x33333333;}
-#else   // #ifdef  LCD_AUTOOPT
+#else
 #define LCD_DIRWRITE { \
   GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_D0); GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_D1);\
   GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_D2); GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_D3);\
@@ -163,15 +163,15 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
   GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_D10); GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_D11);\
   GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_D12); GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_D13);\
   GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_D14); GPIOX_MODE(MODE_PP_OUT_50MHZ, LCD_D15);}
-#endif  // #else  LCD_AUTOOPT
-#endif  // #ifndef LCD_DATA_DIROUT
+#endif
+#endif
 
 //-----------------------------------------------------------------------------
 /* data pins setting to input */
 #ifndef LCD_DIRREAD
 #ifdef  LCD_AUTOOPT
 #define LCD_DIRREAD  {GPIOX_PORT(LCD_D0)->CRL = 0x44444444; GPIOX_PORT(LCD_D0)->CRH = 0x44444444;}
-#else   // #ifdef  LCD_AUTOOPT
+#else
 #define LCD_DIRREAD { \
   GPIOX_MODE(MODE_FF_DIGITAL_INPUT, LCD_D0); GPIOX_MODE(MODE_FF_DIGITAL_INPUT, LCD_D1);\
   GPIOX_MODE(MODE_FF_DIGITAL_INPUT, LCD_D2); GPIOX_MODE(MODE_FF_DIGITAL_INPUT, LCD_D3);\
@@ -189,7 +189,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #ifndef LCD_WRITE
 #ifdef  LCD_AUTOOPT
 #define LCD_WRITE(dt) GPIOX_PORT(LCD_D0)->ODR = dt
-#else   // #ifdef  LCD_AUTOOPT
+#else
 #define LCD_WRITE(dt) {;                  \
   GPIOX_ODR(LCD_D0) = BITBAND_ACCESS(dt, 0); \
   GPIOX_ODR(LCD_D1) = BITBAND_ACCESS(dt, 1); \
@@ -215,7 +215,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #ifndef LCD_READ
 #ifdef  LCD_AUTOOPT
 #define LCD_READ(dt) dt = GPIOX_PORT(LCD_D0)->IDR
-#else   // #ifdef  LCD_AUTOOPT
+#else
 #define LCD_READ(dt) {                  \
   BITBAND_ACCESS(dt, 0) = GPIOX_IDR(LCD_D0); \
   BITBAND_ACCESS(dt, 1) = GPIOX_IDR(LCD_D1); \
@@ -349,7 +349,7 @@ void LCD_IO_Init(void)
   /* data pins directions = out */
   LCD_DIRWRITE;
 
-  /* Reset */
+  /* Reset the LCD */
   #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
   LCD_Delay(1);
   LCD_RST_ON;                           // RST = 0

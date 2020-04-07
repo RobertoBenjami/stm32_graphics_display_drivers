@@ -147,21 +147,21 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #ifndef LCD_DIRWRITE
 #ifdef  LCD_AUTOOPT
 #define LCD_DIRWRITE  GPIOX_PORT(LCD_D0)->MODER = (GPIOX_PORT(LCD_D0)->MODER & ~(0xFFFF << (2 * GPIOX_PIN(LCD_D0)))) | (0x5555 << (2 * GPIOX_PIN(LCD_D0)));
-#else   /* #ifdef  LCD_AUTOOPT */
+#else
 #define LCD_DIRWRITE { \
   GPIOX_MODER(MODE_OUT, LCD_D0); GPIOX_MODER(MODE_OUT, LCD_D1);\
   GPIOX_MODER(MODE_OUT, LCD_D2); GPIOX_MODER(MODE_OUT, LCD_D3);\
   GPIOX_MODER(MODE_OUT, LCD_D4); GPIOX_MODER(MODE_OUT, LCD_D5);\
   GPIOX_MODER(MODE_OUT, LCD_D6); GPIOX_MODER(MODE_OUT, LCD_D7);}
-#endif  /* #else  LCD_AUTOOPT */
-#endif  /* #ifndef LCD_DATA_DIROUT */
+#endif
+#endif
 
 //-----------------------------------------------------------------------------
 /* data pins set to input direction */
 #ifndef LCD_DIRREAD
 #ifdef  LCD_AUTOOPT
 #define LCD_DIRREAD  GPIOX_PORT(LCD_D0)->MODER = (GPIOX_PORT(LCD_D0)->MODER & ~(0xFFFF << (2 * GPIOX_PIN(LCD_D0)))) | (0x0000 << (2 * GPIOX_PIN(LCD_D0)));
-#else   /* #ifdef  LCD_AUTOOPT */
+#else
 #define LCD_DIRREAD { \
   GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_D0); GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_D1);\
   GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_D2); GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_D3);\
@@ -176,7 +176,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #ifdef  LCD_AUTOOPT
 #define LCD_WRITE(dt) { \
   GPIOX_PORT(LCD_D0)->BSRR = (dt << GPIOX_PIN(LCD_D0)) | (0xFF << (GPIOX_PIN(LCD_D0) + 16));}
-#else   /* #ifdef  LCD_AUTOOPT */
+#else
 #define LCD_WRITE(dt) {;                                   \
   if(dt & 0x01) GPIOX_SET(LCD_D0); else GPIOX_CLR(LCD_D0); \
   if(dt & 0x02) GPIOX_SET(LCD_D1); else GPIOX_CLR(LCD_D1); \
@@ -195,7 +195,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #ifdef  LCD_AUTOOPT
 #define LCD_READ(dt) {                          \
   dt = GPIOX_PORT(LCD_D0)->IDR >> GPIOX_PIN(LCD_D0); }
-#else   /* #ifdef  LCD_AUTOOPT */
+#else
 #define LCD_READ(dt) {                       \
   if(GPIOX_IDR(LCD_D0)) dt = 1; else dt = 0; \
   if(GPIOX_IDR(LCD_D1)) dt |= 0x02;          \
@@ -338,7 +338,7 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D6);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D7);
 
-  /* Set or Reset the control line */
+  /* Reset the LCD */
   #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
   LCD_Delay(1);
   LCD_RST_ON;                           /* RST = 0 */

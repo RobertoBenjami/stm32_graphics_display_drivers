@@ -139,7 +139,7 @@ void  LCD_IO_Delay(uint32_t c);
 #define DMAX_CHANNEL_IRQHANDLER_(a, b, c, d)  DMA ## a ## _Channel ## b ## _IRQHandler
 #define DMAX_CHANNEL_IRQHANDLER(a)      DMAX_CHANNEL_IRQHANDLER_(a)
 
-// Interrupt event pl: if(DMAX_ISR(LCD_DMA_TX) & DMAX_ISR_TCIF(LCD_DMA_TX))...
+/* Interrupt event pl: if(DMAX_ISR(LCD_DMA_TX) & DMAX_ISR_TCIF(LCD_DMA_TX))... */
 #define DMAX_ISR_TCIF_(a, b, c, d)      DMA_ISR_TCIF ## b
 #define DMAX_ISR_TCIF(a)                DMAX_ISR_TCIF_(a)
 
@@ -152,7 +152,7 @@ void  LCD_IO_Delay(uint32_t c);
 #define DMAX_ISR_GIF_(a, b, c, d)       DMA_ISR_GIF ## b
 #define DMAX_ISR_GIF(a)                 DMAX_ISR_GIF_(a)
 
-// Interrupt clear pl: DMAX_IFCR(LCD_DMA_TX) = DMAX_IFCR_CTCIF(LCD_DMA_TX) | DMAX_IFCR_CFEIF(LCD_DMA_TX);
+/* Interrupt clear pl: DMAX_IFCR(LCD_DMA_TX) = DMAX_IFCR_CTCIF(LCD_DMA_TX) | DMAX_IFCR_CFEIF(LCD_DMA_TX); */
 #define DMAX_IFCR_CTCIF_(a, b, c, d)    DMA_IFCR_CTCIF ## b
 #define DMAX_IFCR_CTCIF(a)              DMAX_IFCR_CTCIF_(a)
 
@@ -372,7 +372,7 @@ void LcdWrite16(uint16_t d16)
 #elif   LCD_SPI_MODE == 2
 /* Fullduplex SPI : data direction is fix, dummy read */
 #define LcdDirWrite()
-#endif  // #elif   LCD_SPI_MODE == 2
+#endif  /* #elif   LCD_SPI_MODE == 2 */
 
 //-----------------------------------------------------------------------------
 void LcdDirRead(uint32_t d)
@@ -455,12 +455,12 @@ uint16_t LcdRead16(void)
   GPIOX_SET(LCD_SCK);
   return d16;
 }
-#endif  // #if LCD_SPI_MODE != 0
+#endif  /* #if LCD_SPI_MODE != 0 */
 
 /* not using the DMA -> no need to wait for the end of the previous DMA operation */
 
 //=============================================================================
-#else    // #if LCD_SPI == 0
+#else    /* #if LCD_SPI == 0 */
 /* Hardware SPI */
 
 #if LCD_SPI == 1
@@ -898,10 +898,10 @@ inline void Dma_irq_rx(void)
   #ifndef osFeature_Semaphore
   /* no FreeRtos */
   LCD_IO_DmaTransferStatus = 0;
-  #else  // #ifndef osFeature_Semaphore
+  #else  /* #ifndef osFeature_Semaphore */
   /* FreeRtos */
   osSemaphoreRelease(spiDmaBinSemHandle);
-  #endif // #else osFeature_Semaphore
+  #endif /* #else osFeature_Semaphore */
 }
 
 //-----------------------------------------------------------------------------
@@ -1061,8 +1061,8 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
   #endif
 }
 
-#endif // #elif DMANUM(LCD_DMA_RX) > 0 && LCD_SPI > 0
-#endif // #if LCD_SPI_MODE != 0
+#endif /* #elif DMANUM(LCD_DMA_RX) > 0 && LCD_SPI > 0 */
+#endif /* #if LCD_SPI_MODE != 0 */
 
 //=============================================================================
 #ifdef  __GNUC__
@@ -1137,7 +1137,7 @@ void LCD_IO_Init(void)
   #if LCD_SPI == 0
   #define DMA1_CLOCK_TX         0
   #define DMA1_CLOCK_RX         0
-  #else // #if LCD_SPI == 0
+  #else /* #if LCD_SPI == 0 */
   #if DMANUM(LCD_DMA_TX) == 1
   #define DMA1_CLOCK_TX         RCC_AHBENR_DMA1EN
   #elif DMANUM(LCD_DMA_TX) == 2
@@ -1152,7 +1152,7 @@ void LCD_IO_Init(void)
   #else
   #define DMA1_CLOCK_RX         0
   #endif
-  #endif  // #else LCD_SPI == 0
+  #endif  /* #else LCD_SPI == 0 */
 
   /* GPIO, DMA Clocks */
   RCC->AHBENR |= GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI) |
@@ -1206,16 +1206,16 @@ void LCD_IO_Init(void)
   #if LCD_SPI_MODE == 1
   /* Half duplex */
   SPIX->CR1 = SPI_CR1_CPHA | SPI_CR1_CPOL | SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI | (LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos) | SPI_CR1_BIDIMODE | SPI_CR1_BIDIOE;
-  #else // #if LCD_SPI_MODE == 1
+  #else /* #if LCD_SPI_MODE == 1 */
   /* TX or full duplex */
   SPIX->CR1 = SPI_CR1_CPHA | SPI_CR1_CPOL | SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI | (LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos);
-  #endif // #else LCD_SPI_MODE == 1
+  #endif /* #else LCD_SPI_MODE == 1 */
   SPIX->CR2 = (7 << SPI_CR2_DS_Pos);
   SPIX->CR1 |= SPI_CR1_SPE;
 
-  #endif // #else LCD_SPI == 0
+  #endif /* #else LCD_SPI == 0 */
 
-  /* Set or Reset the control line */
+  /* Reset the LCD */
   #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A // reset
   LCD_Delay(10);
   LCD_RST_ON;
@@ -1260,8 +1260,8 @@ void LCD_IO_Init(void)
   spiDmaBinSemHandle = osSemaphoreCreate(osSemaphore(spiDmaBinSem), 1);
   osSemaphoreWait(spiDmaBinSemHandle, 1);
   #endif
-  #endif  // #if DMANUM(LCD_DMA_RX) > 0
-} // void LCD_IO_Init(void)
+  #endif  /* #if DMANUM(LCD_DMA_RX) > 0 */
+} /* void LCD_IO_Init(void) */
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd8(uint8_t Cmd)
@@ -1456,4 +1456,4 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
   LCD_IO_ReadMultiData16to24(pData, Size);
 }
 
-#endif // #else LCD_SPI_MODE == 0
+#endif /* #else LCD_SPI_MODE == 0 */

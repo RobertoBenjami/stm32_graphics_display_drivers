@@ -1109,7 +1109,7 @@ void LCD_IO_Init(void)
 
   #endif // #else LCD_SPI == 0
 
-  /* Set or Reset the control line */
+  /* Reset the LCD */
   #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A // reset
   LCD_Delay(10);
   LCD_RST_ON;

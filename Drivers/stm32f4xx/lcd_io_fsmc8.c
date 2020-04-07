@@ -1,18 +1,21 @@
-/* 8 bites párhuzamos LCD FSMC driver STM32F4-re
-5 vezárlöláb (CS, RS, WR, RD, RST) + 8 adatláb
+/* 
+ * 8 bit paralell LCD FSMC driver for STM32F4
+ * 5 controll pins (CS, RS, WR, RD, RST) + 8 data pins + 1 backlight pin
+ */
 
-Kászitö: Roberto Benjami
-verzio:  2020.01 */
+/* 
+ * Author: Roberto Benjami
+ * version:  2020.01
+ */
 
 #include "main.h"
 #include "lcd.h"
 #include "lcd_io_fsmc8.h"
 
-/* Mivel nincs globálisan felcserélve a 16bites LCD változok, ezért itt kell cserélni */
+/* Change the byte order of 16bits data? */
 #if LCD_REVERSE16 == 0
 #define RD(a)                 __REVSH(a)
 #endif
-
 #if LCD_REVERSE16 == 1
 #define RD(a)                 a
 #endif
@@ -21,6 +24,7 @@ verzio:  2020.01 */
 
 #define DMA_MAXSIZE           0xFFFE
 
+//-----------------------------------------------------------------------------
 /* Link function for LCD peripheral */
 void     LCD_Delay (uint32_t delay);
 void     LCD_IO_Init(void);
@@ -48,7 +52,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 //-----------------------------------------------------------------------------
 #define BITBAND_ACCESS(a, b)  *(volatile uint32_t*)(((uint32_t)&a & 0xF0000000) + 0x2000000 + (((uint32_t)&a & 0x000FFFFF) << 5) + (b << 2))
 
-// portláb mádok
+/* GPIO mode */
 #define MODE_DIGITAL_INPUT    0x0
 #define MODE_OUT              0x1
 #define MODE_ALTER            0x2
@@ -96,7 +100,6 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define GPIOX_PINSRC_(a, b)   GPIO_PinSource ## b
 #define GPIOX_PINSRC(a)       GPIOX_PINSRC_(a)
 
-// GPIO Ports Clock Enable
 #define GPIOX_CLOCK_(a, b)    RCC_AHB1ENR_GPIO ## a ## EN
 #define GPIOX_CLOCK(a)        GPIOX_CLOCK_(a)
 
@@ -118,6 +121,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 #define GPIOX_PORTNAME(a)     GPIOX_PORTNAME_(a)
 
 //-----------------------------------------------------------------------------
+/* DMA mode */
 #define DMA_ISR_TCIF0_Pos       (5U)
 #define DMA_ISR_TCIF0           (0x1U << DMA_ISR_TCIF0_Pos)                  /*!< 0x00000020 */
 #define DMA_ISR_HTIF0_Pos       (4U)
@@ -345,6 +349,7 @@ typedef struct
 #define DMAX_IFCR_CFEIF_(a, b, c, d)    DMA_IFCR_CFEIF ## c
 #define DMAX_IFCR_CFEIF(a)              DMAX_IFCR_CFEIF_(a)
 
+//-----------------------------------------------------------------------------
 #if DMANUM(LCD_DMA) > 0
 /* SPI DMA WRITE(a: src data pointer, b: target data pointer, c: source increment, d: target increment,
                  e: number of data, f: 0=8 bit, 1=16bit */
@@ -378,15 +383,15 @@ typedef struct
 #define WAIT_FOR_DMA_END      osSemaphoreWait(BinarySemDmaHandle, osWaitForever)
 #define TCIE                  DMA_SxCR_TCIE
 #define LCD_DMA_IRQ
-#else   // #ifdef  osFeature_Semaphore
+#else   /* #ifdef  osFeature_Semaphore */
 #define WAIT_FOR_DMA_END      while(!(DMAX_ISR(LCD_DMA) & DMAX_ISR_TCIF(LCD_DMA)));
 #define TCIE                  0
-#endif  // #else  osFeature_Semaphore
+#endif  /* #else  osFeature_Semaphore */
 
-#endif  // #if LCD_DMA > 0
+#endif  /* #if LCD_DMA > 0 */
 
 //-----------------------------------------------------------------------------
-// Reset láb aktiv/passziv
+/* reset pin setting */
 #define LCD_RST_ON            GPIOX_ODR(LCD_RST) = 0
 #define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
 
@@ -423,11 +428,10 @@ void LCD_IO_Bl_OnOff(uint8_t Bl)
 //-----------------------------------------------------------------------------
 void LCD_IO_Init(void)
 {
-  // GPIO Ports Clock Enable
   #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
   RCC->AHB1ENR |= GPIOX_CLOCK(LCD_RST);
-  GPIOX_MODER(MODE_OUT, LCD_RST);       // RST = GPIO OUT
-  GPIOX_ODR(LCD_RST) = 1;               // RST = 1
+  GPIOX_MODER(MODE_OUT, LCD_RST);       /* RST = GPIO OUT */
+  GPIOX_ODR(LCD_RST) = 1;               /* RST = 1 */
   #endif
 
   #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A
@@ -436,7 +440,7 @@ void LCD_IO_Init(void)
   GPIOX_MODER(MODE_OUT, LCD_BL);
   #endif
 
-  /* Set or Reset the control line */
+  /* Reset the LCD */
   #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
   LCD_Delay(1);
   LCD_RST_ON;
