@@ -62,8 +62,9 @@
  * When drawing a non-bitmap (example: FillRect), you do not wait for the end of the drawing
  * because it stores the drawing color in a static variable.
  * The "LCD_IO_DmaTransferStatus" variable is content this status (if 0 -> DMA transfers are completed)
-   - 0: bitmap drawing function end wait off
-   - 1: bitmap drawing function end wait on */
+   - 0: bitmap and fill drawing function end wait off
+   - 1: bitmap drawing function end wait on, fill drawing function end wait off (default mode)
+   - 2: bitmap and fill drawing function end wait on */
 #define LCD_DMA_TXWAIT    1
 
 /* Because there are DMA capable and DMA unable memory regions
@@ -86,3 +87,6 @@
 #define LCD_DMA_RX_FREE     free
 /* Inlude for malloc/free functions */
 #include <stdlib.h>
+
+/* Delay n millisecond function name */
+#define LCD_DELAY_MS(n)     HAL_Delay(n)

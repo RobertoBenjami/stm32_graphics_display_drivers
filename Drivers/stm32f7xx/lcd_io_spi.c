@@ -918,8 +918,13 @@ void LCD_IO_WriteMultiData8(uint8_t * pData, uint32_t Size, uint32_t dinc)
         if(dinc)
           pData+= DMA_MAXSIZE;
         Size-= DMA_MAXSIZE;
+        #if LCD_DMA_TXWAIT != 2
         WaitForDmaEnd();
+        #endif
       }
+      #if LCD_DMA_TXWAIT == 2
+      WaitForDmaEnd();
+      #endif
     }
   }
 }
@@ -979,7 +984,9 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
         if(dinc)
           pData+= Size - DMA_MAXSIZE;
         Size = DMA_MAXSIZE;
+        #if LCD_DMA_TXWAIT != 2
         WaitForDmaEnd();
+        #endif
       }
       else
       {
@@ -988,8 +995,13 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
         if(dinc)
           pData+= DMA_MAXSIZE;
         Size-= DMA_MAXSIZE;
+        #if LCD_DMA_TXWAIT != 2
         WaitForDmaEnd();
+        #endif
       }
+      #if LCD_DMA_TXWAIT == 2
+      WaitForDmaEnd();
+      #endif
     }
   }
 }
@@ -1306,7 +1318,7 @@ void LCD_IO_Delay(uint32_t c)
 
 void LCD_Delay(uint32_t Delay)
 {
-  HAL_Delay(Delay);
+  LCD_DELAY_MS(Delay);
 }
 
 //-----------------------------------------------------------------------------
@@ -1451,12 +1463,12 @@ void LCD_IO_Init(void)
   #define DMA_IRQ_PRIORITY    configLIBRARY_LOWEST_INTERRUPT_PRIORITY
   #endif
   #if DMANUM(LCD_DMA_TX) > 0
-  HAL_NVIC_SetPriority(DMAX_STREAMX_IRQ(LCD_DMA_TX), DMA_IRQ_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(DMAX_STREAMX_IRQ(LCD_DMA_TX));
+  NVIC_SetPriority(DMAX_STREAMX_IRQ(LCD_DMA_TX), DMA_IRQ_PRIORITY);
+  NVIC_EnableIRQ(DMAX_STREAMX_IRQ(LCD_DMA_TX));
   #endif
   #if DMANUM(LCD_DMA_RX) > 0
-  HAL_NVIC_SetPriority(DMAX_STREAMX_IRQ(LCD_DMA_RX), DMA_IRQ_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(DMAX_STREAMX_IRQ(LCD_DMA_RX));
+  NVIC_SetPriority(DMAX_STREAMX_IRQ(LCD_DMA_RX), DMA_IRQ_PRIORITY);
+  NVIC_EnableIRQ(DMAX_STREAMX_IRQ(LCD_DMA_RX));
   #endif
   #ifdef osFeature_Semaphore
   osSemaphoreDef(spiDmaBinSem);
