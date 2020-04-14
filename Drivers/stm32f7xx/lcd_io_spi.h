@@ -71,7 +71,7 @@
  * here we can set what is the DMA unable region condition
  * note: where the condition is true, it is considered a DMA-unable region
  * If you delete this definition: all memory are DMA capable */
-#define LCD_DMA_BLOCK(addr)  addr >= 0x20000000 && addr < 0x20010000
+#define LCD_DMA_UNABLE(addr)  addr >= 0x20000000 && addr < 0x20010000
 
 /* DMA RX buffer [byte] (only in ...24to16 function) */
 #define LCD_DMA_RX_BUFSIZE  256

@@ -885,8 +885,8 @@ void LCD_IO_WriteMultiData8(uint8_t * pData, uint32_t Size, uint32_t dinc)
             (DMACHN(LCD_DMA_TX) << DMA_SxCR_CHSEL_Pos) |
             (DMAPRIORITY(LCD_DMA_TX) << DMA_SxCR_PL_Pos);
 
-  #ifdef LCD_DMA_BLOCK
-  if(LCD_DMA_BLOCK((uint32_t)(pData)))
+  #ifdef LCD_DMA_UNABLE
+  if(LCD_DMA_UNABLE((uint32_t)(pData)))
   {
     while(Size--)
     {
@@ -951,8 +951,8 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
             (DMACHN(LCD_DMA_TX) << DMA_SxCR_CHSEL_Pos) |
             (DMAPRIORITY(LCD_DMA_TX) << DMA_SxCR_PL_Pos);
 
-  #ifdef LCD_DMA_BLOCK
-  if(LCD_DMA_BLOCK((uint32_t)(pData)))
+  #ifdef LCD_DMA_UNABLE
+  if(LCD_DMA_UNABLE((uint32_t)(pData)))
   {
     while(Size--)
     {
@@ -1124,9 +1124,9 @@ void LCD_IO_ReadMultiData8(uint8_t * pData, uint32_t Size)
           (DMACHN(LCD_DMA_RX) << DMA_SxCR_CHSEL_Pos) |
           (DMAPRIORITY(LCD_DMA_RX) << DMA_SxCR_PL_Pos)/* | (0 << DMA_SxCR_MBURST_Pos)*/;
 
-  #ifdef LCD_DMA_BLOCK
+  #ifdef LCD_DMA_UNABLE
   uint8_t d8;
-  if(LCD_DMA_BLOCK((uint32_t)(pData)))
+  if(LCD_DMA_UNABLE((uint32_t)(pData)))
   {
     while(Size--)
     {
@@ -1169,9 +1169,9 @@ void LCD_IO_ReadMultiData16(uint16_t * pData, uint32_t Size)
           (DMACHN(LCD_DMA_RX) << DMA_SxCR_CHSEL_Pos) |
           (DMAPRIORITY(LCD_DMA_RX) << DMA_SxCR_PL_Pos) | (0 << DMA_SxCR_MBURST_Pos);
 
-  #ifdef LCD_DMA_BLOCK
+  #ifdef LCD_DMA_UNABLE
   uint16_t d16;
-  if(LCD_DMA_BLOCK((uint32_t)(pData)))
+  if(LCD_DMA_UNABLE((uint32_t)(pData)))
   {
     while(Size--)
     {
@@ -1220,8 +1220,8 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
   uint8_t * dmadata;
   #endif
 
-  #ifdef LCD_DMA_BLOCK
-  if(LCD_DMA_BLOCK((uint32_t)(pData)))
+  #ifdef LCD_DMA_UNABLE
+  if(LCD_DMA_UNABLE((uint32_t)(pData)))
   {
     while(Size--)
     {
