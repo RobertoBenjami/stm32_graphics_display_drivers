@@ -120,14 +120,14 @@ static void SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint1
 uint8_t BSP_LCD_Init(void)
 { 
   uint8_t ret = LCD_ERROR;
+
+  /* LCD Init */   
+  lcd_drv->Init();
   
   /* Default value for draw propriety */
   DrawProp.BackColor = LCD_DEFAULT_BACKCOLOR;
   DrawProp.TextColor = LCD_DEFAULT_TEXTCOLOR;
   DrawProp.pFont     = &LCD_DEFAULT_FONT;
-  
-  /* LCD Init */   
-  lcd_drv->Init();
   
   /* Clear the LCD screen */
   #if LCD_INIT_CLEAR == 1

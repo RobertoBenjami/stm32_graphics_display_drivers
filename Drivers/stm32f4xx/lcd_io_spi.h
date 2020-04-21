@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32F4
  * author: Roberto Benjami
- * v.2020.01
+ * v.2020.04
  */
 
 //=============================================================================
@@ -60,9 +60,16 @@
  * When drawing a non-bitmap (example: FillRect), you do not wait for the end of the drawing
  * because it stores the drawing color in a static variable.
  * The "LCD_IO_DmaTransferStatus" variable is content this status (if 0 -> DMA transfers are completed)
-   - 0: bitmap drawing function end wait off
-   - 1: bitmap drawing function end wait on */
+   - 0: bitmap and fill drawing function end wait off
+   - 1: bitmap drawing function end wait on, fill drawing function end wait off (default mode)
+   - 2: bitmap and fill drawing function end wait on */
 #define LCD_DMA_TXWAIT    1
+
+/* Because there are DMA capable and DMA unable memory regions
+ * here we can set what is the DMA unable region condition
+ * note: where the condition is true, it is considered a DMA-unable region
+ * If you delete this definition: all memory are DMA capable */
+#define LCD_DMA_UNABLE(addr)  addr >= 0x10000000 && addr < 0x20000000
 
 /* DMA RX buffer [byte] (only in ...24to16 function) */
 #define LCD_DMA_RX_BUFSIZE  256

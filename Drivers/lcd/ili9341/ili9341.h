@@ -18,6 +18,12 @@
 */
 #define  ILI9341_COLORMODE        0
 
+/* To clear the screen before display turning on ?
+   - 0: does not clear
+   - 1: clear
+*/
+#define  ILI9341_INITCLEAR        1
+
 /* Analog touchscreen (only INTERFACE_MODE == 1, 8bit paralell IO mode)
    - 0: touchscreen disabled
    - 1: touchscreen enabled

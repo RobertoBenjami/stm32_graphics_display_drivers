@@ -48,11 +48,11 @@
    
 #define  LCD_DRVTYPE_V1_1
 
-/* A 16bites értékeket (szinkodok, bitmapok) forditott sorrendben legyenek-e tárolva
- * - 0: ne legyen forditva tárolva
- * - 1: forditva legyen tárolva
- *   a forditott tárolást kizárólag FSMC 8bit DMA miatt lehet érdemes bekapcsolni, ugyanis amig a kijelzö a 16bites értéket
- *   felsö bájt - also bájt sorrendben várja, az FSMC 8bit DMA csak also bájt-felsö bájt sorrendben tudja küldeni
+/* The 16 bits values (color codes, bitmap) byte order
+ * - 0: ne reverse order
+ * - 1: reverse order
+ *   note: Using reverse order is only recommended in 8 bit fsmc dma mode so that dma can be turned on. 
+           In all other cases it is disadvantageous.
  */
 #define  LCD_REVERSE16   0
 
@@ -85,7 +85,6 @@ typedef struct
   void     (*WritePixel)(uint16_t, uint16_t, uint16_t);
   uint16_t (*ReadPixel)(uint16_t, uint16_t);
   
-   /* Optimized operation */
   void     (*SetDisplayWindow)(uint16_t, uint16_t, uint16_t, uint16_t);
   void     (*DrawHLine)(uint16_t, uint16_t, uint16_t, uint16_t);
   void     (*DrawVLine)(uint16_t, uint16_t, uint16_t, uint16_t);

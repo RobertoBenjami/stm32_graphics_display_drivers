@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32F4
  * author: Roberto Benjami
- * version:  2020.01.20
+ * version:  2020.04
  *
  * - hardware, software SPI
  * - 3 modes (only TX, half duplex, full duplex)
@@ -878,26 +878,46 @@ void LCD_IO_WriteMultiData8(uint8_t * pData, uint32_t Size, uint32_t dinc)
             (DMACHN(LCD_DMA_TX) << DMA_SxCR_CHSEL_Pos) |
             (DMAPRIORITY(LCD_DMA_TX) << DMA_SxCR_PL_Pos);
 
-  while(Size)
+  #ifdef LCD_DMA_UNABLE
+  if(LCD_DMA_UNABLE((uint32_t)(pData)))
   {
-    if(Size <= DMA_MAXSIZE)
+    while(Size--)
     {
-      LCD_IO_DmaTransferStatus = 1;     /* last transfer */
-      LCD_IO_WriteMultiData((void *)pData, Size, dmacr);
-      Size = 0;
-      #if LCD_DMA_TXWAIT == 1
+      LcdWrite8(*pData);
       if(dinc)
-        WaitForDmaEnd();
-      #endif
+        pData++;
     }
-    else
+    LCD_CS_OFF;
+  }
+  else
+  #endif
+  {
+    while(Size)
     {
-      LCD_IO_DmaTransferStatus = 2;     /* no last transfer */
-      LCD_IO_WriteMultiData((void *)pData, DMA_MAXSIZE, dmacr);
-      if(dinc)
-        pData+= DMA_MAXSIZE;
-      Size-= DMA_MAXSIZE;
+      if(Size <= DMA_MAXSIZE)
+      {
+        LCD_IO_DmaTransferStatus = 1;     /* last transfer */
+        LCD_IO_WriteMultiData((void *)pData, Size, dmacr);
+        Size = 0;
+        #if LCD_DMA_TXWAIT == 1
+        if(dinc)
+          WaitForDmaEnd();
+        #endif
+      }
+      else
+      {
+        LCD_IO_DmaTransferStatus = 2;     /* no last transfer */
+        LCD_IO_WriteMultiData((void *)pData, DMA_MAXSIZE, dmacr);
+        if(dinc)
+          pData+= DMA_MAXSIZE;
+        Size-= DMA_MAXSIZE;
+        #if LCD_DMA_TXWAIT != 2
+        WaitForDmaEnd();
+        #endif
+      }
+      #if LCD_DMA_TXWAIT == 2
       WaitForDmaEnd();
+      #endif
     }
   }
 }
@@ -924,35 +944,57 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
             (DMACHN(LCD_DMA_TX) << DMA_SxCR_CHSEL_Pos) |
             (DMAPRIORITY(LCD_DMA_TX) << DMA_SxCR_PL_Pos);
 
-  while(Size)
+  #ifdef LCD_DMA_UNABLE
+  if(LCD_DMA_UNABLE((uint32_t)(pData)))
   {
-    if(Size <= DMA_MAXSIZE)
+    while(Size--)
     {
-      LCD_IO_DmaTransferStatus = 1;     /* last transfer */
-      LCD_IO_WriteMultiData((void *)pData, Size, dmacr);
-      Size = 0;
-      #if LCD_DMA_TXWAIT == 1
+      LcdWrite16(*pData);
       if(dinc)
+        pData++;
+    }
+    LCD_CS_OFF;
+  }
+  else
+  #endif
+  {
+    while(Size)
+    {
+      if(Size <= DMA_MAXSIZE)
+      {
+        LCD_IO_DmaTransferStatus = 1;     /* last transfer */
+        LCD_IO_WriteMultiData((void *)pData, Size, dmacr);
+        Size = 0;
+        #if LCD_DMA_TXWAIT == 1
+        if(dinc)
+          WaitForDmaEnd();
+        #endif
+      }
+      else if(Size < 2 * DMA_MAXSIZE)
+      {
+        LCD_IO_DmaTransferStatus = 2;     /* no last transfer */
+        LCD_IO_WriteMultiData((void *)pData, Size - DMA_MAXSIZE, dmacr);
+        if(dinc)
+          pData+= Size - DMA_MAXSIZE;
+        Size = DMA_MAXSIZE;
+        #if LCD_DMA_TXWAIT != 2
         WaitForDmaEnd();
+        #endif
+      }
+      else
+      {
+        LCD_IO_DmaTransferStatus = 2;     /* no last transfer */
+        LCD_IO_WriteMultiData((void *)pData, DMA_MAXSIZE, dmacr);
+        if(dinc)
+          pData+= DMA_MAXSIZE;
+        Size-= DMA_MAXSIZE;
+        #if LCD_DMA_TXWAIT != 2
+        WaitForDmaEnd();
+        #endif
+      }
+      #if LCD_DMA_TXWAIT == 2
+      WaitForDmaEnd();
       #endif
-    }
-    else if(Size < 2 * DMA_MAXSIZE)
-    {
-      LCD_IO_DmaTransferStatus = 2;     /* no last transfer */
-      LCD_IO_WriteMultiData((void *)pData, Size - DMA_MAXSIZE, dmacr);
-      if(dinc)
-        pData+= Size - DMA_MAXSIZE;
-      Size = DMA_MAXSIZE;
-      WaitForDmaEnd();
-    }
-    else
-    {
-      LCD_IO_DmaTransferStatus = 2;     /* no last transfer */
-      LCD_IO_WriteMultiData((void *)pData, DMA_MAXSIZE, dmacr);
-      if(dinc)
-        pData+= DMA_MAXSIZE;
-      Size-= DMA_MAXSIZE;
-      WaitForDmaEnd();
     }
   }
 }

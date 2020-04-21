@@ -52,6 +52,9 @@
 #include "lcd.h"
 #include "Fonts/fonts.h"
 
+//-----------------------------------------------------------------------------
+/* Config section (you can change this defines) */
+
 /* LCD default font (Font8 or Font12 or Font16 or Font20 or Font24) */
 #define LCD_DEFAULT_FONT         Font8
 
@@ -60,8 +63,22 @@
 #define LCD_DEFAULT_TEXTCOLOR    LCD_COLOR_WHITE
 
 /* LCD clear with LCD_DEFAULT_BACKCOLOR in the BSP_LCD_Init (0:diasble, 1:enable) */
-#define LCD_INIT_CLEAR           1
+#define LCD_INIT_CLEAR           0
+
+/* some colors */
+#define LCD_COLOR_BLACK         RC(0x0000)
+#define LCD_COLOR_GRAY          RC(0xF7DE)
+#define LCD_COLOR_BLUE          RC(0x001F)
+#define LCD_COLOR_RED           RC(0xF800)
+#define LCD_COLOR_GREEN         RC(0x07E0)
+#define LCD_COLOR_CYAN          RC(0x07FF)
+#define LCD_COLOR_MAGENTA       RC(0xF81F)
+#define LCD_COLOR_YELLOW        RC(0xFFE0)
+#define LCD_COLOR_WHITE         RC(0xFFFF)
   
+//-----------------------------------------------------------------------------
+/* Interface section (no modify) */   
+
 /** 
   * @brief  Draw Properties structures definition
   */ 
@@ -109,15 +126,6 @@ typedef enum
 /** 
   * @brief  LCD color  
   */
-#define LCD_COLOR_BLACK         RC(0x0000)
-#define LCD_COLOR_GRAY          RC(0xF7DE)
-#define LCD_COLOR_BLUE          RC(0x001F)
-#define LCD_COLOR_RED           RC(0xF800)
-#define LCD_COLOR_GREEN         RC(0x07E0)
-#define LCD_COLOR_CYAN          RC(0x07FF)
-#define LCD_COLOR_MAGENTA       RC(0xF81F)
-#define LCD_COLOR_YELLOW        RC(0xFFE0)
-#define LCD_COLOR_WHITE         RC(0xFFFF)
 #define LCD_COLOR(r, g, b)      RC((r & 0xF8) << 8 | (g & 0xFC) << 3 | (b & 0xF8) >> 3)
 
 /** @defgroup STM32_ADAFRUIT_LCD_Exported_Functions

@@ -439,6 +439,17 @@ void ili9341_Init(void)
   LCD_IO_WriteCmd8(ILI9341_MADCTL); LCD_IO_WriteData8(ILI9341_MAD_DATA_RIGHT_THEN_DOWN);
   LCD_IO_WriteCmd8(ILI9341_SLPOUT);    // Exit Sleep
   LCD_Delay(10);
+
+  #if ILI9341_INITCLEAR == 1
+  #ifdef   LCD_DRVTYPE_V1_1
+  ili9341_FillRect(0, 0, ILI9341_SIZE_X, ILI9341_SIZE_Y, 0x0000);
+  #else
+  for(uint32_t counter = 0; counter < ILI9341_SIZE_Y; counter++)
+    ili9341_DrawHLine(0x0000, 0, counter, ILI9341_SIZE_X);
+  #endif
+  LCD_Delay(10);
+  #endif
+  
   LCD_IO_WriteCmd8(ILI9341_DISPON);    // Display on
   LCD_Delay(10);
 }
