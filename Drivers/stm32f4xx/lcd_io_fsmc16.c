@@ -437,14 +437,14 @@ void LCD_IO_WriteMultiData8(uint8_t * pData, uint32_t Size, uint32_t dinc)
     d8s = *pData;
     pData = &d8s;
     #endif
-    dmacr = DMAX_STREAMX(LCD_DMA)->CR = DMA_SxCR_TCIE |
+    dmacr = DMA_SxCR_TCIE |
             (0 << DMA_SxCR_MSIZE_Pos) | (0 << DMA_SxCR_PSIZE_Pos) |
             (0 << DMA_SxCR_PINC_Pos) | (2 << DMA_SxCR_DIR_Pos) |
             (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |
             (DMAPRIORITY(LCD_DMA) << DMA_SxCR_PL_Pos);
   }
   else
-    dmacr = DMAX_STREAMX(LCD_DMA)->CR = DMA_SxCR_TCIE |
+    dmacr = DMA_SxCR_TCIE |
             (0 << DMA_SxCR_MSIZE_Pos) | (0 << DMA_SxCR_PSIZE_Pos) |
             (1 << DMA_SxCR_PINC_Pos) | (2 << DMA_SxCR_DIR_Pos) |
             (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |
@@ -590,7 +590,7 @@ void LCD_IO_ReadMultiData(void * pData, uint32_t Size, uint32_t dmacr)
 void LCD_IO_ReadMultiData8(uint8_t * pData, uint32_t Size)
 {
   uint32_t dmacr;
-  dmacr = DMAX_STREAMX(LCD_DMA)->CR = DMA_SxCR_TCIE |
+  dmacr = DMA_SxCR_TCIE |
           (0 << DMA_SxCR_MSIZE_Pos) | (0 << DMA_SxCR_PSIZE_Pos) |
           (1 << DMA_SxCR_MINC_Pos) | (2 << DMA_SxCR_DIR_Pos) |
           (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |
