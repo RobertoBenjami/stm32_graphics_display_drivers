@@ -5,7 +5,10 @@
  * FSMC_D0<-LCD_D0, FSMC_D1<-LCD_D1, FSMC_D2<-LCD_D2, FSMC_D3<-LCD_D3
  * FSMC_D4<-LCD_D4, FSMC_D5<-LCD_D5, FSMC_D6<-LCD_D6, FSMC_D7<-LCD_D7
  * FSMC_D8<-LCD_D8, FSMC_D9<-LCD_D9, FSMC_D10<-LCD_D10, FSMC_D11<-LCD_D11
- * FSMC_D12<-LCD_D12, FSMC_D13<-LCD_D13, FSMC_D14<-LCD_D14, FSMC_D15<-LCD_D15 
+ * FSMC_D12<-LCD_D12, FSMC_D13<-LCD_D13, FSMC_D14<-LCD_D14, FSMC_D15<-LCD_D15
+ *
+ * Author:  Roberto Benjami
+ * version: 2020.05
  */
 
 //=============================================================================
@@ -34,3 +37,15 @@
    - 0..7: Stream
    - 1..3: DMA priority (0=low..3=very high) */
 #define LCD_DMA           0, 0, 0, 0
+
+/* In dma mode the bitmap drawing function is completed before the actual drawing.
+ * If the content of the image changes (because it is in a stack), the drawing will be corrupted.
+ * If you want to wait for the drawing operation to complete, set it here.
+ * This will slow down the program, but will not cause a bad drawing.
+ * When drawing a non-bitmap (example: FillRect), you do not wait for the end of the drawing
+ * because it stores the drawing color in a static variable.
+ * The "LCD_IO_DmaTransferStatus" variable is content this status (if 0 -> DMA transfers are completed)
+   - 0: bitmap and fill drawing function end wait off
+   - 1: bitmap drawing function end wait on, fill drawing function end wait off (default mode)
+   - 2: bitmap and fill drawing function end wait on */
+#define LCD_DMA_TXWAIT    1
