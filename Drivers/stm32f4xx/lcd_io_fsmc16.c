@@ -5,7 +5,7 @@
 
 /* 
  * Author: Roberto Benjami
- * version:  2020.01
+ * version:  2020.05
  */
 
 #include "main.h"
@@ -13,8 +13,8 @@
 #include "lcd_io_fsmc16.h"
 
 #define  LCD_ADDR_DATA       (LCD_ADDR_BASE + (1 << (LCD_REGSELECT_BIT + 2)) - 2)
-
 #define  DMA_MAXSIZE         0xFFFE
+#define  DMA_IRQ_PR          255    /* DMA interrupt priority */
 
 //-----------------------------------------------------------------------------
 /* Link function for LCD peripheral */
@@ -342,45 +342,337 @@ typedef struct
 #define DMAX_IFCR_CFEIF(a)              DMAX_IFCR_CFEIF_(a)
 
 //-----------------------------------------------------------------------------
+/* freertos vs HAL */
+#ifdef  osCMSIS
+#define DelayMs(t)            osDelay(t)
+#define GetTime()             osKernelSysTick()
+#else
+#define DelayMs(t)            HAL_Delay(t)
+#define GetTime()             HAL_GetTick()
+#endif
+
+//-----------------------------------------------------------------------------
 #if DMANUM(LCD_DMA) > 0
-/* mem to mem DMA copy(a: src data pointer, b: target data pointer, c: source increment, d: target increment,
-                       e: number of data, f: 0=8 bit, 1=16bit */
-#define LCD_FSMC_DMA(a, b, c, d, e, f) {                                        \
-  while(e)                                                                      \
-  {                                                                             \
-    DMAX_STREAMX(LCD_DMA)->CR = 0;                                              \
-    DMAX_IFCR(LCD_DMA) = DMAX_IFCR_CTCIF(LCD_DMA);                              \
-    DMAX_STREAMX(LCD_DMA)->PAR = (uint32_t)a;                                   \
-    DMAX_STREAMX(LCD_DMA)->M0AR = (uint32_t)b;                                  \
-    if(e > DMA_MAXSIZE)                                                         \
-    {                                                                           \
-      DMAX_STREAMX(LCD_DMA)->NDTR = DMA_MAXSIZE;                                \
-      e -= DMA_MAXSIZE;                                                         \
-    }                                                                           \
-    else                                                                        \
-    {                                                                           \
-      DMAX_STREAMX(LCD_DMA)->NDTR = e;                                          \
-      e = 0;                                                                    \
-    }                                                                           \
-    DMAX_STREAMX(LCD_DMA)->CR = TCIE |                                          \
-      (c << DMA_SxCR_PINC_Pos) | (d << DMA_SxCR_MINC_Pos) |                     \
-      (f << DMA_SxCR_PSIZE_Pos) | (f << DMA_SxCR_MSIZE_Pos) |                   \
-      (2 << DMA_SxCR_DIR_Pos) | (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |       \
-      (DMAPRIORITY(LCD_DMA) << DMA_SxCR_PL_Pos);                                \
-    DMAX_STREAMX(LCD_DMA)->CR |= DMA_SxCR_EN;                                   \
-    WAIT_FOR_DMA_END;                                                           \
-  }                                                                             }
+/* DMA transfer end check */
 
-#ifdef  osFeature_Semaphore
-#define WAIT_FOR_DMA_END      osSemaphoreWait(BinarySemDmaHandle, osWaitForever)
-#define TCIE                  DMA_SxCR_TCIE
-#define LCD_DMA_IRQ
-#else   /* #ifdef  osFeature_Semaphore */
-#define WAIT_FOR_DMA_END      while(!(DMAX_ISR(LCD_DMA) & DMAX_ISR_TCIF(LCD_DMA)));
-#define TCIE                  0
-#endif  /* #else  osFeature_Semaphore */
+/* DMA status
+   - 0: all DMA transfers are completed
+   - 1: last DMA transfer in progress
+   - 2: DMA transfer in progress */
+volatile uint32_t LCD_IO_DmaTransferStatus = 0;
 
-#endif  /* #if LCD_DMA > 0 */
+//-----------------------------------------------------------------------------
+/* Waiting for all DMA processes to complete */
+#ifndef osFeature_Semaphore
+/* no FreeRtos */
+
+extern inline void WaitForDmaEnd(void);
+inline void WaitForDmaEnd(void)
+{
+  while(LCD_IO_DmaTransferStatus);
+}
+
+//-----------------------------------------------------------------------------
+#else   /* osFeature_Semaphore */
+/* FreeRtos */
+osSemaphoreId spiDmaBinSemHandle;
+
+extern inline void WaitForDmaEnd(void);
+inline void WaitForDmaEnd(void)
+{
+  if(LCD_IO_DmaTransferStatus)
+  {
+    osSemaphoreWait(spiDmaBinSemHandle, 500);
+    if(LCD_IO_DmaTransferStatus == 1)
+      LCD_IO_DmaTransferStatus = 0;
+  }
+}
+#endif  /* #else osFeature_Semaphore */
+
+//-----------------------------------------------------------------------------
+/* DMA interrupt handler */
+void DMAX_STREAMX_IRQHANDLER(LCD_DMA)(void)
+{
+  if(DMAX_ISR(LCD_DMA) & DMAX_ISR_TCIF(LCD_DMA))
+  {
+    DMAX_IFCR(LCD_DMA) = DMAX_IFCR_CTCIF(LCD_DMA);
+    DMAX_STREAMX(LCD_DMA)->CR = 0;
+    while(DMAX_STREAMX(LCD_DMA)->CR & DMA_SxCR_EN);
+    #ifndef osFeature_Semaphore
+    /* no FreeRtos */
+    LCD_IO_DmaTransferStatus = 0;
+    #else
+    /* FreeRtos */
+    osSemaphoreRelease(spiDmaBinSemHandle);
+    #endif /* #else osFeature_Semaphore */
+  }
+  else
+    DMAX_IFCR(LCD_DMA) = DMAX_IFCR_CTCIF(LCD_DMA)  | DMAX_IFCR_CHTIF(LCD_DMA) | DMAX_IFCR_CTEIF(LCD_DMA) |
+                         DMAX_IFCR_CDMEIF(LCD_DMA) | DMAX_IFCR_CFEIF(LCD_DMA);
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_WriteMultiData(void * pData, uint32_t Size, uint32_t dmacr)
+{
+  DMAX_IFCR(LCD_DMA) = DMAX_IFCR_CTCIF(LCD_DMA)  | DMAX_IFCR_CHTIF(LCD_DMA) | DMAX_IFCR_CTEIF(LCD_DMA) |
+                       DMAX_IFCR_CDMEIF(LCD_DMA) | DMAX_IFCR_CFEIF(LCD_DMA);
+  DMAX_STREAMX(LCD_DMA)->CR = 0;        /* DMA stop */
+  DMAX_STREAMX(LCD_DMA)->M0AR = LCD_ADDR_DATA;
+  DMAX_STREAMX(LCD_DMA)->PAR = (uint32_t)pData;
+  DMAX_STREAMX(LCD_DMA)->NDTR = Size;
+  DMAX_STREAMX(LCD_DMA)->CR = dmacr;
+  DMAX_STREAMX(LCD_DMA)->CR |= DMA_SxCR_EN;
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_WriteMultiData8(uint8_t * pData, uint32_t Size, uint32_t dinc)
+{
+  uint32_t dmacr;
+  #if LCD_DMA_TXWAIT != 2
+  static uint8_t d8s;
+  #endif
+  if(!dinc)
+  {
+    #if LCD_DMA_TXWAIT != 2
+    d8s = *pData;
+    pData = &d8s;
+    #endif
+    dmacr = DMAX_STREAMX(LCD_DMA)->CR = DMA_SxCR_TCIE |
+            (0 << DMA_SxCR_MSIZE_Pos) | (0 << DMA_SxCR_PSIZE_Pos) |
+            (0 << DMA_SxCR_PINC_Pos) | (2 << DMA_SxCR_DIR_Pos) |
+            (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |
+            (DMAPRIORITY(LCD_DMA) << DMA_SxCR_PL_Pos);
+  }
+  else
+    dmacr = DMAX_STREAMX(LCD_DMA)->CR = DMA_SxCR_TCIE |
+            (0 << DMA_SxCR_MSIZE_Pos) | (0 << DMA_SxCR_PSIZE_Pos) |
+            (1 << DMA_SxCR_PINC_Pos) | (2 << DMA_SxCR_DIR_Pos) |
+            (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |
+            (DMAPRIORITY(LCD_DMA) << DMA_SxCR_PL_Pos);
+
+  #ifdef LCD_DMA_UNABLE
+  if(LCD_DMA_UNABLE((uint32_t)(pData)))
+  {
+    while(Size--)
+    {
+      *(volatile uint16_t *)LCD_ADDR_DATA = (uint16_t)*pData;
+      if(dinc)
+        pData++;
+    }
+  }
+  else
+  #endif
+  {
+    while(Size)
+    {
+      if(Size <= DMA_MAXSIZE)
+      {
+        LCD_IO_DmaTransferStatus = 1;     /* last transfer */
+        LCD_IO_WriteMultiData((void *)pData, Size, dmacr);
+        Size = 0;
+        #if LCD_DMA_TXWAIT == 1
+        if(dinc)
+          WaitForDmaEnd();
+        #endif
+      }
+      else
+      {
+        LCD_IO_DmaTransferStatus = 2;     /* no last transfer */
+        LCD_IO_WriteMultiData((void *)pData, DMA_MAXSIZE, dmacr);
+        if(dinc)
+          pData+= DMA_MAXSIZE;
+        Size-= DMA_MAXSIZE;
+        #if LCD_DMA_TXWAIT != 2
+        WaitForDmaEnd();
+        #endif
+      }
+      #if LCD_DMA_TXWAIT == 2
+      WaitForDmaEnd();
+      #endif
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
+{
+  uint32_t dmacr;
+  #if LCD_DMA_TXWAIT != 2
+  static uint16_t d16s;
+  #endif
+  if(!dinc)
+  {
+    #if LCD_DMA_TXWAIT != 2
+    d16s = *pData;
+    pData = &d16s;
+    #endif
+    dmacr = DMA_SxCR_TCIE |
+            (1 << DMA_SxCR_MSIZE_Pos) | (1 << DMA_SxCR_PSIZE_Pos) |
+            (0 << DMA_SxCR_PINC_Pos) | (2 << DMA_SxCR_DIR_Pos) |
+            (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |
+            (DMAPRIORITY(LCD_DMA) << DMA_SxCR_PL_Pos);
+  }
+  else
+    dmacr = DMA_SxCR_TCIE |
+            (1 << DMA_SxCR_MSIZE_Pos) | (1 << DMA_SxCR_PSIZE_Pos) |
+            (1 << DMA_SxCR_PINC_Pos) | (2 << DMA_SxCR_DIR_Pos) |
+            (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |
+            (DMAPRIORITY(LCD_DMA) << DMA_SxCR_PL_Pos);
+
+  #ifdef LCD_DMA_UNABLE
+  if(LCD_DMA_UNABLE((uint32_t)(pData)))
+  {
+    while(Size--)
+    {
+      *(volatile uint16_t *)LCD_ADDR_DATA = *pData;
+      if(dinc)
+        pData++;
+    }
+  }
+  else
+  #endif
+  {
+    while(Size)
+    {
+      if(Size <= DMA_MAXSIZE)
+      {
+        LCD_IO_DmaTransferStatus = 1;     /* last transfer */
+        LCD_IO_WriteMultiData((void *)pData, Size, dmacr);
+        Size = 0;
+        #if LCD_DMA_TXWAIT == 1
+        if(dinc)
+          WaitForDmaEnd();
+        #endif
+      }
+      else if(Size < 2 * DMA_MAXSIZE)
+      {
+        LCD_IO_DmaTransferStatus = 2;     /* no last transfer */
+        LCD_IO_WriteMultiData((void *)pData, Size - DMA_MAXSIZE, dmacr);
+        if(dinc)
+          pData+= Size - DMA_MAXSIZE;
+        Size = DMA_MAXSIZE;
+        #if LCD_DMA_TXWAIT != 2
+        WaitForDmaEnd();
+        #endif
+      }
+      else
+      {
+        LCD_IO_DmaTransferStatus = 2;     /* no last transfer */
+        LCD_IO_WriteMultiData((void *)pData, DMA_MAXSIZE, dmacr);
+        if(dinc)
+          pData+= DMA_MAXSIZE;
+        Size-= DMA_MAXSIZE;
+        #if LCD_DMA_TXWAIT != 2
+        WaitForDmaEnd();
+        #endif
+      }
+      #if LCD_DMA_TXWAIT == 2
+      WaitForDmaEnd();
+      #endif
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_ReadMultiData(void * pData, uint32_t Size, uint32_t dmacr)
+{
+  DMAX_IFCR(LCD_DMA) = DMAX_IFCR_CTCIF(LCD_DMA)  | DMAX_IFCR_CHTIF(LCD_DMA) | DMAX_IFCR_CTEIF(LCD_DMA) |
+                       DMAX_IFCR_CDMEIF(LCD_DMA) | DMAX_IFCR_CFEIF(LCD_DMA);
+  DMAX_STREAMX(LCD_DMA)->CR = 0;        /* DMA stop */
+  DMAX_STREAMX(LCD_DMA)->M0AR = (uint32_t)pData;
+  DMAX_STREAMX(LCD_DMA)->PAR = LCD_ADDR_DATA;
+  DMAX_STREAMX(LCD_DMA)->NDTR = Size;
+  DMAX_STREAMX(LCD_DMA)->CR = dmacr;
+  DMAX_STREAMX(LCD_DMA)->CR |= DMA_SxCR_EN;
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_ReadMultiData8(uint8_t * pData, uint32_t Size)
+{
+  uint32_t dmacr;
+  dmacr = DMAX_STREAMX(LCD_DMA)->CR = DMA_SxCR_TCIE |
+          (0 << DMA_SxCR_MSIZE_Pos) | (0 << DMA_SxCR_PSIZE_Pos) |
+          (1 << DMA_SxCR_MINC_Pos) | (2 << DMA_SxCR_DIR_Pos) |
+          (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |
+          (DMAPRIORITY(LCD_DMA) << DMA_SxCR_PL_Pos);
+  #ifdef LCD_DMA_UNABLE
+  if(LCD_DMA_UNABLE((uint32_t)(pData)))
+  {
+    while(Size--)
+    {
+      *pData = (uint8_t)(*(volatile uint16_t *)LCD_ADDR_DATA);
+      pData++;
+    }
+  }
+  else
+  #endif
+  {
+    while(Size)
+    {
+      if(Size > DMA_MAXSIZE)
+      {
+        LCD_IO_DmaTransferStatus = 2;     /* no last transfer */
+        LCD_IO_ReadMultiData((void *)pData, DMA_MAXSIZE, dmacr);
+        Size-= DMA_MAXSIZE;
+        pData+= DMA_MAXSIZE;
+      }
+      else
+      {
+        LCD_IO_DmaTransferStatus = 1;     /* last transfer */
+        LCD_IO_ReadMultiData((void *)pData, Size, dmacr);
+        Size = 0;
+      }
+      WaitForDmaEnd();
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+void LCD_IO_ReadMultiData16(uint16_t * pData, uint32_t Size)
+{
+  uint32_t dmacr;
+  dmacr = DMA_SxCR_TCIE |
+          (1 << DMA_SxCR_MSIZE_Pos) | (1 << DMA_SxCR_PSIZE_Pos) |
+          (1 << DMA_SxCR_MINC_Pos) | (2 << DMA_SxCR_DIR_Pos) |
+          (DMACHN(LCD_DMA) << DMA_SxCR_CHSEL_Pos) |
+          (DMAPRIORITY(LCD_DMA) << DMA_SxCR_PL_Pos);
+  #ifdef LCD_DMA_UNABLE
+  if(LCD_DMA_UNABLE((uint32_t)(pData)))
+  {
+    while(Size--)
+    {
+      *pData = *(volatile uint16_t *)LCD_ADDR_DATA;
+      pData++;
+    }
+  }
+  else
+  #endif
+  {
+    while(Size)
+    {
+      if(Size > DMA_MAXSIZE)
+      {
+        LCD_IO_DmaTransferStatus = 2;     /* no last transfer */
+        LCD_IO_ReadMultiData((void *)pData, DMA_MAXSIZE, dmacr);
+        Size-= DMA_MAXSIZE;
+        pData+= DMA_MAXSIZE;
+      }
+      else
+      {
+        LCD_IO_DmaTransferStatus = 1;     /* last transfer */
+        LCD_IO_ReadMultiData((void *)pData, Size, dmacr);
+        Size = 0;
+      }
+      WaitForDmaEnd();
+    }
+  }
+}
+
+#else   /* #if DMANUM(LCD_DMA) > 0 */
+
+#define  WaitForDmaEnd()                /* if DMA is not used -> no need to wait */
+
+#endif  /* #else DMANUM(LCD_DMA) > 0 */
 
 //-----------------------------------------------------------------------------
 /* reset pin setting */
@@ -388,22 +680,9 @@ typedef struct
 #define LCD_RST_OFF           GPIOX_ODR(LCD_RST) = 1
 
 //-----------------------------------------------------------------------------
-#ifdef  LCD_DMA_IRQ
-osSemaphoreId BinarySemDmaHandle;
-void DMAX_STREAMX_IRQHANDLER(LCD_DMA)(void)
-{
-  if(DMAX_ISR(LCD_DMA) & DMAX_ISR_TCIF(LCD_DMA))
-  {
-    DMAX_IFCR(LCD_DMA) = DMAX_IFCR_CTCIF(LCD_DMA);
-    osSemaphoreRelease(BinarySemDmaHandle);
-  }
-}
-#endif
-
-//-----------------------------------------------------------------------------
 void LCD_Delay(uint32_t Delay)
 {
-  HAL_Delay(Delay);
+  DelayMs(Delay);
 }
 
 //-----------------------------------------------------------------------------
@@ -420,14 +699,40 @@ void LCD_IO_Bl_OnOff(uint8_t Bl)
 //-----------------------------------------------------------------------------
 void LCD_IO_Init(void)
 {
+  /* Reset pin clock */
   #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
-  RCC->AHB1ENR |= GPIOX_CLOCK(LCD_RST);
+  #define GPIOX_CLOCK_LCD_RST   GPIOX_CLOCK(LCD_RST)
+  #else
+  #define GPIOX_CLOCK_LCD_RST   0
+  #endif
+
+  /* Backlight pin clock */
+  #if GPIOX_PORTNUM(LCD_BL) >=  GPIOX_PORTNUM_A
+  #define GPIOX_CLOCK_LCD_BL    GPIOX_CLOCK(LCD_BL)
+  #else
+  #define GPIOX_CLOCK_LCD_BL    0
+  #endif
+
+  /* DMA clock */
+  #if DMANUM(LCD_DMA) == 1
+  #define DMA_CLOCK             RCC_AHB1ENR_DMA1EN
+  #elif DMANUM(LCD_DMA) == 2
+  #define DMA_CLOCK             RCC_AHB1ENR_DMA2EN
+  #else
+  #define DMA_CLOCK             0
+  #endif
+
+  /* GPIO, DMA Clocks */
+  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A || GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A || DMANUM(LCD_DMA) > 0
+  RCC->AHB1ENR |= GPIOX_CLOCK_LCD_RST | GPIOX_CLOCK_LCD_BL | DMA_CLOCK;
+  #endif
+
+  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
   GPIOX_MODER(MODE_OUT, LCD_RST);       /* RST = GPIO OUT */
   GPIOX_ODR(LCD_RST) = 1;               /* RST = 1 */
   #endif
 
   #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A
-  RCC->AHB1ENR |= GPIOX_CLOCK(LCD_BL);
   GPIOX_ODR(LCD_BL) = LCD_BLON;
   GPIOX_MODER(MODE_OUT, LCD_BL);
   #endif
@@ -441,48 +746,54 @@ void LCD_IO_Init(void)
   #endif
   LCD_Delay(1);
 
-  #if DMANUM(LCD_DMA) == 1
-  RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
-  #elif DMANUM(LCD_DMA) == 2
-  RCC->AHB1ENR |= RCC_AHB1ENR_DMA2EN;
+  #if DMANUM(LCD_DMA) > 0
+  #ifndef osFeature_Semaphore
+  #define DMA_IRQ_PRIORITY    DMA_IRQ_PR
+  #else
+  #define DMA_IRQ_PRIORITY    configLIBRARY_LOWEST_INTERRUPT_PRIORITY
   #endif
-
-  #ifdef LCD_DMA_IRQ
-  osSemaphoreDef(myBinarySem01);
-  BinarySemDmaHandle = osSemaphoreCreate(osSemaphore(myBinarySem01), 1);
-  HAL_NVIC_SetPriority(DMAX_STREAMX_IRQ(LCD_DMA), configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(DMAX_STREAMX_IRQ(LCD_DMA));
-  osSemaphoreWait(BinarySemDmaHandle, 1);
+  NVIC_SetPriority(DMAX_STREAMX_IRQ(LCD_DMA), DMA_IRQ_PRIORITY);
+  NVIC_EnableIRQ(DMAX_STREAMX_IRQ(LCD_DMA));
+  #ifdef osFeature_Semaphore
+  osSemaphoreDef(spiDmaBinSem);
+  spiDmaBinSemHandle = osSemaphoreCreate(osSemaphore(spiDmaBinSem), 1);
+  osSemaphoreWait(spiDmaBinSemHandle, 1);
   #endif
+  #endif  /* #if DMANUM(LCD_DMA) > 0 */
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd8(uint8_t Cmd)
 {
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = (uint16_t)Cmd;
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd16(uint16_t Cmd)
 {
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = Cmd;
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteData8(uint8_t Data)
 {
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_DATA = (uint16_t)Data;
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteData16(uint16_t Data)
 {
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_DATA = Data;
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd8DataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
 {
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = (uint16_t)Cmd;
 
   #if DMANUM(LCD_DMA) == 0
@@ -490,13 +801,14 @@ void LCD_IO_WriteCmd8DataFill16(uint8_t Cmd, uint16_t Data, uint32_t Size)
     *(volatile uint16_t *)LCD_ADDR_DATA = Data;
 
   #else
-  LCD_FSMC_DMA(&Data, LCD_ADDR_DATA, 0, 0, Size, 1);
+  LCD_IO_WriteMultiData16(&Data, Size, 0);
   #endif
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
 {
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = (uint16_t)Cmd;
 
   #if DMANUM(LCD_DMA) == 0
@@ -507,13 +819,14 @@ void LCD_IO_WriteCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size)
   }
 
   #else
-  LCD_FSMC_DMA(pData, LCD_ADDR_DATA, 1, 0, Size, 0);
+  LCD_IO_WriteMultiData8(pData, Size, 1);
   #endif
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
 {
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = (uint16_t)Cmd;
 
   #if DMANUM(LCD_DMA) == 0 || LCD_REVERSE16 == 1
@@ -524,13 +837,14 @@ void LCD_IO_WriteCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size)
   }
 
   #else
-  LCD_FSMC_DMA(pData, LCD_ADDR_DATA, 1, 0, Size, 1);
+  LCD_IO_WriteMultiData16(pData, Size, 1);
   #endif
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd16DataFill16(uint16_t Cmd, uint16_t Data, uint32_t Size)
 {
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = Cmd;
 
   #if DMANUM(LCD_DMA) == 0
@@ -538,13 +852,14 @@ void LCD_IO_WriteCmd16DataFill16(uint16_t Cmd, uint16_t Data, uint32_t Size)
     *(volatile uint16_t *)LCD_ADDR_DATA = Data;
 
   #else
-  LCD_FSMC_DMA(&Data, LCD_ADDR_DATA, 0, 0, Size, 1);
+  LCD_IO_WriteMultiData16(&Data, Size, 0);
   #endif
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size)
 {
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = Cmd;
 
   #if DMANUM(LCD_DMA) == 0
@@ -555,13 +870,14 @@ void LCD_IO_WriteCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size)
   }
 
   #else
-  LCD_FSMC_DMA(pData, LCD_ADDR_DATA, 1, 0, Size, 0);
+  LCD_IO_WriteMultiData8(pData, Size, 1);
   #endif
 }
 
 //-----------------------------------------------------------------------------
 void LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size)
 {
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = Cmd;
 
   #if DMANUM(LCD_DMA) == 0 || LCD_REVERSE16 == 1
@@ -572,7 +888,7 @@ void LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Siz
   }
 
   #else
-  LCD_FSMC_DMA(pData, LCD_ADDR_DATA, 1, 0, Size, 1);
+  LCD_IO_WriteMultiData16(pData, Size, 1);
   #endif
 }
 
@@ -588,6 +904,7 @@ void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, ui
   uint16_t DummyData;
   #endif
 
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = (uint16_t)Cmd;
 
   while(DummySize--)
@@ -601,7 +918,7 @@ void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, ui
   }
 
   #else
-  LCD_FSMC_DMA(LCD_ADDR_DATA, pData, 0, 1, Size, 0);
+  LCD_IO_ReadMultiData8(pData, Size);
   #endif
 }
 
@@ -617,13 +934,11 @@ void LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, 
   uint16_t DummyData;
   #endif
 
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = (uint16_t)Cmd;
 
-  while(DummySize)
-  {
+  while(DummySize--)
     DummyData = *(volatile uint16_t *)LCD_ADDR_DATA;
-    DummySize--;
-  }
 
   #if DMANUM(LCD_DMA) == 0 || LCD_REVERSE16 == 1
   while(Size--)
@@ -633,7 +948,7 @@ void LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, 
   }
 
   #else
-  LCD_FSMC_DMA(LCD_ADDR_DATA, pData, 0, 1, Size, 1);
+  LCD_IO_ReadMultiData16(pData, Size);
   #endif
 }
 
@@ -655,6 +970,7 @@ void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Si
   uint16_t DummyData;
   #endif
 
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = (uint16_t)Cmd;
 
   while(DummySize--)
@@ -699,6 +1015,7 @@ void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, 
   uint16_t DummyData;
   #endif
 
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = Cmd;
 
   while(DummySize--)
@@ -712,7 +1029,7 @@ void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, 
   }
 
   #else
-  LCD_FSMC_DMA(LCD_ADDR_DATA, pData, 0, 1, Size, 0);
+  LCD_IO_ReadMultiData8(pData, Size);
   #endif
 }
 
@@ -728,21 +1045,21 @@ void LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size
   uint16_t DummyData;
   #endif
 
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = Cmd;
 
   while(DummySize--)
     DummyData = *(volatile uint16_t *)LCD_ADDR_DATA;
 
   #if DMANUM(LCD_DMA) == 0 || LCD_REVERSE16 == 1
-  while(Size)
+  while(Size--)
   {
     *pData = *(volatile uint16_t *)LCD_ADDR_DATA;
     pData++;
-    Size--;
   }
 
   #else
-  LCD_FSMC_DMA(LCD_ADDR_DATA, pData, 0, 1, Size, 1);
+  LCD_IO_ReadMultiData16(pData, Size);
   #endif
 }
 
@@ -764,6 +1081,7 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
   uint16_t DummyData;
   #endif
 
+  WaitForDmaEnd();
   *(volatile uint16_t *)LCD_ADDR_BASE = Cmd;
 
   while(DummySize--)
