@@ -6,6 +6,10 @@
  * version:  2020.01
  */
 
+/* Bitmap and character test select
+   - 0: do not use the bitmap and character test
+   - 1: apply the bitmap and character test */
+#define BITMAP_TEST   1
 
 /* Pixel and Image read test and verify
    - 0: test off
@@ -18,9 +22,11 @@
 #define POWERMETER    1
 
 /* Test photo */
+#if BITMAP_TEST == 1
 #define rombitmap  beer_60x100_16
 #define ROMBITMAP_WIDTH  60
 #define ROMBITMAP_HEIGHT 100
+#endif
 
 /* Chapter delays */
 #define DELAY_CHAPTER    1000
@@ -35,8 +41,6 @@
 
 /* BSP_LCD_... */
 #include "stm32_adafruit_lcd.h"
-
-extern LCD_DrvTypeDef  *lcd_drv;
 
 #ifdef  __CC_ARM
 #define random()   rand()
@@ -93,9 +97,11 @@ void cbTimer(void const * argument);
 #define RD(a)                 __REVSH(a)
 #endif
 
+#if BITMAP_TEST == 1
 extern const BITMAPSTRUCT rombitmap;
 #if READ_TEST == 1
 uint16_t bitmap[ROMBITMAP_WIDTH * ROMBITMAP_HEIGHT];
+#endif
 #endif
 
 //-----------------------------------------------------------------------------
@@ -276,6 +282,7 @@ uint32_t ColorTest(void)
 }
 
 //-----------------------------------------------------------------------------
+#if BITMAP_TEST == 1
 uint32_t BitmapTest(uint32_t n)
 {
   extern const BITMAPSTRUCT beer_60x100_16;
@@ -363,7 +370,8 @@ uint32_t ReadImageTest(uint32_t n)
   BSP_LCD_DrawRGB16Image(x0 - 15, y0 + 20, xsize, ysize, &bitmap[0]);
   return(ctStartT);
 }
-#endif
+#endif /* #if READ_TEST == 1 */
+#endif /* #if BITMAP_TEST == 1 */
 
 //-----------------------------------------------------------------------------
 #ifdef osCMSIS
@@ -452,6 +460,7 @@ void mainApp(void)
     POWERMETER_PRINT;
     Delay(DELAY_CHAPTER);
 
+    #if BITMAP_TEST == 1
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
     t = CharTest(5000);
@@ -485,6 +494,7 @@ void mainApp(void)
     POWERMETER_PRINT;
     Delay(DELAY_CHAPTER);
     #endif
+    #endif /* #if BITMAP_TEST == 1 */
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);
     POWERMETER_START;
