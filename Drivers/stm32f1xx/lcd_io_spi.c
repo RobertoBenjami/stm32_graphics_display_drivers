@@ -1035,12 +1035,13 @@ void LCD_IO_Init(void)
   #define AFIO_CLOCK            RCC_APB2ENR_AFIOEN
   #else
   #define AFIO_CLOCK            0
+  #define LCD_SPI_ALTERSET
   #endif
 
   /* GPIO, DMA Clocks */
   RCC->APB2ENR |= GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_SCK) | GPIOX_CLOCK(LCD_MOSI) |
                   GPIOX_CLOCK_LCD_RST | GPIOX_CLOCK_LCD_BL  | GPIOX_CLOCK_LCD_MISO |
-		  AFIO_CLOCK;
+                  AFIO_CLOCK;
 
   /* DMA clock */
   #if LCD_SPI == 0
@@ -1067,9 +1068,7 @@ void LCD_IO_Init(void)
   RCC->AHBENR |= DMA1_CLOCK_TX | DMA1_CLOCK_RX;
   #endif
 
-  #ifdef  LCD_SPI_ALTERSET
   LCD_SPI_ALTERSET;
-  #endif
 
   /* MISO = input in full duplex mode */
   #if LCD_SPI_MODE == 2                 // Full duplex
