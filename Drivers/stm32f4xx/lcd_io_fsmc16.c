@@ -14,7 +14,6 @@
 
 #define  LCD_ADDR_DATA       (LCD_ADDR_BASE + (1 << (LCD_REGSELECT_BIT + 2)) - 2)
 #define  DMA_MAXSIZE         0xFFFE
-#define  DMA_IRQ_PR          255    /* DMA interrupt priority */
 
 //-----------------------------------------------------------------------------
 /* Link function for LCD peripheral */
@@ -747,12 +746,7 @@ void LCD_IO_Init(void)
   LCD_Delay(1);
 
   #if DMANUM(LCD_DMA) > 0
-  #ifndef osFeature_Semaphore
-  #define DMA_IRQ_PRIORITY    DMA_IRQ_PR
-  #else
-  #define DMA_IRQ_PRIORITY    configLIBRARY_LOWEST_INTERRUPT_PRIORITY
-  #endif
-  NVIC_SetPriority(DMAX_STREAMX_IRQ(LCD_DMA), DMA_IRQ_PRIORITY);
+  NVIC_SetPriority(DMAX_STREAMX_IRQ(LCD_DMA), LCD_DMA_IRQ_PR);
   NVIC_EnableIRQ(DMAX_STREAMX_IRQ(LCD_DMA));
   #ifdef osFeature_Semaphore
   osSemaphoreDef(spiDmaBinSem);
