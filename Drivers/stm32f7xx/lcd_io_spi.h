@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32F7
  * author: Roberto Benjami
- * v.2020.04
+ * v.2020.05
  */
 
 //=============================================================================
@@ -54,6 +54,9 @@
    - 1..3: DMA priority (0=low..3=very high) */
 #define LCD_DMA_TX        0, 0, 0, 0
 #define LCD_DMA_RX        0, 0, 0, 0
+
+/* DMA interrupt priority (see NVIC_SetPriority function, default value: 15) */
+#define LCD_DMA_IRQ_PR    15
 
 /* In dma mode the bitmap drawing function is completed before the actual drawing.
  * If the content of the image changes (because it is in a stack), the drawing will be corrupted.

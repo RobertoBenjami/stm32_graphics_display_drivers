@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32F3
  * author: Roberto Benjami
- * v.2020.01.22
+ * v.2020.05
  */
 
 //=============================================================================
@@ -52,6 +52,9 @@
 #define LCD_DMA_TX        0, 0, 0
 #define LCD_DMA_RX        0, 0, 0
 
+/* DMA interrupt priority (see NVIC_SetPriority function, default value: 15) */
+#define LCD_DMA_IRQ_PR    15
+
 /* In dma mode the bitmap drawing function is completed before the actual drawing.
  * If the content of the image changes (because it is in a stack), the drawing will be corrupted.
  * If you want to wait for the drawing operation to complete, set it here.
@@ -59,8 +62,9 @@
  * When drawing a non-bitmap (example: FillRect), you do not wait for the end of the drawing
  * because it stores the drawing color in a static variable.
  * The "LCD_IO_DmaTransferStatus" variable is content this status (if 0 -> DMA transfers are completed)
-   - 0: bitmap drawing function end wait off
-   - 1: bitmap drawing function end wait on */
+   - 0: bitmap and fill drawing function end wait off
+   - 1: bitmap drawing function end wait on, fill drawing function end wait off (default mode)
+   - 2: bitmap and fill drawing function end wait on */
 #define LCD_DMA_TXWAIT    1
 
 /* DMA RX buffer [byte] (only in ...24to16 function) */

@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32L1
  * author: Roberto Benjami
- * version:  2020.04
+ * version:  2020.05
  *
  * - hardware, software SPI
  * - 3 modes (only TX, half duplex, full duplex)
@@ -694,8 +694,13 @@ void LCD_IO_WriteMultiData8(uint8_t * pData, uint32_t Size, uint32_t dinc)
       if(dinc)
         pData+= DMA_MAXSIZE;
       Size-= DMA_MAXSIZE;
+      #if LCD_DMA_TXWAIT != 2
       WaitForDmaEnd();
+      #endif
     }
+    #if LCD_DMA_TXWAIT == 2
+    WaitForDmaEnd();
+    #endif
   }
 }
 
@@ -736,7 +741,9 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
       if(dinc)
         pData+= Size - DMA_MAXSIZE;
       Size = DMA_MAXSIZE;
+      #if LCD_DMA_TXWAIT != 2
       WaitForDmaEnd();
+      #endif
     }
     else
     {
@@ -745,8 +752,13 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
       if(dinc)
         pData+= DMA_MAXSIZE;
       Size-= DMA_MAXSIZE;
+      #if LCD_DMA_TXWAIT != 2
       WaitForDmaEnd();
+      #endif
     }
+    #if LCD_DMA_TXWAIT == 2
+    WaitForDmaEnd();
+    #endif
   }
 }
 
@@ -1129,18 +1141,13 @@ void LCD_IO_Init(void)
   LCD_Delay(10);
 
   #if (DMANUM(LCD_DMA_TX) > 0 || DMANUM(LCD_DMA_RX) > 0) && LCD_SPI > 0
-  #ifndef osFeature_Semaphore
-  #define DMA_IRQ_PRIORITY    15
-  #else
-  #define DMA_IRQ_PRIORITY    configLIBRARY_LOWEST_INTERRUPT_PRIORITY
-  #endif
   #if DMANUM(LCD_DMA_TX) > 0
-  HAL_NVIC_SetPriority(DMAX_CHANNEL_IRQ(LCD_DMA_TX), DMA_IRQ_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(DMAX_CHANNEL_IRQ(LCD_DMA_TX));
+  NVIC_SetPriority(DMAX_CHANNEL_IRQ(LCD_DMA_TX), LCD_DMA_IRQ_PR);
+  NVIC_EnableIRQ(DMAX_CHANNEL_IRQ(LCD_DMA_TX));
   #endif
   #if DMANUM(LCD_DMA_RX) > 0
-  HAL_NVIC_SetPriority(DMAX_CHANNEL_IRQ(LCD_DMA_RX), DMA_IRQ_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(DMAX_CHANNEL_IRQ(LCD_DMA_RX));
+  NVIC_SetPriority(DMAX_CHANNEL_IRQ(LCD_DMA_RX), LCD_DMA_IRQ_PR);
+  NVIC_EnableIRQ(DMAX_CHANNEL_IRQ(LCD_DMA_RX));
   #endif
   #ifdef osFeature_Semaphore
   osSemaphoreDef(spiDmaBinSem);

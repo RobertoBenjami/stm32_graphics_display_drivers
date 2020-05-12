@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32L0
  * author: Roberto Benjami
- * version:  2020.04
+ * version:  2020.05
  *
  * - hardware, software SPI
  * - 3 modes (only TX, half duplex, full duplex)
@@ -771,8 +771,13 @@ void LCD_IO_WriteMultiData8(uint8_t * pData, uint32_t Size, uint32_t dinc)
       if(dinc)
         pData+= DMA_MAXSIZE;
       Size-= DMA_MAXSIZE;
+      #if LCD_DMA_TXWAIT != 2
       WaitForDmaEnd();
+      #endif
     }
+    #if LCD_DMA_TXWAIT == 2
+    WaitForDmaEnd();
+    #endif
   }
 }
 
@@ -813,7 +818,9 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
       if(dinc)
         pData+= Size - DMA_MAXSIZE;
       Size = DMA_MAXSIZE;
+      #if LCD_DMA_TXWAIT != 2
       WaitForDmaEnd();
+      #endif
     }
     else
     {
@@ -822,8 +829,13 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
       if(dinc)
         pData+= DMA_MAXSIZE;
       Size-= DMA_MAXSIZE;
+      #if LCD_DMA_TXWAIT != 2
       WaitForDmaEnd();
+      #endif
     }
+    #if LCD_DMA_TXWAIT == 2
+    WaitForDmaEnd();
+    #endif
   }
 }
 
@@ -1254,16 +1266,16 @@ void LCD_IO_Init(void)
 
   #ifdef LCD_DMA_TX_RX_IRQ_SHARED
   /* Shared interrupt handler */
-  HAL_NVIC_SetPriority(LCD_DMA_TX_IRQ, DMA_IRQ_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(LCD_DMA_TX_IRQ);
+  NVIC_SetPriority(LCD_DMA_TX_IRQ, LCD_DMA_IRQ_PR);
+  NVIC_EnableIRQ(LCD_DMA_TX_IRQ);
   #else /* #ifdef LCD_DMA_TX_RX_IRQ_SHARED */
   #if DMANUM(LCD_DMA_TX) > 0
-  HAL_NVIC_SetPriority(LCD_DMA_TX_IRQ, DMA_IRQ_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(LCD_DMA_TX_IRQ);
+  NVIC_SetPriority(LCD_DMA_TX_IRQ, LCD_DMA_IRQ_PR);
+  NVIC_EnableIRQ(LCD_DMA_TX_IRQ);
   #endif
   #if DMANUM(LCD_DMA_RX) > 0
-  HAL_NVIC_SetPriority(LCD_DMA_RX_IRQ, DMA_IRQ_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(LCD_DMA_RX_IRQ);
+  NVIC_SetPriority(LCD_DMA_RX_IRQ, LCD_DMA_IRQ_PR);
+  NVIC_EnableIRQ(LCD_DMA_RX_IRQ);
   #endif
   #endif /* #else LCD_DMA_TX_RX_IRQ_SHARED */
 

@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32F0
  * author: Roberto Benjami
- * version:  2020.02.20
+ * version:  2020.05
  *
  * - hardware, software SPI
  * - 3 modes (only TX, half duplex, full duplex)
@@ -768,8 +768,13 @@ void LCD_IO_WriteMultiData8(uint8_t * pData, uint32_t Size, uint32_t dinc)
       if(dinc)
         pData+= DMA_MAXSIZE;
       Size-= DMA_MAXSIZE;
+      #if LCD_DMA_TXWAIT != 2
       WaitForDmaEnd();
+      #endif
     }
+    #if LCD_DMA_TXWAIT == 2
+    WaitForDmaEnd();
+    #endif
   }
 }
 
@@ -810,7 +815,9 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
       if(dinc)
         pData+= Size - DMA_MAXSIZE;
       Size = DMA_MAXSIZE;
+      #if LCD_DMA_TXWAIT != 2
       WaitForDmaEnd();
+      #endif
     }
     else
     {
@@ -819,8 +826,13 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
       if(dinc)
         pData+= DMA_MAXSIZE;
       Size-= DMA_MAXSIZE;
+      #if LCD_DMA_TXWAIT != 2
       WaitForDmaEnd();
+      #endif
     }
+    #if LCD_DMA_TXWAIT == 2
+    WaitForDmaEnd();
+    #endif
   }
 }
 
@@ -1225,31 +1237,25 @@ void LCD_IO_Init(void)
   LCD_Delay(10);
 
   #if (DMANUM(LCD_DMA_TX) > 0 || DMANUM(LCD_DMA_RX) > 0) && LCD_SPI > 0
-  #ifndef osFeature_Semaphore
-  #define DMA_IRQ_PRIORITY    15
-  #else
-  #define DMA_IRQ_PRIORITY    configLIBRARY_LOWEST_INTERRUPT_PRIORITY
-  #endif
-
   #ifdef LCD_DMA_TX_RX_IRQ_SHARED
   /* Shared interrupt handler */
-  HAL_NVIC_SetPriority(LCD_DMA_TX_IRQ, DMA_IRQ_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(LCD_DMA_TX_IRQ);
+  NVIC_SetPriority(LCD_DMA_TX_IRQ, LCD_DMA_IRQ_PR);
+  NVIC_EnableIRQ(LCD_DMA_TX_IRQ);
   #if defined(DMA1_CSELR_DEFAULT) || defined(DMA2_CSELR_DEFAULT)  /* only stm32f09x DMA routing */
   DMAX(LCD_DMA_TX)->CSELR = (DMAX(LCD_DMA_TX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_TX)))) | DMAROUTING(LCD_DMA_TX) << (4 * DMACHN(LCD_DMA_TX));
   DMAX(LCD_DMA_RX)->CSELR = (DMAX(LCD_DMA_RX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_RX)))) | DMAROUTING(LCD_DMA_RX) << (4 * DMACHN(LCD_DMA_RX));
   #endif
   #else /* #ifdef LCD_DMA_TX_RX_IRQ_SHARED */
   #if DMANUM(LCD_DMA_TX) > 0
-  HAL_NVIC_SetPriority(LCD_DMA_TX_IRQ, DMA_IRQ_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(LCD_DMA_TX_IRQ);
+  NVIC_SetPriority(LCD_DMA_TX_IRQ, LCD_DMA_IRQ_PR);
+  NVIC_EnableIRQ(LCD_DMA_TX_IRQ);
   #if defined(DMA1_CSELR_DEFAULT) || defined(DMA2_CSELR_DEFAULT)  /* only stm32f09x DMA routing */
   DMAX(LCD_DMA_TX)->CSELR = (DMAX(LCD_DMA_TX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_TX)))) | DMAROUTING(LCD_DMA_TX) << (4 * DMACHN(LCD_DMA_TX));
   #endif
   #endif
   #if DMANUM(LCD_DMA_RX) > 0
-  HAL_NVIC_SetPriority(LCD_DMA_RX_IRQ, DMA_IRQ_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(LCD_DMA_RX_IRQ);
+  NVIC_SetPriority(LCD_DMA_RX_IRQ, LCD_DMA_IRQ_PR);
+  NVIC_EnableIRQ(LCD_DMA_RX_IRQ);
   #if defined(DMA1_CSELR_DEFAULT) || defined(DMA2_CSELR_DEFAULT)  /* only stm32f09x DMA routing */
   DMAX(LCD_DMA_RX)->CSELR = (DMAX(LCD_DMA_RX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_RX)))) | DMAROUTING(LCD_DMA_RX) << (4 * DMACHN(LCD_DMA_RX));
   #endif
