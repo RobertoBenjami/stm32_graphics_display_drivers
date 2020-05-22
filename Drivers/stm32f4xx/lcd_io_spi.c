@@ -685,9 +685,6 @@ extern inline uint8_t LcdRead8(void);
 inline uint8_t LcdRead8(void)
 {
   uint8_t d8;
-  #if   LCD_SPI_MODE == 2
-  //SPIX->DR = 0;
-  #endif
   while(!BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos));
   d8 = (uint8_t)SPIX->DR;
   return d8;
@@ -718,9 +715,6 @@ extern inline uint16_t LcdRead16(void);
 inline uint16_t LcdRead16(void)
 {
   uint16_t d16;
-  #if   LCD_SPI_MODE == 2
-  //SPIX->DR = 0;
-  #endif
   while(!BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos));
   d16 = SPIX->DR;
   return d16;
