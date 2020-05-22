@@ -397,7 +397,7 @@ uint16_t ili9488_ReadID(void)
   #elif ILI9488_INTERFACE == 1
   LCD_IO_ReadCmd8MultipleData8(0x04, (uint8_t *)&id, 3, 1);
   #endif
-  printf("ID:%08X\r\n", (unsigned int)id);
+  // printf("ID:%08X\r\n", (unsigned int)id);
 
   ILI9488_LCDMUTEX_POP();
 
