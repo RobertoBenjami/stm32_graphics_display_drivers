@@ -630,8 +630,7 @@ inline void LcdDirWrite(void)
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
     d8 = SPIX->DR;
   SPIX->CR1 &= ~SPI_CR1_SPE;
-  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | ((LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos) |
-               SPI_CR1_BIDIOE);
+  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | ((LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos) | SPI_CR1_BIDIOE);
   LCD_IO_Delay(2 ^ LCD_SPI_SPD_READ);
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
     d8 = SPIX->DR;
@@ -651,15 +650,25 @@ inline void LcdDirRead(uint32_t d)
     GPIOX_ODR(LCD_SCK) = 1;
   }
   GPIOX_MODER(MODE_ALTER, LCD_SCK);
-  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos);
+  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
+    d = SPIX->DR;
+  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos) | SPI_CR1_RXONLY;
 }
 
 extern inline void LcdDirWrite(void);
 inline void LcdDirWrite(void)
 {
-  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos);
-}
+  volatile uint8_t d8 __attribute__((unused));
+  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
+    d8 = SPIX->DR;
+  SPIX->CR1 &= ~SPI_CR1_SPE;
+  SPIX->CR1 = (SPIX->CR1 & ~(SPI_CR1_BR | SPI_CR1_RXONLY)) | (LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos);
+  LCD_IO_Delay(2 ^ LCD_SPI_SPD_READ);
+  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
+    d8 = SPIX->DR;
+  SPIX->CR1 |= SPI_CR1_SPE;
 
+}
 #endif
 
 //-----------------------------------------------------------------------------
@@ -676,6 +685,9 @@ extern inline uint8_t LcdRead8(void);
 inline uint8_t LcdRead8(void)
 {
   uint8_t d8;
+  #if   LCD_SPI_MODE == 2
+  //SPIX->DR = 0;
+  #endif
   while(!BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos));
   d8 = (uint8_t)SPIX->DR;
   return d8;
@@ -706,6 +718,9 @@ extern inline uint16_t LcdRead16(void);
 inline uint16_t LcdRead16(void)
 {
   uint16_t d16;
+  #if   LCD_SPI_MODE == 2
+  //SPIX->DR = 0;
+  #endif
   while(!BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos));
   d16 = SPIX->DR;
   return d16;
@@ -1072,7 +1087,11 @@ void DMAX_STREAMX_IRQHANDLER(LCD_DMA_RX)(void)
     while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
       d8 = SPIX->DR;
     SPIX->CR1 &= ~SPI_CR1_SPE;
+    #if   LCD_SPI_MODE == 1
     SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | ((LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos) | SPI_CR1_BIDIOE);
+    #elif LCD_SPI_MODE == 2
+    SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos);
+    #endif
     LCD_IO_Delay(2 ^ LCD_SPI_SPD_READ);
     while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
       d8 = SPIX->DR;
@@ -1319,7 +1338,8 @@ void LCD_IO_Init(void)
 
   /* MISO = input in full duplex mode */
   #if LCD_SPI_MODE == 2                 // Full duplex
-  GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_MISO);
+  GPIOX_MODER(MODE_ALTER, LCD_MISO);
+  GPIOX_AFR(LCD_SPI_AFR, LCD_MISO);
   #endif
 
   /* Backlight = output, light on */
