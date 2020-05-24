@@ -47,16 +47,23 @@ void  LCD_IO_Delay(uint32_t c);
 
 //-----------------------------------------------------------------------------
 /* GPIO mode */
+/* values for GPIOX_MODER (io mode) */
 #define MODE_DIGITAL_INPUT    0x0
 #define MODE_OUT              0x1
 #define MODE_ALTER            0x2
 #define MODE_ANALOG_INPUT     0x3
 
+/* values for GPIOX_OSPEEDR (output speed) */
 #define MODE_SPD_LOW          0x0
 #define MODE_SPD_MEDIUM       0x1
 #define MODE_SPD_HIGH         0x2
 #define MODE_SPD_VHIGH        0x3
 
+/* values for GPIOX_OTYPER (output type: PP = push-pull, OD = open-drain) */
+#define MODE_OT_PP            0x0
+#define MODE_OT_OD            0x1
+
+/* values for GPIOX_PUPDR (push up and down resistor) */
 #define MODE_PU_NONE          0x0
 #define MODE_PU_UP            0x1
 #define MODE_PU_DOWN          0x2
@@ -72,6 +79,9 @@ void  LCD_IO_Delay(uint32_t c);
 
 #define GPIOX_MODER_(a,b,c)   GPIO ## b->MODER = (GPIO ## b->MODER & ~(3 << (2 * c))) | (a << (2 * c));
 #define GPIOX_MODER(a, b)     GPIOX_MODER_(a, b)
+
+#define GPIOX_OTYPER_(a,b,c)  GPIO ## b->OTYPER = (GPIO ## b->OTYPER & ~(1 << c)) | (a << c);
+#define GPIOX_OTYPER(a, b)    GPIOX_OTYPER_(a, b)
 
 #define GPIOX_OSPEEDR_(a,b,c) GPIO ## b->OSPEEDR = (GPIO ## b->OSPEEDR & ~(3 << (2 * c))) | (a << (2 * c));
 #define GPIOX_OSPEEDR(a, b)   GPIOX_OSPEEDR_(a, b)
@@ -1213,6 +1223,7 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
     {
       if(!--ntdr_follower)
         ntdr_follower = LCD_DMA_RX_BUFSIZE;
+      __NOP(); __NOP(); __NOP();        /* a small wait until the DMA transfer is definitely completed */
       rgb888[rgb888cnt++] = dmadata[dmadata_ri++];
       if(dmadata_ri >= LCD_DMA_RX_BUFSIZE)
         dmadata_ri = 0;

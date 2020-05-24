@@ -47,16 +47,23 @@ void  LCD_IO_Delay(uint32_t c);
 
 //-----------------------------------------------------------------------------
 /* GPIO mode */
+/* values for GPIOX_MODER (io mode) */
 #define MODE_DIGITAL_INPUT    0x0
 #define MODE_OUT              0x1
 #define MODE_ALTER            0x2
 #define MODE_ANALOG_INPUT     0x3
 
+/* values for GPIOX_OSPEEDR (output speed) */
 #define MODE_SPD_LOW          0x0
 #define MODE_SPD_MEDIUM       0x1
 #define MODE_SPD_HIGH         0x2
 #define MODE_SPD_VHIGH        0x3
 
+/* values for GPIOX_OTYPER (output type: PP = push-pull, OD = open-drain) */
+#define MODE_OT_PP            0x0
+#define MODE_OT_OD            0x1
+
+/* values for GPIOX_PUPDR (push up and down resistor) */
 #define MODE_PU_NONE          0x0
 #define MODE_PU_UP            0x1
 #define MODE_PU_DOWN          0x2
@@ -72,6 +79,9 @@ void  LCD_IO_Delay(uint32_t c);
 
 #define GPIOX_MODER_(a,b,c)   GPIO ## b->MODER = (GPIO ## b->MODER & ~(3 << (2 * c))) | (a << (2 * c));
 #define GPIOX_MODER(a, b)     GPIOX_MODER_(a, b)
+
+#define GPIOX_OTYPER_(a,b,c)  GPIO ## b->OTYPER = (GPIO ## b->OTYPER & ~(1 << c)) | (a << c);
+#define GPIOX_OTYPER(a, b)    GPIOX_OTYPER_(a, b)
 
 #define GPIOX_OSPEEDR_(a,b,c) GPIO ## b->OSPEEDR = (GPIO ## b->OSPEEDR & ~(3 << (2 * c))) | (a << (2 * c));
 #define GPIOX_OSPEEDR(a, b)   GPIOX_OSPEEDR_(a, b)
@@ -621,8 +631,7 @@ inline void LcdDirWrite(void)
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
     d8 = SPIX->DR;
   SPIX->CR1 &= ~SPI_CR1_SPE;
-  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | ((LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos) |
-               SPI_CR1_BIDIOE);
+  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | ((LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos) | SPI_CR1_BIDIOE);
   LCD_IO_Delay(2 ^ LCD_SPI_SPD_READ);
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
     d8 = SPIX->DR;
@@ -642,15 +651,24 @@ inline void LcdDirRead(uint32_t d)
     GPIOX_ODR(LCD_SCK) = 1;
   }
   GPIOX_MODER(MODE_ALTER, LCD_SCK);
-  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos);
+  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
+    d = SPIX->DR;
+  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos) | SPI_CR1_RXONLY;
 }
 
 extern inline void LcdDirWrite(void);
 inline void LcdDirWrite(void)
 {
-  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos);
+  volatile uint8_t d8 __attribute__((unused));
+  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
+    d8 = SPIX->DR;
+  SPIX->CR1 &= ~SPI_CR1_SPE;
+  SPIX->CR1 = (SPIX->CR1 & ~(SPI_CR1_BR | SPI_CR1_RXONLY)) | (LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos);
+  LCD_IO_Delay(2 ^ LCD_SPI_SPD_READ);
+  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
+    d8 = SPIX->DR;
+  SPIX->CR1 |= SPI_CR1_SPE;
 }
-
 #endif
 
 //-----------------------------------------------------------------------------
@@ -1033,7 +1051,11 @@ void DMAX_STREAMX_IRQHANDLER(LCD_DMA_RX)(void)
     while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
       d8 = SPIX->DR;
     SPIX->CR1 &= ~SPI_CR1_SPE;
+    #if   LCD_SPI_MODE == 1
     SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | ((LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos) | SPI_CR1_BIDIOE);
+    #elif LCD_SPI_MODE == 2
+    SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos);
+    #endif
     LCD_IO_Delay(2 ^ LCD_SPI_SPD_READ);
     while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
       d8 = SPIX->DR;
@@ -1162,6 +1184,7 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
     {
       if(!--ntdr_follower)
         ntdr_follower = LCD_DMA_RX_BUFSIZE;
+      __NOP(); __NOP(); __NOP();        /* a small wait until the DMA transfer is definitely completed */
       rgb888[rgb888cnt++] = dmadata[dmadata_ri++];
       if(dmadata_ri >= LCD_DMA_RX_BUFSIZE)
         dmadata_ri = 0;
@@ -1278,11 +1301,6 @@ void LCD_IO_Init(void)
                   GPIOX_CLOCK_LCD_RST | GPIOX_CLOCK_LCD_BL  | GPIOX_CLOCK_LCD_MISO |
                   DMA1_CLOCK_TX | DMA1_CLOCK_RX;
 
-  /* MISO = input in full duplex mode */
-  #if LCD_SPI_MODE == 2                 // Full duplex
-  GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_MISO);
-  #endif
-
   /* Backlight = output, light on */
   #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A
   GPIOX_MODER(MODE_OUT, LCD_BL);
@@ -1312,6 +1330,11 @@ void LCD_IO_Init(void)
   GPIOX_MODER(MODE_OUT, LCD_SCK);
   GPIOX_MODER(MODE_OUT, LCD_MOSI);
 
+  /* MISO = input in full duplex mode */
+  #if LCD_SPI_MODE == 2                 // Full duplex
+  GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_MISO);
+  #endif
+
   #else
 
   /* Hardware SPI */
@@ -1321,6 +1344,12 @@ void LCD_IO_Init(void)
   GPIOX_MODER(MODE_ALTER, LCD_SCK);
   GPIOX_AFR(LCD_SPI_AFR, LCD_MOSI);
   GPIOX_MODER(MODE_ALTER, LCD_MOSI);
+
+  /* MISO = input in full duplex mode */
+  #if LCD_SPI_MODE == 2                 // Full duplex
+  GPIOX_AFR(LCD_SPI_AFR, LCD_MISO);
+  GPIOX_MODER(MODE_ALTER, LCD_MISO);
+  #endif
 
   #if LCD_SPI_MODE == 1
   /* Half duplex */
