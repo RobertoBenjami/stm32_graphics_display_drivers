@@ -667,7 +667,6 @@ inline void LcdDirWrite(void)
   while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
     d8 = SPIX->DR;
   SPIX->CR1 |= SPI_CR1_SPE;
-
 }
 #endif
 
@@ -1330,12 +1329,6 @@ void LCD_IO_Init(void)
                   GPIOX_CLOCK_LCD_RST | GPIOX_CLOCK_LCD_BL  | GPIOX_CLOCK_LCD_MISO |
                   DMA1_CLOCK_TX | DMA1_CLOCK_RX;
 
-  /* MISO = input in full duplex mode */
-  #if LCD_SPI_MODE == 2                 // Full duplex
-  GPIOX_MODER(MODE_ALTER, LCD_MISO);
-  GPIOX_AFR(LCD_SPI_AFR, LCD_MISO);
-  #endif
-
   /* Backlight = output, light on */
   #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A
   GPIOX_MODER(MODE_OUT, LCD_BL);
@@ -1364,6 +1357,11 @@ void LCD_IO_Init(void)
   /* Software SPI */
   GPIOX_MODER(MODE_OUT, LCD_SCK);
   GPIOX_MODER(MODE_OUT, LCD_MOSI);
+  
+  /* MISO = input in full duplex mode */
+  #if LCD_SPI_MODE == 2                 // Full duplex
+  GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_MISO);
+  #endif
 
   #else
 
@@ -1374,6 +1372,12 @@ void LCD_IO_Init(void)
   GPIOX_MODER(MODE_ALTER, LCD_SCK);
   GPIOX_AFR(LCD_SPI_AFR, LCD_MOSI);
   GPIOX_MODER(MODE_ALTER, LCD_MOSI);
+
+  /* MISO = input in full duplex mode */
+  #if LCD_SPI_MODE == 2                 // Full duplex
+  GPIOX_AFR(LCD_SPI_AFR, LCD_MISO);
+  GPIOX_MODER(MODE_ALTER, LCD_MISO);
+  #endif
 
   #if LCD_SPI_MODE == 1
   /* Half duplex */
