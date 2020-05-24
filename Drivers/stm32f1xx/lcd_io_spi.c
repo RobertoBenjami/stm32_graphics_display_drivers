@@ -450,16 +450,25 @@ inline void LcdDirRead(uint32_t d)
     LCD_READ_DELAY;
     GPIOX_ODR(LCD_SCK) = 1;
   }
-  GPIOX_MODE(MODE_OD_ALTER_50MHZ, LCD_SCK);
-  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos);
+  GPIOX_MODE(MODE_PP_ALTER_50MHZ, LCD_SCK);
+  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
+    d = SPIX->DR;
+  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos) | SPI_CR1_RXONLY;
 }
 
 extern inline void LcdDirWrite(void);
 inline void LcdDirWrite(void)
 {
-  SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos);
+  volatile uint32_t d8 __attribute__((unused));
+  SPIX->CR1 &= ~SPI_CR1_SPE;
+  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
+    d8 = SPIX->DR;
+  SPIX->CR1 = (SPIX->CR1 & ~(SPI_CR1_BR | SPI_CR1_RXONLY)) | (LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos);
+  LCD_IO_Delay(2 ^ LCD_SPI_SPD_READ);
+  while(BITBAND_ACCESS(SPIX->SR, SPI_SR_RXNE_Pos))
+    d8 = SPIX->DR;
+  SPIX->CR1 |= SPI_CR1_SPE;
 }
-
 #endif
 
 //-----------------------------------------------------------------------------
@@ -940,6 +949,7 @@ void LCD_IO_ReadMultiData16to24(uint16_t * pData, uint32_t Size)
     {
       if(!--ntdr_follower)
         ntdr_follower = LCD_DMA_RX_BUFSIZE;
+      __NOP(); __NOP(); __NOP();        /* a small wait until the DMA transfer is definitely completed */
       rgb888[rgb888cnt++] = dmadata[dmadata_ri++];
       if(dmadata_ri >= LCD_DMA_RX_BUFSIZE)
         dmadata_ri = 0;
