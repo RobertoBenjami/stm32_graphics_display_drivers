@@ -46,8 +46,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
    
-#define  LCD_DRVTYPE_V1_1
-
 /* The 16 bits values (color codes, bitmap) byte order
  * - 0: ne reverse order
  * - 1: reverse order
@@ -92,11 +90,10 @@ typedef struct
   uint16_t (*GetLcdPixelWidth)(void);
   uint16_t (*GetLcdPixelHeight)(void);
   void     (*DrawBitmap)(uint16_t, uint16_t, uint8_t*);
-  void     (*DrawRGBImage)(uint16_t, uint16_t, uint16_t, uint16_t, uint8_t*);
-  #ifdef   LCD_DRVTYPE_V1_1
+  void     (*DrawRGBImage)(uint16_t, uint16_t, uint16_t, uint16_t, uint16_t*);
   void     (*FillRect)(uint16_t, uint16_t, uint16_t, uint16_t, uint16_t);
-  void     (*ReadRGBImage)(uint16_t, uint16_t, uint16_t, uint16_t, uint8_t*);
-  #endif
+  void     (*ReadRGBImage)(uint16_t, uint16_t, uint16_t, uint16_t, uint16_t*);
+  void     (*Scroll)(int16_t, uint16_t, uint16_t);
 }LCD_DrvTypeDef;    
 /**
   * @}

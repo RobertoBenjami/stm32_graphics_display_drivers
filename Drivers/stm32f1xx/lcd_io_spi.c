@@ -650,9 +650,9 @@ void LCD_IO_WriteMultiData(void * pData, uint32_t Size, uint32_t dmacr)
   DMAX_CHANNEL(LCD_DMA_TX)->CPAR = (uint32_t)&SPIX->DR;
   DMAX_CHANNEL(LCD_DMA_TX)->CNDTR = Size;
   DMAX_CHANNEL(LCD_DMA_TX)->CCR = dmacr;
-  DMAX_CHANNEL(LCD_DMA_TX)->CCR |= DMA_CCR_EN;
   BITBAND_ACCESS(SPIX->CR2, SPI_CR2_TXDMAEN_Pos) = 1;
   SPIX->CR1 |= SPI_CR1_SPE;
+  DMAX_CHANNEL(LCD_DMA_TX)->CCR |= DMA_CCR_EN;
 }
 
 //-----------------------------------------------------------------------------

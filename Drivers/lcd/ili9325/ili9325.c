@@ -11,7 +11,6 @@
 #define  RD(a)   a
 #endif
 
-/* Konstans szám bájtjainak cseréje, változó bájtjainak cseréje */
 #if LCD_REVERSE16 == 1
 #define  RC(a)   ((((a) & 0xFF) << 8) | (((a) & 0xFF00) >> 8))
 #define  RD(a)   __REVSH(a)
@@ -30,9 +29,10 @@ void     ili9325_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint1
 uint16_t ili9325_GetLcdPixelWidth(void);
 uint16_t ili9325_GetLcdPixelHeight(void);
 void     ili9325_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
-void     ili9325_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata);
-void     ili9325_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata);
+void     ili9325_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata);
+void     ili9325_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata);
 void     ili9325_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t RGBCode);
+void     ili9325_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
 
 LCD_DrvTypeDef   ili9325_drv =
 {
@@ -50,10 +50,9 @@ LCD_DrvTypeDef   ili9325_drv =
   ili9325_GetLcdPixelHeight,
   ili9325_DrawBitmap,
   ili9325_DrawRGBImage,
-  #ifdef   LCD_DRVTYPE_V1_1
   ili9325_FillRect,
   ili9325_ReadRGBImage,
-  #endif
+  ili9325_Scroll,
 };
 
 LCD_DrvTypeDef  *lcd_drv = &ili9325_drv;
@@ -109,7 +108,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9325_drv;
 #define ILI9325_PANEL_IF_CTRL5     0x97
 #define ILI9325_PANEL_IF_CTRL6     0x98
 
-// entry mode bitjei (16 vs 18 bites szinkód, szinsorrend, rajzolási irány)
+// entry mode bits
 #define ILI9325_ENTRY_18BITCOLOR   0x8000
 #define ILI9325_ENTRY_18BITBCD     0x4000
 
@@ -128,7 +127,6 @@ LCD_DrvTypeDef  *lcd_drv = &ili9325_drv;
 #define ILI9325_ENTRY_COLORMODE    ILI9325_ENTRY_BGR
 #endif
 
-// Az orientáciokhoz tartozo ENTRY modok jobra/fel és jobbra/le rajzolási irányhoz
 #if (ILI9325_ORIENTATION == 0)
 #define ILI9325_ENTRY_DATA_RIGHT_THEN_UP     ILI9325_ENTRY_COLORMODE | ILI9325_ENTRY_X_RIGHT | ILI9325_ENTRY_Y_UP
 #define ILI9325_ENTRY_DATA_RIGHT_THEN_DOWN   ILI9325_ENTRY_COLORMODE | ILI9325_ENTRY_X_RIGHT | ILI9325_ENTRY_Y_DOWN
@@ -176,16 +174,14 @@ volatile uint8_t io_ts_busy = 0;
 //-----------------------------------------------------------------------------
 #if ILI9325_TOUCH == 1
 
-// Touch paraméterek
-// nyomáserõsség értékek honnan hova konvertálodjanak
-
+// Touch parameters
 #define TOUCHMINPRESSRC    8192
 #define TOUCHMAXPRESSRC    4096
 #define TOUCHMINPRESTRG       0
 #define TOUCHMAXPRESTRG     255
 #define TOUCH_FILTER          8
 
-// fixpontos Z indexek (16bit egész, 16bit tört)
+// fixpoint Z indexs
 #define ZINDEXA  ((65536 * (TOUCHMAXPRESTRG - TOUCHMINPRESTRG)) / (TOUCHMAXPRESSRC - TOUCHMINPRESSRC))
 #define ZINDEXB  (-ZINDEXA * TOUCHMINPRESSRC)
 
@@ -297,7 +293,7 @@ void ili9325_Init(void)
     LCD_IO_WriteCmd16(RC(ILI9325_VER_END_AD)); LCD_IO_WriteData16(RC(ILI9325_LCD_PIXEL_HEIGHT - 1)); // 320 - 1
     //----FRAME RATE SETTING-----
     LCD_IO_WriteCmd16(RC(ILI9325_GATE_SCAN_CTRL1)); LCD_IO_WriteData16(RC(ILI9325_GATE_SCAN_CTRL1_DATA));
-    LCD_IO_WriteCmd16(RC(ILI9325_GATE_SCAN_CTRL2)); LCD_IO_WriteData16(RC(0x0001));
+    LCD_IO_WriteCmd16(RC(ILI9325_GATE_SCAN_CTRL2)); LCD_IO_WriteData16(RC(0x0003));
     LCD_IO_WriteCmd16(RC(ILI9325_PANEL_IF_CTRL1)); LCD_IO_WriteData16(RC(0x0029)); /* RTNI setting */
     LCD_Delay(5);
 
@@ -600,12 +596,12 @@ void ili9325_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   * @retval None
   * @brief  Draw direction: right then down
   */
-void ili9325_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata)
+void ili9325_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata)
 {
   ILI9325_LCDMUTEX_PUSH();
   ili9325_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ILI9325_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteCmd16MultipleData16(RC(ILI9325_RW_GRAM), (uint16_t *)pdata, Xsize * Ysize);
+  LCD_IO_WriteCmd16MultipleData16(RC(ILI9325_RW_GRAM), pdata, Xsize * Ysize);
 
   LCD_IO_WriteCmd16(RC(ILI9325_HOR_START_AD)); LCD_IO_WriteData16(RC(0));
   LCD_IO_WriteCmd16(RC(ILI9325_HOR_END_AD)); LCD_IO_WriteData16(RC(ILI9325_LCD_PIXEL_WIDTH - 1));
@@ -625,13 +621,13 @@ void ili9325_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   * @retval None
   * @brief  Draw direction: right then down
   */
-void ili9325_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata)
+void ili9325_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata)
 {
   ILI9325_LCDMUTEX_PUSH();
   #if 0
   ili9325_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ILI9325_SETCURSOR(Xpos, Ypos);
-  LCD_IO_ReadMultipleData16(RC(ILI9325_RW_GRAM), (uint16_t *)pdata, Xsize * Ysize);
+  LCD_IO_ReadMultipleData16(RC(ILI9325_RW_GRAM), pdata, Xsize * Ysize);
   LCD_IO_WriteCmd16(RC(ILI9325_HOR_START_AD)); LCD_IO_WriteData16(RC(0));
   LCD_IO_WriteCmd16(RC(ILI9325_HOR_END_AD)); LCD_IO_WriteData16(RC(ILI9325_LCD_PIXEL_WIDTH - 1));
   LCD_IO_WriteCmd16(RC(ILI9325_VER_START_AD)); LCD_IO_WriteData16(RC(0));
@@ -639,13 +635,36 @@ void ili9325_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   #else
   for(uint16_t yp = Ypos; yp < Ypos + Ysize; yp++)
     for(uint16_t xp = Xpos; xp < Xpos + Xsize; xp++)
-    { // mivel memoria olvasáskor nem lépteti a memoriacimet automatikusan csak ez a modszer marad :(
+    {
       ILI9325_SETCURSOR(xp, yp);
-      LCD_IO_ReadCmd16MultipleData16(RC(ILI9325_RW_GRAM), (uint16_t *)pdata, 1, 2);
-      pdata += 2;
+      LCD_IO_ReadCmd16MultipleData16(RC(ILI9325_RW_GRAM), pdata, 1, 2);
+      pdata++;
     }
   #endif
   ILI9325_LCDMUTEX_POP();
+}
+
+//-----------------------------------------------------------------------------
+/**
+  * @brief  Set display scroll parameters
+  * @param  Scroll    : Scroll size [pixel]
+  * @param  TopFix    : Top fix size [pixel]
+  * @param  BottonFix : Botton fix size [pixel]
+  * @retval None
+  */
+void ili9325_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix)
+{ /* Only full screen scrolling is possible */
+  static uint16_t scrparam;
+  Scroll = (0 - Scroll) % ILI9325_LCD_PIXEL_HEIGHT;
+  if(Scroll < 0)
+    Scroll += ILI9325_LCD_PIXEL_HEIGHT;
+  if(Scroll != scrparam)
+  {
+    scrparam = Scroll;
+    ILI9325_LCDMUTEX_PUSH();
+    LCD_IO_WriteCmd16DataFill16(ILI9325_GATE_SCAN_CTRL3, scrparam, 1);
+    ILI9325_LCDMUTEX_POP();
+  }
 }
 
 //=============================================================================
@@ -716,10 +735,10 @@ uint8_t ili9325_ts_DetectTouch(uint16_t DeviceAddr)
         z21 = z22;
       }
     }
-    // ha sokadik probára sem sikerült stabil koordinátát kiolvasni -> nincs változás
+    /* if a stable coordinate could not be read for many probes -> no change */
   }
   else
-    tp = 0; // nincs lenyomva
+    tp = 0; /* no pressed */
 
   #if  ILI9325_MULTITASK_MUTEX == 1
   io_ts_busy = 0;

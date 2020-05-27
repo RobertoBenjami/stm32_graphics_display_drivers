@@ -31,9 +31,10 @@ void      st7783_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint1
 uint16_t  st7783_GetLcdPixelWidth(void);
 uint16_t  st7783_GetLcdPixelHeight(void);
 void      st7783_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
-void      st7783_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata);
-void      st7783_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata);
+void      st7783_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata);
+void      st7783_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata);
 void      st7783_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t RGBCode);
+void      st7783_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
 
 // Touchscreen
 void      st7783_ts_Init(uint16_t DeviceAddr);
@@ -56,10 +57,9 @@ LCD_DrvTypeDef   st7783_drv =
   st7783_GetLcdPixelHeight,
   st7783_DrawBitmap,
   st7783_DrawRGBImage,
-  #ifdef   LCD_DRVTYPE_V1_1
   st7783_FillRect,
   st7783_ReadRGBImage,
-  #endif
+  st7783_Scroll,
 };
 
 LCD_DrvTypeDef  *lcd_drv = &st7783_drv;
@@ -580,12 +580,12 @@ void st7783_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   * @retval None
   * @brief  Draw direction: right then down
   */
-void st7783_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata)
+void st7783_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata)
 {
   ST7783_LCDMUTEX_PUSH();
   st7783_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ST7783_SETCURSOR(Xpos, Ypos);
-  LCD_IO_WriteCmd16MultipleData16(RC(ST7783_RW_GRAM), (uint16_t *)pdata, Xsize * Ysize);
+  LCD_IO_WriteCmd16MultipleData16(RC(ST7783_RW_GRAM), pdata, Xsize * Ysize);
   st7783_SetDisplayWindow(0, 0, ST7783_XSIZE, ST7783_YSIZE);
   ST7783_LCDMUTEX_POP();
 }
@@ -601,14 +601,26 @@ void st7783_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t 
   * @retval None
   * @brief  Draw direction: right then down
   */
-void st7783_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata)
+void st7783_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata)
 {
   ST7783_LCDMUTEX_PUSH();
   st7783_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ST7783_SETCURSOR(Xpos, Ypos);
-  LCD_IO_ReadCmd16MultipleData16(RC(ST7783_RW_GRAM), (uint16_t *)pdata, Xsize * Ysize, 2);
+  LCD_IO_ReadCmd16MultipleData16(RC(ST7783_RW_GRAM), pdata, Xsize * Ysize, 2);
   st7783_SetDisplayWindow(0, 0, ST7783_XSIZE, ST7783_YSIZE);
   ST7783_LCDMUTEX_POP();
+}
+
+//-----------------------------------------------------------------------------
+/**
+  * @brief  Set display scroll parameters
+  * @param  Scroll    : Scroll size [pixel]
+  * @param  TopFix    : Top fix size [pixel]
+  * @param  BottonFix : Botton fix size [pixel]
+  * @retval None
+  */
+void st7783_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix)
+{ /* This display is not capable scroll function */
 }
   
 //=============================================================================

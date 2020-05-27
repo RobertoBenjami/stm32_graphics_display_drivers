@@ -1,6 +1,9 @@
 /*
- * ST7735 LCD driver v1.1
- * 2019.05. Add v1.1 extension (#ifdef LCD_DRVTYPE_V1_1)
+ ST7735 LCD driver v2020.05.27
+ Add function:
+ - st7735_FillRect
+ - st7735_ReadRGBImage
+ - st7735_Scroll
 */
 
 #include <string.h>
@@ -22,8 +25,9 @@ void     st7735_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t 
 uint16_t st7735_GetLcdPixelWidth(void);
 uint16_t st7735_GetLcdPixelHeight(void);
 void     st7735_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
-void     st7735_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData);
-void     st7735_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData);
+void     st7735_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
+void     st7735_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
+void     st7735_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
 
 LCD_DrvTypeDef   st7735_drv =
 {
@@ -41,10 +45,9 @@ LCD_DrvTypeDef   st7735_drv =
   st7735_GetLcdPixelHeight,
   st7735_DrawBitmap,
   st7735_DrawRGBImage,
-  #ifdef   LCD_DRVTYPE_V1_1
   st7735_FillRect,
   st7735_ReadRGBImage,
-  #endif
+  st7735_Scroll,
 };
 
 LCD_DrvTypeDef  *lcd_drv = &st7735_drv;
@@ -77,7 +80,9 @@ LCD_DrvTypeDef  *lcd_drv = &st7735_drv;
 #define ST7735_RAMRD          0x2E
 
 #define ST7735_PTLAR          0x30
+#define ST7735_VSCRDEF        0x33
 #define ST7735_MADCTL         0x36
+#define ST7735_VSCRSADD       0x37
 #define ST7735_COLMOD         0x3A
 
 #define ST7735_FRMCTR1        0xB1
@@ -104,10 +109,10 @@ LCD_DrvTypeDef  *lcd_drv = &st7735_drv;
 
 #define ST7735_PWCTR6         0xFC
 
-// entry mode bitjei szinsorrend, rajzolási irány)
 #define ST7735_MAD_RGB        0x00
 #define ST7735_MAD_BGR        0x08
 
+//-----------------------------------------------------------------------------
 #define ST7735_MAD_VERTICAL   0x20
 #define ST7735_MAD_X_LEFT     0x00
 #define ST7735_MAD_X_RIGHT    0x40
@@ -120,7 +125,6 @@ LCD_DrvTypeDef  *lcd_drv = &st7735_drv;
 #define ST7735_MAD_COLORMODE  ST7735_MAD_BGR
 #endif
 
-// Az orientáciokhoz tartozo ENTRY modok jobra/fel és jobbra/le rajzolási irányhoz és a maximális koordináták
 #if (ST7735_ORIENTATION == 0)
 #define ST7735_SIZE_X                     ST7735_LCD_PIXEL_WIDTH
 #define ST7735_SIZE_Y                     ST7735_LCD_PIXEL_HEIGHT
@@ -204,8 +208,7 @@ void st7735_Init(void)
   // Power Control 3 (Vcom)
   LCD_IO_WriteCmd8MultipleData8(ST7735_VMCTR1, (uint8_t *)"\x00\x12\x80", 3);
 
-  // LCD_IO_WriteMultipleData8(ST7735_COLMOD, (uint8_t *)"\x55", 1); // Interface Pixel Format (16 bit)
-  LCD_IO_WriteCmd8MultipleData8(ST7735_COLMOD, (uint8_t *)"\x05", 1); // Interface Pixel Format (16 bit)
+  LCD_IO_WriteCmd8MultipleData8(ST7735_COLMOD, (uint8_t *)"\x55", 1); // Interface Pixel Format (16 bit)
   LCD_IO_WriteCmd8MultipleData8(0xB0, (uint8_t *)"\x80", 1); // Interface Mode Control (SDO NOT USE)
   LCD_IO_WriteCmd8MultipleData8(0xB1, (uint8_t *)"\xA0", 1);// Frame rate (60Hz)
   LCD_IO_WriteCmd8MultipleData8(0xB4, (uint8_t *)"\x02", 1);// Display Inversion Control (2-dot)
@@ -424,10 +427,10 @@ void st7735_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   * @retval None
   * @brief  Draw direction: right then down
   */
-void st7735_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData)
+void st7735_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData)
 {
   st7735_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
-  LCD_IO_WriteCmd8MultipleData16(ST7735_RAMWR, (uint16_t *)pData, Xsize * Ysize);
+  LCD_IO_WriteCmd8MultipleData16(ST7735_RAMWR, pData, Xsize * Ysize);
 }
 
 //-----------------------------------------------------------------------------
@@ -441,8 +444,80 @@ void st7735_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t 
   * @retval None
   * @brief  Draw direction: right then down
   */
-void st7735_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData)
+void st7735_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData)
 {
   st7735_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
-  LCD_IO_ReadCmd8MultipleData24to16(ST7735_RAMRD, (uint16_t *)pData, Xsize * Ysize, 1);
+  LCD_IO_ReadCmd8MultipleData24to16(ST7735_RAMRD, pData, Xsize * Ysize, 1);
+}
+
+//-----------------------------------------------------------------------------
+/**
+  * @brief  Set display scroll parameters
+  * @param  Scroll    : Scroll size [pixel]
+  * @param  TopFix    : Top fix size [pixel]
+  * @param  BottonFix : Botton fix size [pixel]
+  * @retval None
+  */
+void st7735_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix)
+{
+  static uint16_t scrparam[4] = {0, 0, 0, 0};
+  // Scroll = Scroll % ST7735_LCD_PIXEL_HEIGHT;
+  #if (ST7735_ORIENTATION == 0)
+  if((TopFix != scrparam[1]) || (BottonFix != scrparam[3]))
+  {
+    scrparam[1] = TopFix;
+    scrparam[3] = BottonFix;
+    scrparam[2] = ST7735_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ST7735_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll = (0 - Scroll) % scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (ST7735_ORIENTATION == 1)
+  if((TopFix != scrparam[1]) || (BottonFix != scrparam[3]))
+  {
+    scrparam[1] = TopFix;
+    scrparam[3] = BottonFix;
+    scrparam[2] = ST7735_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ST7735_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll = (0 - Scroll) % scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (ST7735_ORIENTATION == 2)
+  if((TopFix != scrparam[3]) || (BottonFix != scrparam[1]))
+  {
+    scrparam[3] = TopFix;
+    scrparam[1] = BottonFix;
+    scrparam[2] = ST7735_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ST7735_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll %= scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (ST7735_ORIENTATION == 3)
+  if((TopFix != scrparam[3]) || (BottonFix != scrparam[1]))
+  {
+    scrparam[3] = TopFix;
+    scrparam[1] = BottonFix;
+    scrparam[2] = ST7735_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ST7735_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll %= scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #endif
+  if(Scroll != scrparam[0])
+  {
+    scrparam[0] = Scroll;
+    LCD_IO_WriteCmd8DataFill16(ST7735_VSCRSADD, scrparam[0], 1);
+  }
 }

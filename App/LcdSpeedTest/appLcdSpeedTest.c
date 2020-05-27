@@ -299,6 +299,103 @@ uint32_t BitmapTest(uint32_t n)
 }
 
 //-----------------------------------------------------------------------------
+uint32_t ScrollTest(uint32_t n)
+{
+  uint32_t t;
+  uint16_t ss, o, tf, bf;
+  int16_t  i;
+  ss = BSP_LCD_GetXSize();
+  o = 0;
+  if(BSP_LCD_GetYSize() > ss)
+  {
+    ss = BSP_LCD_GetYSize();
+    o = 1;                              /* vertical display */
+  }
+  BSP_LCD_SetTextColor(LCD_COLOR_YELLOW);
+  BSP_LCD_SetBackColor(LCD_COLOR_BLUE);
+  BSP_LCD_SetFont(&Font12);
+  BSP_LCD_DisplayChar(0, 0, '1');
+  BSP_LCD_DisplayChar(BSP_LCD_GetXSize() - 8, 0, '2');
+
+  BSP_LCD_SetFont(&Font16);
+  BSP_LCD_DisplayChar(0, BSP_LCD_GetYSize() - 16, '3');
+  BSP_LCD_DisplayChar(BSP_LCD_GetXSize() - 12, BSP_LCD_GetYSize() - 16, '4');
+  if(o == 0)
+  { /* horizontal display */
+    tf = 12; bf = 16;
+    BSP_LCD_DrawBitmap(tf, (BSP_LCD_GetYSize() - rombitmap.infoHeader.biHeight) / 2, (uint8_t *)&rombitmap);
+    ss -= (tf + bf + rombitmap.infoHeader.biWidth);
+  }
+  else
+  { /* vertical display */
+    tf = 12; bf = 16;
+    BSP_LCD_DrawBitmap((BSP_LCD_GetXSize() - rombitmap.infoHeader.biWidth) / 2, tf, (uint8_t *)&rombitmap);
+    ss -= (tf + bf + rombitmap.infoHeader.biHeight);
+  }
+  t = GetTime();
+  i = 0;
+  while(i < ss)
+  {
+    while(GetTime() < (t + 20));
+    t = GetTime();
+    BSP_LCD_Scroll(i, tf, bf);
+    i++;
+  }
+  do
+  {
+    i--;
+    while(GetTime() < t + 20);
+    t = GetTime();
+    BSP_LCD_Scroll(i, tf, bf);
+  } while(i > 0);
+
+  while(GetTime() < t + 1000);
+
+  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+  if(o == 0)
+  { /* horizontal display */
+    BSP_LCD_FillRect(tf, (BSP_LCD_GetYSize() - rombitmap.infoHeader.biHeight) / 2, rombitmap.infoHeader.biWidth, rombitmap.infoHeader.biHeight);
+    BSP_LCD_DrawBitmap(BSP_LCD_GetXSize() - rombitmap.infoHeader.biWidth - bf, (BSP_LCD_GetYSize() - rombitmap.infoHeader.biHeight) / 2, (uint8_t *)&rombitmap);
+  }
+  else
+  { /* vertical display */
+    BSP_LCD_FillRect((BSP_LCD_GetXSize() - rombitmap.infoHeader.biWidth) / 2, tf, rombitmap.infoHeader.biWidth, rombitmap.infoHeader.biHeight);
+    BSP_LCD_DrawBitmap((BSP_LCD_GetXSize() - rombitmap.infoHeader.biWidth) / 2, BSP_LCD_GetYSize() - rombitmap.infoHeader.biHeight - bf, (uint8_t *)&rombitmap);
+  }
+  t = GetTime();
+  i = 0;
+  while(i > 0 - ss)
+  {
+    while(GetTime() < (t + 20));
+    t = GetTime();
+    BSP_LCD_Scroll(i, tf, bf);
+    i--;
+  }
+  do
+  {
+    i++;
+    while(GetTime() < t + 20);
+    t = GetTime();
+    BSP_LCD_Scroll(i, tf, bf);
+  } while(i < 0);
+
+  while(GetTime() < t + 1000);
+
+  i = -500;
+  while(i < 500)
+  {
+    while(GetTime() < t + 10);
+    t = GetTime();
+    BSP_LCD_Scroll(i, tf, bf);
+    i++;
+  }
+
+  while(GetTime() < t + 1000);
+  BSP_LCD_Scroll(0, 0, 0);
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
 #if READ_TEST == 1
 uint32_t ReadPixelTest(uint32_t n)
 {
@@ -397,13 +494,15 @@ void mainApp(void)
   t = ReadPixelTest(1);
   t = ReadImageTest(1);
   Delay(DELAY_CHAPTER);
+  BSP_LCD_Clear(LCD_COLOR_BLACK);
+  ScrollTest(0);
   #endif 
 
   while(1)
   {
     #ifdef  __GNUC__
     _impure_ptr->_r48->_rand_next = 0;
-	#endif
+    #endif
 
     Delay(100);
     t = 300;
@@ -494,6 +593,12 @@ void mainApp(void)
     POWERMETER_PRINT;
     Delay(DELAY_CHAPTER);
     #endif
+
+    BSP_LCD_Clear(LCD_COLOR_BLACK);
+    ScrollTest(0);
+    printf("Scroll Test\r\n");
+    Delay(DELAY_CHAPTER);
+
     #endif /* #if BITMAP_TEST == 1 */
 
     BSP_LCD_Clear(LCD_COLOR_BLACK);

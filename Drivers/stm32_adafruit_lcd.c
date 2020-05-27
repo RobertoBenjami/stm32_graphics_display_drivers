@@ -226,21 +226,7 @@ sFONT *BSP_LCD_GetFont(void)
   */
 void BSP_LCD_Clear(uint16_t Color)
 {
-  #ifdef   LCD_DRVTYPE_V1_1
   lcd_drv->FillRect(0, 0, BSP_LCD_GetXSize(), BSP_LCD_GetYSize(), Color);
-  #else
-
-  uint32_t counter = 0;
-  uint32_t color_backup = DrawProp.TextColor; 
-  DrawProp.TextColor = Color;
-  
-  for(counter = 0; counter < BSP_LCD_GetYSize(); counter++)
-  {
-    BSP_LCD_DrawHLine(0, counter, BSP_LCD_GetXSize());
-  }
-  DrawProp.TextColor = color_backup; 
-  BSP_LCD_SetTextColor(DrawProp.TextColor);
-  #endif
 }
 
 /**
@@ -651,16 +637,7 @@ void BSP_LCD_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pBmp)
   */
 void BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
-  #ifdef LCD_DRVTYPE_V1_1
   lcd_drv->FillRect(Xpos, Ypos, Width, Height, DrawProp.TextColor);
-  #else
-  BSP_LCD_SetTextColor(DrawProp.TextColor);
-  do
-  {
-    BSP_LCD_DrawHLine(Xpos, Ypos++, Width);    
-  }
-  while(Height--);
-  #endif
 }
 
 /**
@@ -1011,7 +988,11 @@ static void SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint1
   }  
 }
 
-#ifdef   LCD_DRVTYPE_V1_1
+/**
+  * @brief  Get display ID
+  * @param  none
+  * @retval ID number
+  */
 uint16_t BSP_LCD_ReadID(void)
 {
   if(lcd_drv->ReadID)
@@ -1020,6 +1001,12 @@ uint16_t BSP_LCD_ReadID(void)
     return 0;
 }
 
+/**
+  * @brief  Get pixel
+  * @param  Xpos: LCD X position
+  * @param  Ypos: LCD Y position
+  * @retval RGB565 pixel color
+  */
 uint16_t BSP_LCD_ReadPixel(uint16_t Xpos, uint16_t Ypos)
 {
   if(lcd_drv->ReadPixel != NULL)
@@ -1028,16 +1015,44 @@ uint16_t BSP_LCD_ReadPixel(uint16_t Xpos, uint16_t Ypos)
     return 0;
 }
 
+/**
+  * @brief  Draw RGB565 image (draw direction: right then down)
+  * @param  Xpos: LCD X position
+  * @param  Ypos: LCD Y position
+  * @param  Width: image width
+  * @param  Height: image height
+  * @param  *pData: image data pointer
+  * @retval None
+  */
 void BSP_LCD_DrawRGB16Image(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData)
 {
-  lcd_drv->DrawRGBImage(Xpos, Ypos, Xsize, Ysize, (uint8_t *)pData);
+  lcd_drv->DrawRGBImage(Xpos, Ypos, Xsize, Ysize, pData);
 }
 
+/**
+  * @brief  Read RGB565 image (draw direction: right then down)
+  * @param  Xpos: LCD X position
+  * @param  Ypos: LCD Y position
+  * @param  Width: image width
+  * @param  Height: image height
+  * @param  *pData: image data pointer
+  * @retval *pData
+  */
 void BSP_LCD_ReadRGB16Image(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData)
 {
-  lcd_drv->ReadRGBImage(Xpos, Ypos, Xsize, Ysize, (uint8_t *)pData);
+  lcd_drv->ReadRGBImage(Xpos, Ypos, Xsize, Ysize, pData);
 }
 
-#endif
+/**
+  * @brief  Set display scroll parameters
+  * @param  Scroll    : Scroll size [pixel]
+  * @param  TopFix    : Top fix size [pixel]
+  * @param  BottonFix : Botton fix size [pixel]
+  * @retval None
+  */
+void BSP_LCD_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix)
+{
+  lcd_drv->Scroll(Scroll, TopFix, BottonFix);
+}
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

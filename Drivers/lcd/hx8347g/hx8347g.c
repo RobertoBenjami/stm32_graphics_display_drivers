@@ -19,9 +19,10 @@ void     hx8347g_DrawVLine(uint16_t RGBCode, uint16_t Xpos, uint16_t Ypos, uint1
 uint16_t hx8347g_GetLcdPixelWidth(void);
 uint16_t hx8347g_GetLcdPixelHeight(void);
 void     hx8347g_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
-void     hx8347g_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata);
-void     hx8347g_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata);
+void     hx8347g_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata);
+void     hx8347g_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata);
 void     hx8347g_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t RGBCode);
+void     hx8347g_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
 
 LCD_DrvTypeDef   hx8347g_drv =
 {
@@ -39,10 +40,9 @@ LCD_DrvTypeDef   hx8347g_drv =
   hx8347g_GetLcdPixelHeight,
   hx8347g_DrawBitmap,
   hx8347g_DrawRGBImage,
-  #ifdef   LCD_DRVTYPE_V1_1
   hx8347g_FillRect,
   hx8347g_ReadRGBImage,
-  #endif
+  hx8347g_Scroll,
 };
 
 LCD_DrvTypeDef  *lcd_drv = &hx8347g_drv;
@@ -368,6 +368,7 @@ void hx8347g_Init(void)
     LCD_IO_WriteCmd8(HX8347G_DISP_CTRL3); LCD_IO_WriteData8(0x3C);
 
     LCD_IO_WriteCmd8(HX8347G_ENTRY_MOD); LCD_IO_WriteData8(HX8347G_ENTRY_DATA_RIGHT_THEN_DOWN);
+    LCD_IO_WriteCmd8(HX8347G_MODE_CTRL); LCD_IO_WriteData8(0x08);
   }
 }
 
@@ -602,11 +603,11 @@ void hx8347g_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   * @retval None
   * @brief  Draw direction: right then down
   */
-void hx8347g_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata)
+void hx8347g_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata)
 {
   HX8347G_LCDMUTEX_PUSH();
   hx8347g_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
-  LCD_IO_WriteCmd8MultipleData16(HX8347G_RW_GRAM, (uint16_t *)pdata, Xsize * Ysize);
+  LCD_IO_WriteCmd8MultipleData16(HX8347G_RW_GRAM, pdata, Xsize * Ysize);
   HX8347G_LCDMUTEX_POP();
 }
 
@@ -621,11 +622,92 @@ void hx8347g_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   * @retval None
   * @brief  Draw direction: right then down
   */
-void hx8347g_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pdata)
+void hx8347g_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pdata)
 {
   HX8347G_LCDMUTEX_PUSH();
   hx8347g_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
-  LCD_IO_ReadCmd8MultipleData24to16(HX8347G_RW_GRAM, (uint16_t *)pdata, Xsize * Ysize, 1);
+  LCD_IO_ReadCmd8MultipleData24to16(HX8347G_RW_GRAM, pdata, Xsize * Ysize, 1);
+  HX8347G_LCDMUTEX_POP();
+}
+
+//-----------------------------------------------------------------------------
+/**
+  * @brief  Set display scroll parameters
+  * @param  Scroll    : Scroll size [pixel]
+  * @param  TopFix    : Top fix size [pixel]
+  * @param  BottonFix : Botton fix size [pixel]
+  * @retval None
+  */
+void hx8347g_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix)
+{
+  static uint16_t scrparam[4] = {0, 0, 0, 0};
+  HX8347G_LCDMUTEX_PUSH();
+  #if (HX8347G_ORIENTATION == 0)
+  if((TopFix != scrparam[1]) || (BottonFix != scrparam[3]))
+  {
+    scrparam[1] = TopFix;
+    scrparam[3] = BottonFix;
+    scrparam[2] = HX8347G_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_TOP, scrparam[1]);
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_HEIGHT, scrparam[2]);
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_BTN, scrparam[3]);
+  }
+  Scroll = (0 - Scroll) % scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (HX8347G_ORIENTATION == 1)
+  if((TopFix != scrparam[1]) || (BottonFix != scrparam[3]))
+  {
+    scrparam[1] = TopFix;
+    scrparam[3] = BottonFix;
+    scrparam[2] = HX8347G_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_TOP, scrparam[1]);
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_HEIGHT, scrparam[2]);
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_BTN, scrparam[3]);
+  }
+  Scroll = (0 - Scroll) % scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (HX8347G_ORIENTATION == 2)
+  if((TopFix != scrparam[3]) || (BottonFix != scrparam[1]))
+  {
+    scrparam[3] = TopFix;
+    scrparam[1] = BottonFix;
+    scrparam[2] = HX8347G_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_TOP, scrparam[1]);
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_HEIGHT, scrparam[2]);
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_BTN, scrparam[3]);
+  }
+  Scroll %= scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (HX8347G_ORIENTATION == 3)
+  if((TopFix != scrparam[3]) || (BottonFix != scrparam[1]))
+  {
+    scrparam[3] = TopFix;
+    scrparam[1] = BottonFix;
+    scrparam[2] = HX8347G_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_TOP, scrparam[1]);
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_HEIGHT, scrparam[2]);
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_BTN, scrparam[3]);
+  }
+  Scroll %= scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #endif
+  if(Scroll != scrparam[0])
+  {
+    scrparam[0] = Scroll;
+    hx8347g_WriteRegPair(HX8347G_VER_SCR_START, scrparam[0]);
+  }
   HX8347G_LCDMUTEX_POP();
 }
 

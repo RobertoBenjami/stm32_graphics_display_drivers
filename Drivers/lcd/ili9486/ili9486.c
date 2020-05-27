@@ -1,6 +1,6 @@
 /*
  * ILI9486 LCD driver (optional builtin touchscreen driver)
- * 2020.01
+ * 2020.05
 */
 
 #include <string.h>
@@ -28,8 +28,9 @@ void     ili9486_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
 uint16_t ili9486_GetLcdPixelWidth(void);
 uint16_t ili9486_GetLcdPixelHeight(void);
 void     ili9486_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
-void     ili9486_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData);
-void     ili9486_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData);
+void     ili9486_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
+void     ili9486_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
+void     ili9486_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
 
 /* Touchscreen */
 void     ili9486_ts_Init(uint16_t DeviceAddr);
@@ -52,10 +53,10 @@ LCD_DrvTypeDef   ili9486_drv =
   ili9486_GetLcdPixelHeight,
   ili9486_DrawBitmap,
   ili9486_DrawRGBImage,
-  #ifdef   LCD_DRVTYPE_V1_1
   ili9486_FillRect,
   ili9486_ReadRGBImage,
-  #endif
+  ili9486_Scroll,
+
 };
 
 LCD_DrvTypeDef  *lcd_drv = &ili9486_drv;
@@ -88,6 +89,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9486_drv;
 #define ILI9486_RAMRD          0x2E
 
 #define ILI9486_PTLAR          0x30
+#define ILI9486_VSCRDEF        0x33
 #define ILI9486_MADCTL         0x36
 #define ILI9486_VSCRSADD       0x37     /* Vertical Scrolling Start Address */
 #define ILI9486_PIXFMT         0x3A     /* COLMOD: Pixel Format Set */
@@ -536,11 +538,11 @@ void ili9486_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   * @retval None
   * @brief  Draw direction: right then down
   */
-void ili9486_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData)
+void ili9486_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData)
 {
   ili9486_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ILI9486_LCDMUTEX_PUSH();
-  LCD_IO_WriteCmd8MultipleData16(ILI9486_RAMWR, (uint16_t *)pData, Xsize * Ysize);
+  LCD_IO_WriteCmd8MultipleData16(ILI9486_RAMWR, pData, Xsize * Ysize);
   ILI9486_LCDMUTEX_POP();
 }
 
@@ -555,13 +557,86 @@ void ili9486_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   * @retval None
   * @brief  Draw direction: right then down
   */
-void ili9486_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData)
+void ili9486_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData)
 {
   ili9486_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ILI9486_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8MultipleData8(ILI9486_PIXFMT, (uint8_t *)"\x66", 1); // Read: only 24bit pixel mode
-  LCD_IO_ReadCmd8MultipleData24to16(ILI9486_RAMRD, (uint16_t *)pData, Xsize * Ysize, 1);
+  LCD_IO_ReadCmd8MultipleData24to16(ILI9486_RAMRD, pData, Xsize * Ysize, 1);
   LCD_IO_WriteCmd8MultipleData8(ILI9486_PIXFMT, (uint8_t *)"\x55", 1); // Return to 16bit pixel mode
+  ILI9486_LCDMUTEX_POP();
+}
+
+//-----------------------------------------------------------------------------
+/**
+  * @brief  Set display scroll parameters
+  * @param  Scroll    : Scroll size [pixel]
+  * @param  TopFix    : Top fix size [pixel]
+  * @param  BottonFix : Botton fix size [pixel]
+  * @retval None
+  */
+void ili9486_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix)
+{
+  static uint16_t scrparam[4] = {0, 0, 0, 0};
+  ILI9486_LCDMUTEX_PUSH();
+  #if (ILI9486_ORIENTATION == 0)
+  if((TopFix != scrparam[1]) || (BottonFix != scrparam[3]))
+  {
+    scrparam[1] = TopFix;
+    scrparam[3] = BottonFix;
+    scrparam[2] = ILI9486_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ILI9486_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll = (0 - Scroll) % scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (ILI9486_ORIENTATION == 1)
+  if((TopFix != scrparam[1]) || (BottonFix != scrparam[3]))
+  {
+    scrparam[1] = TopFix;
+    scrparam[3] = BottonFix;
+    scrparam[2] = ILI9486_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ILI9486_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll = (0 - Scroll) % scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (ILI9486_ORIENTATION == 2)
+  if((TopFix != scrparam[3]) || (BottonFix != scrparam[1]))
+  {
+    scrparam[3] = TopFix;
+    scrparam[1] = BottonFix;
+    scrparam[2] = ILI9486_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ILI9486_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll %= scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (ILI9486_ORIENTATION == 3)
+  if((TopFix != scrparam[3]) || (BottonFix != scrparam[1]))
+  {
+    scrparam[3] = TopFix;
+    scrparam[1] = BottonFix;
+    scrparam[2] = ILI9486_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ILI9486_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll %= scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #endif
+  if(Scroll != scrparam[0])
+  {
+    scrparam[0] = Scroll;
+    LCD_IO_WriteCmd8DataFill16(ILI9486_VSCRSADD, scrparam[0], 1);
+  }
   ILI9486_LCDMUTEX_POP();
 }
 

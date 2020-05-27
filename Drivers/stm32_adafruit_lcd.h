@@ -1,7 +1,11 @@
 /*
- * 2019.05 Add v1.1 extension (#ifdef   LCD_DRVTYPE_V1_1)
- * 2019.11 Add BSP_LCD_FillTriangle
- * 2019.12 Add LCD_DEFAULT_FONT, LCD_DEFAULT_BACKCOLOR, LCD_DEFAULT_TEXTCOLOR, LCD_INIT_CLEAR
+ - 2019.05 Add BSP_LCD_ReadID fuction
+ - 2019.05 Add BSP_LCD_ReadPixel fuction
+ - 2019.05 Add BSP_LCD_DrawRGB16Image fuction
+ - 2019.05 Add BSP_LCD_ReadRGB16Image fuction
+ - 2019.11 Add BSP_LCD_FillTriangle
+ - 2019.12 Add LCD_DEFAULT_FONT, LCD_DEFAULT_BACKCOLOR, LCD_DEFAULT_TEXTCOLOR, LCD_INIT_CLEAR
+ - 2020.05 Add BSP_LCD_Scroll function
 */
 
 /**
@@ -166,12 +170,11 @@ void     BSP_LCD_FillTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2
 void     BSP_LCD_DisplayOff(void);
 void     BSP_LCD_DisplayOn(void);
 
-#ifdef   LCD_DRVTYPE_V1_1
 uint16_t BSP_LCD_ReadID(void);
 uint16_t BSP_LCD_ReadPixel(uint16_t Xpos, uint16_t Ypos);
 void     BSP_LCD_DrawRGB16Image(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
 void     BSP_LCD_ReadRGB16Image(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
-#endif
+void     BSP_LCD_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
  
 #ifdef __cplusplus
 }

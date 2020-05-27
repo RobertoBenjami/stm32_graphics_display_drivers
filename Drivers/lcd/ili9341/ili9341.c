@@ -1,8 +1,8 @@
 /*
- * ILI9341 LCD driver v1.21
- * 2019.07. Add v1.1 extension (#ifdef LCD_DRVTYPE_V1_1)
+ * ILI9341 LCD driver v2020.05.27
  * 2019.11. Add RGB mode with memory frame buffer (in sram or sdram)
  * 2020.02. Add analog touchscreen (only 8bit paralell mode)
+ * 2020.05  Add Scroll function
 */
 
 #include <string.h>
@@ -29,8 +29,9 @@ void     ili9341_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
 uint16_t ili9341_GetLcdPixelWidth(void);
 uint16_t ili9341_GetLcdPixelHeight(void);
 void     ili9341_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp);
-void     ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData);
-void     ili9341_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData);
+void     ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
+void     ili9341_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData);
+void     ili9341_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix);
 
 LCD_DrvTypeDef   ili9341_drv =
 {
@@ -48,10 +49,9 @@ LCD_DrvTypeDef   ili9341_drv =
   ili9341_GetLcdPixelHeight,
   ili9341_DrawBitmap,
   ili9341_DrawRGBImage,
-  #ifdef   LCD_DRVTYPE_V1_1
   ili9341_FillRect,
   ili9341_ReadRGBImage,
-  #endif
+  ili9341_Scroll,
 };
 
 LCD_DrvTypeDef  *lcd_drv = &ili9341_drv;
@@ -84,6 +84,7 @@ LCD_DrvTypeDef  *lcd_drv = &ili9341_drv;
 #define ILI9341_RAMRD          0x2E
 
 #define ILI9341_PTLAR          0x30
+#define ILI9341_VSCRDEF        0x33
 #define ILI9341_MADCTL         0x36
 #define ILI9341_VSCRSADD       0x37     /* Vertical Scrolling Start Address */
 #define ILI9341_PIXFMT         0x3A     /* COLMOD: Pixel Format Set */
@@ -441,12 +442,7 @@ void ili9341_Init(void)
   LCD_Delay(10);
 
   #if ILI9341_INITCLEAR == 1
-  #ifdef   LCD_DRVTYPE_V1_1
   ili9341_FillRect(0, 0, ILI9341_SIZE_X, ILI9341_SIZE_Y, 0x0000);
-  #else
-  for(uint32_t counter = 0; counter < ILI9341_SIZE_Y; counter++)
-    ili9341_DrawHLine(0x0000, 0, counter, ILI9341_SIZE_X);
-  #endif
   LCD_Delay(10);
   #endif
   
@@ -614,11 +610,11 @@ void ili9341_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   * @retval None
   * @brief  Draw direction: right then down
   */
-void ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData)
+void ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData)
 {
   ili9341_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ILI9341_LCDMUTEX_PUSH();
-  LCD_IO_WriteCmd8MultipleData16(ILI9341_RAMWR, (uint16_t *)pData, Xsize * Ysize);
+  LCD_IO_WriteCmd8MultipleData16(ILI9341_RAMWR, pData, Xsize * Ysize);
   ILI9341_LCDMUTEX_POP();
 }
 
@@ -633,13 +629,86 @@ void ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   * @retval None
   * @brief  Draw direction: right then down
   */
-void ili9341_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData)
+void ili9341_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData)
 {
   ili9341_SetDisplayWindow(Xpos, Ypos, Xsize, Ysize);
   ILI9341_LCDMUTEX_PUSH();
   LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x66", 1); // Read: only 24bit pixel mode
-  LCD_IO_ReadCmd8MultipleData24to16(ILI9341_RAMRD, (uint16_t *)pData, Xsize * Ysize, 1);
+  LCD_IO_ReadCmd8MultipleData24to16(ILI9341_RAMRD, pData, Xsize * Ysize, 1);
   LCD_IO_WriteCmd8MultipleData8(ILI9341_PIXFMT, (uint8_t *)"\x55", 1); // Return to 16bit pixel mode
+  ILI9341_LCDMUTEX_POP();
+}
+
+//-----------------------------------------------------------------------------
+/**
+  * @brief  Set display scroll parameters
+  * @param  Scroll    : Scroll size [pixel]
+  * @param  TopFix    : Top fix size [pixel]
+  * @param  BottonFix : Botton fix size [pixel]
+  * @retval None
+  */
+void ili9341_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix)
+{
+  static uint16_t scrparam[4] = {0, 0, 0, 0};
+  ILI9341_LCDMUTEX_PUSH();
+  #if (ILI9341_ORIENTATION == 0)
+  if((TopFix != scrparam[1]) || (BottonFix != scrparam[3]))
+  {
+    scrparam[1] = TopFix;
+    scrparam[3] = BottonFix;
+    scrparam[2] = ILI9341_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ILI9341_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll = (0 - Scroll) % scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (ILI9341_ORIENTATION == 1)
+  if((TopFix != scrparam[1]) || (BottonFix != scrparam[3]))
+  {
+    scrparam[1] = TopFix;
+    scrparam[3] = BottonFix;
+    scrparam[2] = ILI9341_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ILI9341_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll = (0 - Scroll) % scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (ILI9341_ORIENTATION == 2)
+  if((TopFix != scrparam[3]) || (BottonFix != scrparam[1]))
+  {
+    scrparam[3] = TopFix;
+    scrparam[1] = BottonFix;
+    scrparam[2] = ILI9341_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ILI9341_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll %= scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #elif (ILI9341_ORIENTATION == 3)
+  if((TopFix != scrparam[3]) || (BottonFix != scrparam[1]))
+  {
+    scrparam[3] = TopFix;
+    scrparam[1] = BottonFix;
+    scrparam[2] = ILI9341_LCD_PIXEL_HEIGHT - TopFix - BottonFix;
+    LCD_IO_WriteCmd8MultipleData16(ILI9341_VSCRDEF, &scrparam[1], 3);
+  }
+  Scroll %= scrparam[2];
+  if(Scroll < 0)
+    Scroll = scrparam[2] + Scroll + scrparam[1];
+  else
+    Scroll = Scroll + scrparam[1];
+  #endif
+  if(Scroll != scrparam[0])
+  {
+    scrparam[0] = Scroll;
+    LCD_IO_WriteCmd8DataFill16(ILI9341_VSCRSADD, scrparam[0], 1);
+  }
   ILI9341_LCDMUTEX_POP();
 }
 
@@ -949,7 +1018,7 @@ void ili9341_DrawBitmap(uint16_t Xpos, uint16_t Ypos, uint8_t *pbmp)
   * @retval None
   * @brief  Draw direction: right then down
   */
-void ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData)
+void ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData)
 {
   uint16_t * p = ((YPOS * FrameBuffer.Xsize + XPOS) + FrameBuffer.Pixels);
   uint16_t * yp = p;
@@ -958,7 +1027,7 @@ void ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
     p = yp;
     for(uint16_t x = 0; x < Xsize; x++)
     {
-      *p = *(uint16_t *)pData;
+      *p = *pData;
       p += XSTEP;
       pData += 2;
     }
@@ -977,7 +1046,7 @@ void ili9341_DrawRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
   * @retval None
   * @brief  Draw direction: right then down
   */
-void ili9341_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint8_t *pData)
+void ili9341_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t Ysize, uint16_t *pData)
 {
   uint16_t * p = ((YPOS * FrameBuffer.Xsize + XPOS) + FrameBuffer.Pixels);
   uint16_t * yp = p;
@@ -986,12 +1055,24 @@ void ili9341_ReadRGBImage(uint16_t Xpos, uint16_t Ypos, uint16_t Xsize, uint16_t
     p = yp;
     for(uint16_t x = 0; x < Xsize; x++)
     {
-      *(uint16_t *)pData = *p;
+      *pData = *p;
       p += XSTEP;
       pData += 2;
     }
     yp += YSTEP;
   }
+}
+
+//-----------------------------------------------------------------------------
+/**
+  * @brief  Set display scroll parameters
+  * @param  Scroll    : Scroll size [pixel]
+  * @param  TopFix    : Top fix size [pixel]
+  * @param  BottonFix : Botton fix size [pixel]
+  * @retval None
+  */
+void ili9341_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix)
+{
 }
 
 #endif /* #if ILI9341_INTERFACE_MODE == 2 */
