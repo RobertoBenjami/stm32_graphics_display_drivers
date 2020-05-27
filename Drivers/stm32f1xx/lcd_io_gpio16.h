@@ -8,8 +8,8 @@
 #define LCD_CS            X, 0
 #define LCD_RS            X, 0
 #define LCD_WR            X, 0
-#define LCD_RD            X, 0
-#define LCD_RST           X, 0
+#define LCD_RD            X, 0  /* If not used leave it that way */
+#define LCD_RST           X, 0  /* If not used leave it that way */
 
 /* Lcd data pins (A..K, 0..15) */
 #define LCD_D0            X, 0
@@ -32,7 +32,7 @@
 /* Backlight pin
    - BL: A..K, 0..15 (if not used -> X, 0)
    - BL_ON: 0 -> backlight on = low level, 1 -> backlight on = high level */
-#define LCD_BL            X, 0
+#define LCD_BL            X, 0  /* If not used leave it that way */
 #define LCD_BLON          0
 
 /* A few nsec delay at LCD write and read operations

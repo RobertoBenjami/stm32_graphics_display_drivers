@@ -9,7 +9,7 @@
 
 /* 
  * Author: Roberto Benjami
- * version:  2020.01
+ * version:  2020.05.27
  */
 
 /* ADC sample time (0:3cycles, 1:15c, 2:28c, 3:55c, 4:84c, 5:112c, 6:144c, 7:480cycles) */
@@ -340,20 +340,38 @@ void LCD_IO_Bl_OnOff(uint8_t Bl)
 //-----------------------------------------------------------------------------
 void LCD_IO_Init(void)
 {
+  /* Reset pin clock */
   #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
-  RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_WR) | GPIOX_CLOCK(LCD_RD) | GPIOX_CLOCK(LCD_RST) |
+  #define GPIOX_CLOCK_LCD_RST   GPIOX_CLOCK(LCD_RST)
+  #else
+  #define GPIOX_CLOCK_LCD_RST   0
+  #endif
+
+  /* Backlight pin clock */
+  #if GPIOX_PORTNUM(LCD_BL)  >= GPIOX_PORTNUM_A
+  #define GPIOX_CLOCK_LCD_BL    GPIOX_CLOCK(LCD_BL)
+  #else
+  #define GPIOX_CLOCK_LCD_BL    0
+  #endif
+
+  /* RD pin clock */
+  #if GPIOX_PORTNUM(LCD_RD) >=  GPIOX_PORTNUM_A
+  #define GPIOX_CLOCK_LCD_RD    GPIOX_CLOCK(LCD_RD)
+  #else
+  #define GPIOX_CLOCK_LCD_RD    0
+  #endif
+
+  RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_WR) |
                    GPIOX_CLOCK(LCD_D0) | GPIOX_CLOCK(LCD_D1) | GPIOX_CLOCK(LCD_D2) | GPIOX_CLOCK(LCD_D3) |
-                   GPIOX_CLOCK(LCD_D4) | GPIOX_CLOCK(LCD_D5) | GPIOX_CLOCK(LCD_D6) | GPIOX_CLOCK(LCD_D7));
+                   GPIOX_CLOCK(LCD_D4) | GPIOX_CLOCK(LCD_D5) | GPIOX_CLOCK(LCD_D6) | GPIOX_CLOCK(LCD_D7) |
+                   GPIOX_CLOCK_LCD_RST | GPIOX_CLOCK_LCD_BL  | GPIOX_CLOCK_LCD_RD);
+	
+  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A
   LCD_RST_OFF;                          /* RST = 1 */
   GPIOX_MODER(MODE_OUT, LCD_RST);
-  #else
-  RCC->AHB1ENR |= (GPIOX_CLOCK(LCD_CS) | GPIOX_CLOCK(LCD_RS) | GPIOX_CLOCK(LCD_WR) | GPIOX_CLOCK(LCD_RD) |
-                   GPIOX_CLOCK(LCD_D0) | GPIOX_CLOCK(LCD_D1) | GPIOX_CLOCK(LCD_D2) | GPIOX_CLOCK(LCD_D3) |
-                   GPIOX_CLOCK(LCD_D4) | GPIOX_CLOCK(LCD_D5) | GPIOX_CLOCK(LCD_D6) | GPIOX_CLOCK(LCD_D7));
   #endif
 
   #if GPIOX_PORTNUM(LCD_BL) >= GPIOX_PORTNUM_A
-  RCC->AHB1ENR |= GPIOX_CLOCK(LCD_BL);
   GPIOX_ODR(LCD_BL) = LCD_BLON;
   GPIOX_MODER(MODE_OUT, LCD_BL);
   #endif
@@ -361,12 +379,16 @@ void LCD_IO_Init(void)
   GPIOX_ODR(LCD_CS) = 1;                /* CS = 1 */
   LCD_RS_DATA;                          /* RS = 1 */
   GPIOX_ODR(LCD_WR) = 1;                /* WR = 1 */
+  #if GPIOX_PORTNUM(LCD_RD) >= GPIOX_PORTNUM_A
   GPIOX_ODR(LCD_RD) = 1;                /* RD = 1 */
+  #endif
 
   GPIOX_MODER(MODE_OUT, LCD_CS);
   GPIOX_MODER(MODE_OUT, LCD_RS);
   GPIOX_MODER(MODE_OUT, LCD_WR);
+  #if GPIOX_PORTNUM(LCD_RD) >= GPIOX_PORTNUM_A
   GPIOX_MODER(MODE_OUT, LCD_RD);
+  #endif
 
   LCD_DIRWRITE;                         /* data pins set the output direction */
 
@@ -374,7 +396,9 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_CS);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_RS);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_WR);
+  #if GPIOX_PORTNUM(LCD_RD) >= GPIOX_PORTNUM_A
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_RD);
+  #endif
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D0);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D1);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_D2);
@@ -529,6 +553,7 @@ void LCD_IO_WriteCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Siz
 }
 
 //-----------------------------------------------------------------------------
+#if GPIOX_PORTNUM(LCD_RD) >= GPIOX_PORTNUM_A
 void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize)
 {
   uint8_t  d;
@@ -654,6 +679,15 @@ void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t 
   LCD_CS_OFF;
   LCD_DIRWRITE;
 }
+
+#else
+void LCD_IO_ReadCmd8MultipleData8(uint8_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize) { }
+void LCD_IO_ReadCmd8MultipleData16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize) { }
+void LCD_IO_ReadCmd8MultipleData24to16(uint8_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize) { }
+void LCD_IO_ReadCmd16MultipleData8(uint16_t Cmd, uint8_t *pData, uint32_t Size, uint32_t DummySize) { }
+void LCD_IO_ReadCmd16MultipleData16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize) { }
+void LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint32_t Size, uint32_t DummySize) { }
+#endif
 
 //=============================================================================
 #ifdef ADCX
