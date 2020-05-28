@@ -12,7 +12,7 @@
 #define LCD_CS            X, 0
 #define LCD_RS            X, 0
 #define LCD_WR            X, 0
-#define LCD_RD            X, 0
+#define LCD_RD            X, 0  /* If not used leave it that way */
 #define LCD_RST           X, 0  /* If not used leave it that way */
 
 /* Lcd data pins assign (A..K, 0..15) */
