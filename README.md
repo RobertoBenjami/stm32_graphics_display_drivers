@@ -4,6 +4,14 @@
 - Lcd_drv.pdf ( https://github.com/RobertoBenjami/stm32_graphics_display_drivers/blob/master/Lcd_drv.pdf )
 
 ## LCD I/O driver:
+- spi: software SPI, hardware SPI, hardware SPI with DMA
+- gpio8: 8 bit paralell without analog resistive touchscreen
+- gpio16: 16 bit paralell without analog resistive touchscreen
+- fsmc8: 8 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA
+- fsmc16: 16 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA
+- ts_gpio8: 8 bit paralell with analog resistive touchscreen
+- ts_fsmc8: 8 bit paralell with analog resistive touchscreen + FSMC or FSMC with DMA
+
 |stm family|spi|gpio8|gpio16|fsmc8|fsmc16|ts_gpio8|ts_fsmc8|note|
 |--|--|--|--|--|--|--|--|--|
 |STM32F0|+|+|||||||
