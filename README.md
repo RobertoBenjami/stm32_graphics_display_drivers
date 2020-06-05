@@ -1,42 +1,26 @@
 # STM32Fxxx graphics display drivers
 
-Layer chart, examples circuits and settings:
+## Layer chart, examples circuits and settings:
 - Lcd_drv.pdf ( https://github.com/RobertoBenjami/stm32_graphics_display_drivers/blob/master/Lcd_drv.pdf )
 
-LCD I/O driver:
-- stm32f0: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
-- stm32f0: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
-- stm32f1: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
-- stm32f1: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
-- stm32f1: lcd_io_gpio16 (16 bit paralell without analog resistive touchscreen)
-- stm32f1: lcdts_io_gpio8 (8 bit paralell with analog resistive touchscreen)
-- stm32f2: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
-- stm32f2: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
-- stm32f2: lcd_io_fsmc8 (8 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA)
-- stm32f2: lcd_io_gpio16 (16 bit paralell without analog resistive touchscreen)
-- stm32f2: lcd_io_fsmc16 (16 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA)
-- stm32f2: lcdts_io_gpio8 (8 bit paralell with analog resistive touchscreen)
-- stm32f2: lcdts_io_fsmc8 (8 bit paralell with analog resistive touchscreen + FSMC or FSMC with DMA)
-- stm32f3: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
-- stm32f3: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
-- stm32f3: lcdts_io_gpio8 (8 bit paralell with analog resistive touchscreen)
-- stm32f4: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
-- stm32f4: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
-- stm32f4: lcd_io_fsmc8 (8 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA)
-- stm32f4: lcd_io_gpio16 (16 bit paralell without analog resistive touchscreen)
-- stm32f4: lcd_io_fsmc16 (16 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA)
-- stm32f4: lcdts_io_gpio8 (8 bit paralell with analog resistive touchscreen)
-- stm32f4: lcdts_io_fsmc8 (8 bit paralell with analog resistive touchscreen + FSMC or FSMC with DMA)
-- stm32f7: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA)
-- stm32f7: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen)
-- stm32l0: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA), not tested!
-- stm32l0: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen), not tested!
-- stm32l1: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA), not tested!
-- stm32l1: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen), not tested!
-- stm32l4: lcd_io_spi (software SPI, hardware SPI, hardware SPI with DMA), not tested!
-- stm32l4: lcd_io_gpio8 (8 bit paralell without analog resistive touchscreen), not tested!
+## LCD I/O driver:
+|stm family|spi|gpio8|gpio16|fsmc8|fsmc16|ts_gpio8|ts_fsmc8|note|
+|--|--|--|--|--|--|--|--|--|
+|STM32F0|+|+|||||||
+|STM32F1|+|+|+|||+|||
+|STM32F2|+|+|+|+|+|+|+||
+|STM32F3|+|+|||||||
+|STM32F4|+|+|+|+|+|+|+||
+|STM32F7|+|+|||||||
+|STM32G0|||||||||
+|STM32G4|||||||||
+|STM32L0|+|+||||||not tested|
+|STM32L1|+|+||||||not tested|
+|STM32L4|+|+||||||not tested|
+|STM32L5|||||||||
+|STM32H7|||||||||
 
-LCD driver:
+## LCD driver:
 - st7735  (SPI mode tested)
 - st7783  (8 bit paralell mode tested)
 - ili9325 (8 bit paralell mode tested)
@@ -46,7 +30,7 @@ LCD driver:
 - ili9488 (8 bit paralell mode tested)
 - hx8347g (8 bit paralell mode tested)
 
-App:
+## App:
 - LcdSpeedTest: Lcd speed test 
 - TouchCalib: Touchscreen calibration program 
 - Paint: Arduino paint clone
@@ -55,7 +39,7 @@ App:
   (printf: the result, i use the SWO pin for ST-LINK Serial Wire Viewer (SWV). See:examples/Src/syscalls.c)
 - 3d filled vector (from https://github.com/cbm80amiga/ST7789_3D_Filled_Vector_Ext)
 
-How to use starting from zero?
+## How to use starting from zero?
 - stm32f103c8 - spi: https://www.youtube.com/watch?v=4NZ1VwuQWhw
 - stm32f103c8 - gpio8: https://www.youtube.com/watch?v=2oP4vGotuJA
 - stm32f103c8 - gpio8 with touchscreen: https://www.youtube.com/watch?v=qyCctzAbD2g
@@ -93,7 +77,7 @@ How to use starting from zero?
 - setting the compile options (Enable paralell build, optimalization)
 - compile, run ...
 
-Example (please unzip the app you like):
+## Example (please unzip the app you like):
 - f103c8t_app: (stm32f103c8t HAL applications, cubemx, truestudio)
 - f103c8t_app_rtos: (stm32f103c8t HAL-FreeRtos applications, cubemx, truestudio)
 - f407vet_app: (stm32f407vet HAL-applications, cubemx, truestudio)
@@ -103,6 +87,6 @@ Example (please unzip the app you like):
 - f407vet_app_fsmc16: (stm32f407vet HAL applications, FSMC 16 bit, cubemx, truestudio)
 - f407zet_app_fsmc16_extsram: (stm32f407zet HAL applications, FSMC 16 bit, external 1MB SRAM, cubemx, truestudio)
 
-How to adding the SWO support to cheap stlink ?
+## How to adding the SWO support to cheap stlink ?
 https://lujji.github.io/blog/stlink-clone-trace/
 
