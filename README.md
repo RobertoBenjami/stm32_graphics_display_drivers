@@ -35,7 +35,7 @@
 - ili9328 (8 bit paralell mode tested)
 - ili9341 (SPI, 8 bit and 16 bit paralell mode, SPI with LTDC mode tested)
 - ili9486 (8 bit paralell mode tested)
-- ili9488 (8 bit paralell mode tested)
+- ili9488 (SPI, 8 bit paralell mode tested)
 - hx8347g (8 bit paralell mode tested)
 
 ## App:
