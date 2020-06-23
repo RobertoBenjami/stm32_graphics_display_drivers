@@ -5,7 +5,7 @@
 
 /* 
  * Author: Roberto Benjami
- * version:  2020.05.27
+ * version:  2020.06.23
  */
 
 #include "main.h"
@@ -161,7 +161,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 /* data pins set to output direction */
 #ifndef LCD_DIRWRITE
 #ifdef  LCD_AUTOOPT
-#define LCD_DIRWRITE  GPIOX_PORT(LCD_D0)->MODER = (GPIOX_PORT(LCD_D0)->MODER & ~(0xFFFF << (2 * GPIOX_PIN(LCD_D0)))) | (0x5555 << (2 * GPIOX_PIN(LCD_D0)));
+#define LCD_DIRWRITE  GPIOX_PORT(LCD_D0)->MODER = 0x55555555;
 #else
 #define LCD_DIRWRITE { \
   GPIOX_MODER(MODE_OUT, LCD_D0); GPIOX_MODER(MODE_OUT, LCD_D1);\
@@ -179,7 +179,7 @@ void     LCD_IO_ReadCmd16MultipleData24to16(uint16_t Cmd, uint16_t *pData, uint3
 /* data pins set to input direction */
 #ifndef LCD_DIRREAD
 #ifdef  LCD_AUTOOPT
-#define LCD_DIRREAD  GPIOX_PORT(LCD_D0)->MODER = (GPIOX_PORT(LCD_D0)->MODER & ~(0xFFFF << (2 * GPIOX_PIN(LCD_D0)))) | (0x0000 << (2 * GPIOX_PIN(LCD_D0)));
+#define LCD_DIRREAD  GPIOX_PORT(LCD_D0)->MODER = 0x00000000;
 #else
 #define LCD_DIRREAD { \
   GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_D0); GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_D1);\
