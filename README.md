@@ -26,7 +26,7 @@
 |STM32L1|+|+|+|||||not tested|
 |STM32L4|+|+|+|||||not tested|
 |STM32L5|||||||||
-|STM32H7||+|||||||
+|STM32H7||+|+||||||
 
 ## LCD driver:
 - st7735  (SPI mode tested)
