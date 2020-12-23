@@ -25,7 +25,7 @@
 |STM32L0|+|+|+|||||not tested|
 |STM32L1|+|+|+|||||not tested|
 |STM32L4|+|+|+|||||not tested|
-|STM32L5|||||||||
+|STM32L5||+|+|||||not tested|
 |STM32H7||+|+||||||
 
 ## LCD driver:
