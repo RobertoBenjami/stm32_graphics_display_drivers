@@ -20,8 +20,8 @@
 |STM32F3|+|+|+||||||
 |STM32F4|+|+|+|+|+|+|+||
 |STM32F7|+|+|+||||||
-|STM32G0|||||||||
-|STM32G4|||||||||
+|STM32G0||+|+|||||not tested|
+|STM32G4||+|+|||||not tested|
 |STM32L0|+|+|+|||||not tested|
 |STM32L1|+|+|+|||||not tested|
 |STM32L4|+|+|+|||||not tested|
