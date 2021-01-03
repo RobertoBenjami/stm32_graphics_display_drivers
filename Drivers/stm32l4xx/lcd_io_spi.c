@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32L4
  * author: Roberto Benjami
- * version:  2020.05
+ * version:  2021.01
  *
  * - hardware, software SPI
  * - 3 modes (only TX, half duplex, full duplex)
@@ -115,51 +115,57 @@ void  LCD_IO_Delay(uint32_t c);
 
 //-----------------------------------------------------------------------------
 /* DMA */
-#define DMANUM_(a, b, c)                a
+#define DMANUM_(a, b, c, d)             a
 #define DMANUM(a)                       DMANUM_(a)
 
-#define DMACHN_(a, b, c)                b
+#define DMACHN_(a, b, c, d)             b
 #define DMACHN(a)                       DMACHN_(a)
 
-#define DMAPRIORITY_(a, b, c)           c
+#define DMAREQ_(a, b, c, d)             c
+#define DMAREQ(a)                       DMAREQ_(a)
+
+#define DMAPRIORITY_(a, b, c, d)        d
 #define DMAPRIORITY(a)                  DMAPRIORITY_(a)
 
-#define DMAX_(a, b, c)                  DMA ## a
+#define DMAX_(a, b, c, d)               DMA ## a
 #define DMAX(a)                         DMAX_(a)
 
-#define DMAX_CHANNEL_(a, b, c)          DMA ## a ## _Channel ## b
+#define DMAX_CSELR_(a, b, c, d)         DMA ## a ## _CSELR
+#define DMAX_CSELR(a)                   DMAX_CSELR_(a)
+
+#define DMAX_CHANNEL_(a, b, c, d)       DMA ## a ## _Channel ## b
 #define DMAX_CHANNEL(a)                 DMAX_CHANNEL_(a)
 
-#define DMAX_CHANNEL_IRQ_(a, b, c)      DMA ## a ## _Channel ## b ## _IRQn
+#define DMAX_CHANNEL_IRQ_(a, b, c, d)   DMA ## a ## _Channel ## b ## _IRQn
 #define DMAX_CHANNEL_IRQ(a)             DMAX_CHANNEL_IRQ_(a)
 
-#define DMAX_CHANNEL_IRQHANDLER_(a, b, c) DMA ## a ## _Channel ## b ## _IRQHandler
+#define DMAX_CHANNEL_IRQHANDLER_(a, b, c, d)  DMA ## a ## _Channel ## b ## _IRQHandler
 #define DMAX_CHANNEL_IRQHANDLER(a)      DMAX_CHANNEL_IRQHANDLER_(a)
 
 // Interrupt event pl: if(DMAX_ISR(LCD_DMA_TX) & DMAX_ISR_TCIF(LCD_DMA_TX))...
-#define DMAX_ISR_TCIF_(a, b, c)         DMA_ISR_TCIF ## b
+#define DMAX_ISR_TCIF_(a, b, c, d)      DMA_ISR_TCIF ## b
 #define DMAX_ISR_TCIF(a)                DMAX_ISR_TCIF_(a)
 
-#define DMAX_ISR_HTIF_(a, b, c)         DMA_ISR_HTIF ## b
+#define DMAX_ISR_HTIF_(a, b, c, d)      DMA_ISR_HTIF ## b
 #define DMAX_ISR_HTIF(a)                DMAX_ISR_HTIF_(a)
 
-#define DMAX_ISR_TEIF_(a, b, c)         DMA_ISR_TEIF ## b
+#define DMAX_ISR_TEIF_(a, b, c, d)      DMA_ISR_TEIF ## b
 #define DMAX_ISR_TEIF(a)                DMAX_ISR_TEIF_(a)
 
-#define DMAX_ISR_GIF_(a, b, c)          DMA_ISR_GIF ## b
+#define DMAX_ISR_GIF_(a, b, c, d)       DMA_ISR_GIF ## b
 #define DMAX_ISR_GIF(a)                 DMAX_ISR_GIF_(a)
 
 // Interrupt clear pl: DMAX_IFCR(LCD_DMA_TX) = DMAX_IFCR_CTCIF(LCD_DMA_TX) | DMAX_IFCR_CFEIF(LCD_DMA_TX);
-#define DMAX_IFCR_CTCIF_(a, b, c)       DMA_IFCR_CTCIF ## b
+#define DMAX_IFCR_CTCIF_(a, b, c, d)    DMA_IFCR_CTCIF ## b
 #define DMAX_IFCR_CTCIF(a)              DMAX_IFCR_CTCIF_(a)
 
-#define DMAX_IFCR_CHTIF_(a, b, c)       DMA_IFCR_CHTIF ## b
+#define DMAX_IFCR_CHTIF_(a, b, c, d)    DMA_IFCR_CHTIF ## b
 #define DMAX_IFCR_CHTIF(a)              DMAX_IFCR_CHTIF_(a)
 
-#define DMAX_IFCR_CTEIF_(a, b, c)       DMA_IFCR_CTEIF ## b
+#define DMAX_IFCR_CTEIF_(a, b, c, d)    DMA_IFCR_CTEIF ## b
 #define DMAX_IFCR_CTEIF(a)              DMAX_IFCR_CTEIF_(a)
 
-#define DMAX_IFCR_CGIF_(a, b, c)        DMA_IFCR_CGIF ## b
+#define DMAX_IFCR_CGIF_(a, b, c, d)     DMA_IFCR_CGIF ## b
 #define DMAX_IFCR_CGIF(a)               DMAX_IFCR_CGIF_(a)
 
 //=============================================================================
@@ -1146,10 +1152,12 @@ void LCD_IO_Init(void)
 
   #if (DMANUM(LCD_DMA_TX) > 0 || DMANUM(LCD_DMA_RX) > 0) && LCD_SPI > 0
   #if DMANUM(LCD_DMA_TX) > 0
+  DMAX_CSELR(LCD_DMA_TX)->CSELR = (DMAX_CSELR(LCD_DMA_TX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_TX)))) | DMAREQ(LCD_DMA_TX) << (4 * DMACHN(LCD_DMA_TX));
   NVIC_SetPriority(DMAX_CHANNEL_IRQ(LCD_DMA_TX), LCD_DMA_IRQ_PR);
   NVIC_EnableIRQ(DMAX_CHANNEL_IRQ(LCD_DMA_TX));
   #endif
   #if DMANUM(LCD_DMA_RX) > 0
+  DMAX_CSELR(LCD_DMA_RX)->CSELR = (DMAX_CSELR(LCD_DMA_RX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_RX)))) | DMAREQ(LCD_DMA_RX) << (4 * DMACHN(LCD_DMA_RX));
   NVIC_SetPriority(DMAX_CHANNEL_IRQ(LCD_DMA_RX), LCD_DMA_IRQ_PR);
   NVIC_EnableIRQ(DMAX_CHANNEL_IRQ(LCD_DMA_RX));
   #endif

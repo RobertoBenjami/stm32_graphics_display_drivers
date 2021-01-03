@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32L4
  * author: Roberto Benjami
- * v.2020.05
+ * v.2021.01
  */
 
 //=============================================================================
@@ -46,11 +46,12 @@
 #define LCD_SCK_EXTRACLK  0
 
 /* DMA settings (only hardware SPI)
-   - 0..2: 0 = no DMA, 1 = DMA1, 2 = DMA2
-   - 0..7: DMA channel (DMA request mapping)
-   - 1..3: DMA priority (0=low..3=very high) */
-#define LCD_DMA_TX        0, 0, 0
-#define LCD_DMA_RX        0, 0, 0
+   - 0..2:  0 = no DMA, 1 = DMA1, 2 = DMA2
+   - 1..7:  DMA channel (see DMA request mapping)
+   - 0..15: DMA request number (see DMA request mapping)
+   - 1..3:  DMA priority (0=low..3=very high) */
+#define LCD_DMA_TX        0, 0, 0, 0
+#define LCD_DMA_RX        0, 0, 0, 0
 
 /* DMA interrupt priority (see NVIC_SetPriority function, default value: 15) */
 #define LCD_DMA_IRQ_PR    15
