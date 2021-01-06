@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32F0
  * author: Roberto Benjami
- * version:  2020.05
+ * version:  2021.01.06
  *
  * - hardware, software SPI
  * - 3 modes (only TX, half duplex, full duplex)
@@ -86,12 +86,6 @@ void  LCD_IO_Delay(uint32_t c);
 
 #define GPIOX_LINE_(a, b)     EXTI_Line ## b
 #define GPIOX_LINE(a)         GPIOX_LINE_(a)
-
-#define GPIOX_PORTSRC_(a, b)  GPIO_PortSourceGPIO ## a
-#define GPIOX_PORTSRC(a)      GPIOX_PORTSRC_(a)
-
-#define GPIOX_PINSRC_(a, b)   GPIO_PinSource ## b
-#define GPIOX_PINSRC(a)       GPIOX_PINSRC_(a)
 
 #define GPIOX_CLOCK_(a, b)    RCC_AHBENR_GPIO ## a ## EN
 #define GPIOX_CLOCK(a)        GPIOX_CLOCK_(a)
@@ -234,11 +228,11 @@ void  LCD_IO_Delay(uint32_t c);
 #define LCD_RS_CMD            GPIOX_CLR(LCD_RS)
 #define LCD_RS_DATA           GPIOX_SET(LCD_RS)
 
-/* Reset láb aktiv/passziv */
+/* Reset pin active/passive */
 #define LCD_RST_ON            GPIOX_CLR(LCD_RST)
 #define LCD_RST_OFF           GPIOX_SET(LCD_RST)
 
-/* Chip select láb */
+/* Chip select pin */
 #define LCD_CS_ON             GPIOX_CLR(LCD_CS)
 #define LCD_CS_OFF            GPIOX_SET(LCD_CS)
 
@@ -1242,22 +1236,22 @@ void LCD_IO_Init(void)
   NVIC_SetPriority(LCD_DMA_TX_IRQ, LCD_DMA_IRQ_PR);
   NVIC_EnableIRQ(LCD_DMA_TX_IRQ);
   #if defined(DMA1_CSELR_DEFAULT) || defined(DMA2_CSELR_DEFAULT)  /* only stm32f09x DMA routing */
-  DMAX(LCD_DMA_TX)->CSELR = (DMAX(LCD_DMA_TX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_TX)))) | DMAROUTING(LCD_DMA_TX) << (4 * DMACHN(LCD_DMA_TX));
-  DMAX(LCD_DMA_RX)->CSELR = (DMAX(LCD_DMA_RX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_RX)))) | DMAROUTING(LCD_DMA_RX) << (4 * DMACHN(LCD_DMA_RX));
+  DMAX(LCD_DMA_TX)->CSELR = (DMAX(LCD_DMA_TX)->CSELR & ~(0xF << (4 * (DMACHN(LCD_DMA_TX) - 1)))) | DMAROUTING(LCD_DMA_TX) << (4 * (DMACHN(LCD_DMA_TX) - 1));
+  DMAX(LCD_DMA_RX)->CSELR = (DMAX(LCD_DMA_RX)->CSELR & ~(0xF << (4 * (DMACHN(LCD_DMA_RX) - 1)))) | DMAROUTING(LCD_DMA_RX) << (4 * (DMACHN(LCD_DMA_RX) - 1));
   #endif
   #else /* #ifdef LCD_DMA_TX_RX_IRQ_SHARED */
   #if DMANUM(LCD_DMA_TX) > 0
   NVIC_SetPriority(LCD_DMA_TX_IRQ, LCD_DMA_IRQ_PR);
   NVIC_EnableIRQ(LCD_DMA_TX_IRQ);
   #if defined(DMA1_CSELR_DEFAULT) || defined(DMA2_CSELR_DEFAULT)  /* only stm32f09x DMA routing */
-  DMAX(LCD_DMA_TX)->CSELR = (DMAX(LCD_DMA_TX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_TX)))) | DMAROUTING(LCD_DMA_TX) << (4 * DMACHN(LCD_DMA_TX));
+  DMAX(LCD_DMA_TX)->CSELR = (DMAX(LCD_DMA_TX)->CSELR & ~(0xF << (4 * (DMACHN(LCD_DMA_TX) - 1)))) | DMAROUTING(LCD_DMA_TX) << (4 * (DMACHN(LCD_DMA_TX) - 1));
   #endif
   #endif
   #if DMANUM(LCD_DMA_RX) > 0
   NVIC_SetPriority(LCD_DMA_RX_IRQ, LCD_DMA_IRQ_PR);
   NVIC_EnableIRQ(LCD_DMA_RX_IRQ);
   #if defined(DMA1_CSELR_DEFAULT) || defined(DMA2_CSELR_DEFAULT)  /* only stm32f09x DMA routing */
-  DMAX(LCD_DMA_RX)->CSELR = (DMAX(LCD_DMA_RX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_RX)))) | DMAROUTING(LCD_DMA_RX) << (4 * DMACHN(LCD_DMA_RX));
+  DMAX(LCD_DMA_RX)->CSELR = (DMAX(LCD_DMA_RX)->CSELR & ~(0xF << (4 * (DMACHN(LCD_DMA_RX) - 1)))) | DMAROUTING(LCD_DMA_RX) << (4 * (DMACHN(LCD_DMA_RX) - 1));
   #endif
   #endif
   #endif /* #else LCD_DMA_TX_RX_IRQ_SHARED */
