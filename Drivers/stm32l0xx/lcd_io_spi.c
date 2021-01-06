@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32L0
  * author: Roberto Benjami
- * version:  2020.05
+ * version:  2021.01.06
  *
  * - hardware, software SPI
  * - 3 modes (only TX, half duplex, full duplex)
@@ -86,12 +86,6 @@ void  LCD_IO_Delay(uint32_t c);
 
 #define GPIOX_LINE_(a, b)     EXTI_Line ## b
 #define GPIOX_LINE(a)         GPIOX_LINE_(a)
-
-#define GPIOX_PORTSRC_(a, b)  GPIO_PortSourceGPIO ## a
-#define GPIOX_PORTSRC(a)      GPIOX_PORTSRC_(a)
-
-#define GPIOX_PINSRC_(a, b)   GPIO_PinSource ## b
-#define GPIOX_PINSRC(a)       GPIOX_PINSRC_(a)
 
 #define GPIOX_CLOCK_(a, b)    RCC_IOPENR_GPIO ## a ## EN
 #define GPIOX_CLOCK(a)        GPIOX_CLOCK_(a)
@@ -1251,17 +1245,17 @@ void LCD_IO_Init(void)
   #if (DMANUM(LCD_DMA_TX) > 0) && (DMANUM(LCD_DMA_RX) > 0)
   #if DMANUM(LCD_DMA_TX) == DMANUM(LCD_DMA_RX)
   DMAX_CSELR(LCD_DMA_TX)->CSELR = (DMAX_CSELR(LCD_DMA_TX)->CSELR &
-    ~(0xF << (4 * DMACHN(LCD_DMA_TX)) | (0xF << (4 * DMACHN(LCD_DMA_RX))))) |
-    (DMAREQ(LCD_DMA_TX) << (4 * DMACHN(LCD_DMA_TX))) |
-    (DMAREQ(LCD_DMA_RX) << (4 * DMACHN(LCD_DMA_RX)));
+    ~(0xF << (4 * (DMACHN(LCD_DMA_TX) - 1)) | (0xF << (4 * (DMACHN(LCD_DMA_RX) - 1))))) |
+    (DMAREQ(LCD_DMA_TX) << (4 * (DMACHN(LCD_DMA_TX) - 1))) |
+    (DMAREQ(LCD_DMA_RX) << (4 * (DMACHN(LCD_DMA_RX) - 1)));
   #else
-  DMAX_CSELR(LCD_DMA_TX)->CSELR = (DMAX_CSELR(LCD_DMA_TX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_TX)))) | DMAREQ(LCD_DMA_TX) << (4 * DMACHN(LCD_DMA_TX));
-  DMAX_CSELR(LCD_DMA_RX)->CSELR = (DMAX_CSELR(LCD_DMA_RX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_RX)))) | DMAREQ(LCD_DMA_RX) << (4 * DMACHN(LCD_DMA_RX));
+  DMAX_CSELR(LCD_DMA_TX)->CSELR = (DMAX_CSELR(LCD_DMA_TX)->CSELR & ~(0xF << (4 * (DMACHN(LCD_DMA_TX) - 1)))) | DMAREQ(LCD_DMA_TX) << (4 * (DMACHN(LCD_DMA_TX) - 1));
+  DMAX_CSELR(LCD_DMA_RX)->CSELR = (DMAX_CSELR(LCD_DMA_RX)->CSELR & ~(0xF << (4 * (DMACHN(LCD_DMA_RX) - 1)))) | DMAREQ(LCD_DMA_RX) << (4 * (DMACHN(LCD_DMA_RX) - 1));
   #endif
   #elif DMANUM(LCD_DMA_TX) > 0
-  DMAX_CSELR(LCD_DMA_TX)->CSELR = (DMAX_CSELR(LCD_DMA_TX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_TX)))) | DMAREQ(LCD_DMA_TX) << (4 * DMACHN(LCD_DMA_TX));
+  DMAX_CSELR(LCD_DMA_TX)->CSELR = (DMAX_CSELR(LCD_DMA_TX)->CSELR & ~(0xF << (4 * (DMACHN(LCD_DMA_TX) - 1)))) | DMAREQ(LCD_DMA_TX) << (4 * (DMACHN(LCD_DMA_TX) - 1));
   #elif DMANUM(LCD_DMA_RX) > 0
-  DMAX_CSELR(LCD_DMA_RX)->CSELR = (DMAX_CSELR(LCD_DMA_RX)->CSELR & ~(0xF << (4 * DMACHN(LCD_DMA_RX)))) | DMAREQ(LCD_DMA_RX) << (4 * DMACHN(LCD_DMA_RX));
+  DMAX_CSELR(LCD_DMA_RX)->CSELR = (DMAX_CSELR(LCD_DMA_RX)->CSELR & ~(0xF << (4 * (DMACHN(LCD_DMA_RX) - 1)))) | DMAREQ(LCD_DMA_RX) << (4 * (DMACHN(LCD_DMA_RX) - 1));
   #endif
 
   #ifdef LCD_DMA_TX_RX_IRQ_SHARED
