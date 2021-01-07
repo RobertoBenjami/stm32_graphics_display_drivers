@@ -520,7 +520,7 @@ inline void LcdDirRead(uint32_t d)
   {
     GPIOX_CLR(LCD_SCK);
     LCD_READ_DELAY;
-    GPIOX_CLR(LCD_SCK);
+    GPIOX_SET(LCD_SCK);
   }
   GPIOX_MODER(MODE_ALTER, LCD_SCK);
   SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos);
