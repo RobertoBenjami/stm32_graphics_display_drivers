@@ -305,7 +305,7 @@ void LcdWrite16(uint16_t d16)
 #elif   LCD_SPI_MODE == 2
 /* Fullduplex SPI : data direction is fix, dummy read */
 #define LcdDirWrite()
-#endif  // #elif   LCD_SPI_MODE == 2
+#endif  /* #elif   LCD_SPI_MODE == 2 */
 
 //-----------------------------------------------------------------------------
 void LcdDirRead(uint32_t d)
@@ -393,7 +393,7 @@ uint16_t LcdRead16(void)
 /* not using the DMA -> no need to wait for the end of the previous DMA operation */
 
 //=============================================================================
-#else    // #if LCD_SPI == 0
+#else    /* #if LCD_SPI == 0 */
 /* Hardware SPI */
 
 #if LCD_SPI == 1
@@ -556,7 +556,7 @@ inline void WaitForDmaEnd(void)
 }
 
 //-----------------------------------------------------------------------------
-#else   // osFeature_Semaphore
+#else   /* osFeature_Semaphore */
 /* FreeRtos */
 
 osSemaphoreId spiDmaBinSemHandle;
@@ -608,7 +608,7 @@ void LCD_IO_WriteMultiData16(uint16_t * pData, uint32_t Size, uint32_t dinc)
   LCD_CS_OFF;
 }
 
-#else // #if DMANUM(LCD_DMA_TX) == 0 || LCD_SPI == 0
+#else /* #if DMANUM(LCD_DMA_TX) == 0 || LCD_SPI == 0 */
 
 //-----------------------------------------------------------------------------
 /* SPI TX on DMA */
@@ -837,10 +837,10 @@ void DMAX_CHANNEL_IRQHANDLER(LCD_DMA_RX)(void)
     #ifndef osFeature_Semaphore
     /* no FreeRtos */
     LCD_IO_DmaTransferStatus = 0;
-    #else  // #ifndef osFeature_Semaphore
+    #else  /* #ifndef osFeature_Semaphore */
     /* FreeRtos */
     osSemaphoreRelease(spiDmaBinSemHandle);
-    #endif // #else osFeature_Semaphore
+    #endif /* #else osFeature_Semaphore */
   }
   else
     DMAX(LCD_DMA_RX)->IFCR = DMAX_IFCR_CGIF(LCD_DMA_RX);
@@ -1113,6 +1113,11 @@ void LCD_IO_Init(void)
   GPIOX_MODER(MODE_OUT, LCD_SCK);
   GPIOX_MODER(MODE_OUT, LCD_MOSI);
 
+  /* MISO = input in full duplex mode */
+  #if LCD_SPI_MODE == 2                 /* Full duplex */
+  GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_MISO);
+  #endif
+  
   #else
 
   /* Hardware SPI */
@@ -1122,6 +1127,12 @@ void LCD_IO_Init(void)
   GPIOX_MODER(MODE_ALTER, LCD_SCK);
   GPIOX_AFR(LCD_SPI_AFR, LCD_MOSI);
   GPIOX_MODER(MODE_ALTER, LCD_MOSI);
+  
+  /* MISO = input in full duplex mode */
+  #if LCD_SPI_MODE == 2                 /* Full duplex */
+  GPIOX_AFR(LCD_SPI_AFR, LCD_MISO);
+  GPIOX_MODER(MODE_ALTER, LCD_MISO);
+  #endif
 
   #if LCD_SPI_MODE == 1
   /* Half duplex */
