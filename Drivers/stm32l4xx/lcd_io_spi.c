@@ -459,13 +459,18 @@ inline void LcdDirRead(uint32_t d)
     GPIOX_SET(LCD_SCK);
   }
   GPIOX_MODER(MODE_ALTER, LCD_SCK);
+  while(SPIX->SR & SPI_SR_RXNE) d = SPIX->DR;
+  SPIX->CR1 &= ~SPI_CR1_SPE;
   SPIX->CR1 = (SPIX->CR1 & ~SPI_CR1_BR) | (LCD_SPI_SPD_READ << SPI_CR1_BR_Pos) | SPI_CR1_RXONLY;
+  SPIX->CR1 |= SPI_CR1_SPE;
 }
 
 extern inline void LcdDirWrite(void);
 inline void LcdDirWrite(void)
 {
+  SPIX->CR1 &= ~SPI_CR1_SPE;	
   SPIX->CR1 = (SPIX->CR1 & ~(SPI_CR1_BR | SPI_CR1_RXONLY)) | (LCD_SPI_SPD_WRITE << SPI_CR1_BR_Pos);
+  SPIX->CR1 |= SPI_CR1_SPE;
 }
 
 #endif
