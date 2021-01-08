@@ -1085,7 +1085,7 @@ void LCD_IO_Init(void)
   #endif
 
   /* MISO = input in full duplex mode */
-  #if LCD_SPI_MODE == 2                 // Full duplex
+  #if LCD_SPI_MODE == 2                 /* Full duplex */
   GPIOX_MODER(MODE_DIGITAL_INPUT, LCD_MISO);
   #endif
 
@@ -1111,7 +1111,7 @@ void LCD_IO_Init(void)
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_CS);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_SCK);
   GPIOX_OSPEEDR(MODE_SPD_VHIGH, LCD_MOSI);
-  GPIOX_SET(LCD_SCK);                   // SCK = 1
+  GPIOX_SET(LCD_SCK);                   /* SCK = 1 */
 
   #if LCD_SPI == 0
   /* Software SPI */
@@ -1152,7 +1152,7 @@ void LCD_IO_Init(void)
   #endif /* #else LCD_SPI == 0 */
 
   /* Set or Reset the control line */
-  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A // reset
+  #if GPIOX_PORTNUM(LCD_RST) >= GPIOX_PORTNUM_A /* reset */
   LCD_Delay(10);
   LCD_RST_ON;
   LCD_Delay(10);
