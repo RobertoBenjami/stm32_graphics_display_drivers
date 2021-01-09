@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32F2
  * author: Roberto Benjami
- * version:  2020.05
+ * version:  2021.01.09
  *
  * - hardware, software SPI
  * - 3 modes (only TX, half duplex, full duplex)
@@ -348,6 +348,12 @@ typedef struct
 #define DMAX_IFCR_CFEIF(a)              DMAX_IFCR_CFEIF_(a)
 
 //=============================================================================
+/* only transmit mode -> clear the DMA RX settings */
+#if     LCD_SPI_MODE == 0
+#undef  LCD_DMA_RX
+#define LCD_DMA_RX        0, 0, 0, 0
+#endif
+
 /* Command/data pin set */
 #define LCD_RS_CMD            GPIOX_ODR(LCD_RS) = 0
 #define LCD_RS_DATA           GPIOX_ODR(LCD_RS) = 1

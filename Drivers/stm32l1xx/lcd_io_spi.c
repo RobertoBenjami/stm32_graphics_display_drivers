@@ -1,7 +1,7 @@
 /*
  * SPI LCD driver STM32L1
  * author: Roberto Benjami
- * version:  2020.05
+ * version:  2021.01.09
  *
  * - hardware, software SPI
  * - 3 modes (only TX, half duplex, full duplex)
@@ -157,6 +157,12 @@ void  LCD_IO_Delay(uint32_t c);
 #define DMAX_IFCR_CGIF(a)               DMAX_IFCR_CGIF_(a)
 
 //=============================================================================
+/* only transmit mode -> clear the DMA RX settings */
+#if     LCD_SPI_MODE == 0
+#undef  LCD_DMA_RX
+#define LCD_DMA_RX        0, 0, 0, 0
+#endif
+
 /* Command/data pin set */
 #define LCD_RS_CMD            GPIOX_CLR(LCD_RS)
 #define LCD_RS_DATA           GPIOX_SET(LCD_RS)

@@ -163,6 +163,12 @@ void  LCD_IO_Delay(uint32_t c);
 #define DMAX_IFCR_CGIF(a)               DMAX_IFCR_CGIF_(a)
 
 //-----------------------------------------------------------------------------
+/* only transmit mode -> clear the DMA RX settings */
+#if     LCD_SPI_MODE == 0
+#undef  LCD_DMA_RX
+#define LCD_DMA_RX        0, 0, 0, 0
+#endif
+
 /* LCD_DMA_TX interrupt number */
 #if     (DMANUM(LCD_DMA_TX) == 1) && (DMACHN(LCD_DMA_TX) == 1)
 #define LCD_DMA_TX_IRQ         9
