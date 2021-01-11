@@ -155,7 +155,7 @@ void  LCD_IO_Delay(uint32_t c);
 /* only transmit mode -> clear the DMA RX settings */
 #if     LCD_SPI_MODE == 0
 #undef  LCD_DMA_RX
-#define LCD_DMA_RX        0, 0, 0, 0
+#define LCD_DMA_RX        0, 0, 0
 #endif
 
 /* Command/data pin set */
