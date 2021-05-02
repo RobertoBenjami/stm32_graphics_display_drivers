@@ -344,7 +344,10 @@ uint8_t TS_IO_DetectToch(void)
   uint8_t  ret;
   static uint8_t ts_inited = 0;
   if(!ts_inited)
+  {	  
     TS_IO_Init();
+	ts_inited = 1;
+  }	
   #if GPIOX_PORTNUM(TS_IRQ) >= GPIOX_PORTNUM_A
   if(GPIOX_IDR(TS_IRQ))
     ret = 0;
