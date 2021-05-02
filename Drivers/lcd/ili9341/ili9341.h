@@ -31,10 +31,10 @@
 #define  ILI9341_TOUCH            0
 
 /* Touchscreen calibration data for 4 orientations */
-#define  TS_CINDEX_0        {-2756000, 210932, -423352, 96135608, 269619, 1366, -1021658814}
-#define  TS_CINDEX_1        {-2756000, 269619, 1366, -1021658814, -210932, 423352, -754819608}
-#define  TS_CINDEX_2        {-2756000, -210932, 423352, -754819608, -269619, -1366, 142494814}
-#define  TS_CINDEX_3        {-2756000, -269619, -1366, 142494814, 210932, -423352, 96135608}
+#define  TS_CINDEX_0        {1444723, 5348, -114234, 421806850, -131233, -975, 521525308}
+#define  TS_CINDEX_1        {1444723, -131233, -975, 521525308, -5348, 114234, -76518053}
+#define  TS_CINDEX_2        {1444723, -5348, 114234, -76518053, 131233, 975, -60658671}
+#define  TS_CINDEX_3        {1444723, 131233, 975, -60658671, 5348, -114234, 421806850}
 
 /* For multi-threaded or intermittent use, Lcd and Touchscreen simultaneous use can cause confusion (since it uses common I/O resources)
    Lcd functions wait for the touchscreen header, the touchscreen query is not executed when Lcd is busy.

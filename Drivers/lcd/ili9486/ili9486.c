@@ -1,6 +1,6 @@
 /*
  * ILI9486 LCD driver (optional builtin touchscreen driver)
- * 2020.05
+ * 2021.05
 */
 
 #include <string.h>
@@ -8,10 +8,6 @@
 #include "lcd.h"
 #include "bmp.h"
 #include "ili9486.h"
-
-#if  ILI9486_TOUCH == 1
-#include "ts.h"
-#endif
 
 /* Lcd */
 void     ili9486_Init(void);
@@ -56,7 +52,6 @@ LCD_DrvTypeDef   ili9486_drv =
   ili9486_FillRect,
   ili9486_ReadRGBImage,
   ili9486_Scroll,
-
 };
 
 LCD_DrvTypeDef  *lcd_drv = &ili9486_drv;
@@ -178,59 +173,6 @@ volatile uint8_t io_ts_busy = 0;
 #define  ILI9486_LCDMUTEX_PUSH()
 #define  ILI9486_LCDMUTEX_POP()
 #endif
-
-//-----------------------------------------------------------------------------
-#if ILI9486_TOUCH == 1
-
-// Touch parameters
-#define TOUCHMINPRESSRC    8192
-#define TOUCHMAXPRESSRC    4096
-#define TOUCHMINPRESTRG       0
-#define TOUCHMAXPRESTRG     255
-#define TOUCH_FILTER         16
-
-// fixpoints Z indexs (16bit integer, 16bit fractional)
-#define ZINDEXA  ((65536 * (TOUCHMAXPRESTRG - TOUCHMINPRESTRG)) / (TOUCHMAXPRESSRC - TOUCHMINPRESSRC))
-#define ZINDEXB  (-ZINDEXA * TOUCHMINPRESSRC)
-
-#define ABS(N)   (((N)<0) ? (-(N)) : (N))
-
-TS_DrvTypeDef   ili9486_ts_drv =
-{
-  ili9486_ts_Init,
-  0,
-  0,
-  0,
-  ili9486_ts_DetectTouch,
-  ili9486_ts_GetXY,
-  0,
-  0,
-  0,
-  0,
-};
-
-TS_DrvTypeDef  *ts_drv = &ili9486_ts_drv;
-
-#if (ILI9486_ORIENTATION == 0)
-int32_t  ts_cindex[] = TS_CINDEX_0;
-#elif (ILI9486_ORIENTATION == 1)
-int32_t  ts_cindex[] = TS_CINDEX_1;
-#elif (ILI9486_ORIENTATION == 2)
-int32_t  ts_cindex[] = TS_CINDEX_2;
-#elif (ILI9486_ORIENTATION == 3)
-int32_t  ts_cindex[] = TS_CINDEX_3;
-#endif
-
-uint16_t tx, ty;
-
-/* Link function for Touchscreen */
-uint8_t   TS_IO_DetectToch(void);
-uint16_t  TS_IO_GetX(void);
-uint16_t  TS_IO_GetY(void);
-uint16_t  TS_IO_GetZ1(void);
-uint16_t  TS_IO_GetZ2(void);
-
-#endif   /* #if ILI9486_TOUCH == 1 */
 
 //-----------------------------------------------------------------------------
 /* Link functions for LCD IO peripheral */
@@ -642,6 +584,51 @@ void ili9486_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix)
 
 //=============================================================================
 #if ILI9486_TOUCH == 1
+
+#include "ts.h"
+
+#define TS_MULTITASK_MUTEX    ILI9486_MULTITASK_MUTEX
+#define TOUCH_FILTER          8
+#define TOUCH_MAXREPEAT       8
+
+#define ABS(N)   (((N)<0) ? (-(N)) : (N))
+
+TS_DrvTypeDef   ili9486_ts_drv =
+{
+  ili9486_ts_Init,
+  0,
+  0,
+  0,
+  ili9486_ts_DetectTouch,
+  ili9486_ts_GetXY,
+  0,
+  0,
+  0,
+  0,
+};
+
+TS_DrvTypeDef  *ts_drv = &ili9486_ts_drv;
+
+#if (ILI9486_ORIENTATION == 0)
+int32_t  ts_cindex[] = TS_CINDEX_0;
+#elif (ILI9486_ORIENTATION == 1)
+int32_t  ts_cindex[] = TS_CINDEX_1;
+#elif (ILI9486_ORIENTATION == 2)
+int32_t  ts_cindex[] = TS_CINDEX_2;
+#elif (ILI9486_ORIENTATION == 3)
+int32_t  ts_cindex[] = TS_CINDEX_3;
+#endif
+
+uint16_t tx, ty;
+
+/* Link function for Touchscreen */
+uint8_t   TS_IO_DetectToch(void);
+uint16_t  TS_IO_GetX(void);
+uint16_t  TS_IO_GetY(void);
+uint16_t  TS_IO_GetZ1(void);
+uint16_t  TS_IO_GetZ2(void);
+
+//-----------------------------------------------------------------------------
 void ili9486_ts_Init(uint16_t DeviceAddr)
 {
   if((Is_ili9486_Initialized & ILI9486_IO_INITIALIZED) == 0)
@@ -652,73 +639,54 @@ void ili9486_ts_Init(uint16_t DeviceAddr)
 //-----------------------------------------------------------------------------
 uint8_t ili9486_ts_DetectTouch(uint16_t DeviceAddr)
 {
-  static uint8_t tp = 0;
-  int32_t x1, x2, y1, y2, z11, z12, z21, z22, i, tpr;
+  static uint8_t ret = 0;
+  int32_t x1, x2, y1, y2, i;
 
-  #if  ILI9486_MULTITASK_MUTEX == 1
+  #if TS_MULTITASK_MUTEX == 1
   io_ts_busy = 1;
 
   if(io_lcd_busy)
   {
     io_ts_busy = 0;
-    return tp;
+    return ret;
   }
   #endif
 
+  ret = 0;
   if(TS_IO_DetectToch())
   {
     x1 = TS_IO_GetX();
     y1 = TS_IO_GetY();
-    z11 = TS_IO_GetZ1();
-    z21 = TS_IO_GetZ2();
-    i = 32;
+    i = TOUCH_MAXREPEAT;
     while(i--)
     {
       x2 = TS_IO_GetX();
       y2 = TS_IO_GetY();
-      z12 = TS_IO_GetZ1();
-      z22 = TS_IO_GetZ2();
-
-      if((ABS(x1 - x2) < TOUCH_FILTER) && (ABS(y1 - y2) < TOUCH_FILTER) && (ABS(z11 - z12) < TOUCH_FILTER) && (ABS(z21 - z22) < TOUCH_FILTER))
+      if((ABS(x1 - x2) < TOUCH_FILTER) && (ABS(y1 - y2) < TOUCH_FILTER))
       {
         x1 = (x1 + x2) >> 1;
-        y1 = (x1 + y2) >> 1;
-        z11 = (z11 + z12) >> 1;
-        z21 = (z21 + z22) >> 1;
-
-        tpr = (((4096 - x1) * ((z21 << 10) / z11 - 1024)) >> 10);
-        tpr = (tpr * ZINDEXA + ZINDEXB) >> 16;
-        if(tpr > TOUCHMAXPRESTRG)
-          tpr = TOUCHMAXPRESTRG;
-        if(tpr < TOUCHMINPRESTRG)
-          tpr = TOUCHMINPRESTRG;
-        tx = x1;
-        ty = y1;
-        tp = tpr;
-        #if  ILI9486_MULTITASK_MUTEX == 1
-        io_ts_busy = 0;
-        #endif
-        return tp;
+        y1 = (y1 + y2) >> 1;
+        i = 0;
+        if(TS_IO_DetectToch())
+        {
+          tx = x1;
+          ty = y1;
+          ret = 1;
+        }
       }
       else
       {
         x1 = x2;
         y1 = y2;
-        z11 = z12;
-        z21 = z22;
       }
     }
-    // sokadik probára sem sikerült stabil koordinátát kiolvasni -> nincs lenyomva
-    tp = 0;
   }
-  else
-    tp = 0;
 
-  #if  ILI9486_MULTITASK_MUTEX == 1
+  #if TS_MULTITASK_MUTEX == 1
   io_ts_busy = 0;
   #endif
 
-  return tp;
+  return ret;
 }
 
 //-----------------------------------------------------------------------------
@@ -727,4 +695,5 @@ void ili9486_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y)
   *X = tx,
   *Y = ty;
 }
+
 #endif /* #if ILI9486_TOUCH == 1 */

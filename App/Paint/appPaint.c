@@ -1,15 +1,11 @@
 #include <stdlib.h>
 #include "main.h"
 
-// BSP_LCD_xx függvények
+/* BSP LCD driver */
 #include "stm32_adafruit_lcd.h"
 
-// BSP_TS_xx függvények
+/* BSP TS driver */
 #include "stm32_adafruit_ts.h"
-
-// 16bites szin elöállitása RGB (ill. BGR) összetevökböl
-#define RGB888TORGB565(r, g, b)  ((r & 0xF8) << 8 | (g & 0xFC) << 3 | b >> 3)
-#define RGB888TOBGR565(r, g, b)  (r >> 3 | (g & 0xFC) << 3 | (b & 0xF8) << 8)
 
 #ifdef osCMSIS
 void StartDefaultTask(void const * argument)

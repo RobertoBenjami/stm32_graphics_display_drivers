@@ -2,10 +2,6 @@
 #include "lcd.h"
 #include "hx8347g.h"
 
-#if  HX8347G_TOUCH == 1
-#include "ts.h"
-#endif
-
 void     hx8347g_Init(void);
 uint16_t hx8347g_ReadID(void);
 void     hx8347g_DisplayOn(void);
@@ -231,64 +227,6 @@ volatile uint8_t io_ts_busy = 0;
 #endif
 
 //-----------------------------------------------------------------------------
-#if     HX8347G_TOUCH == 1
-
-// Touch paraméterek
-// nyomáserõsség értékek honnan hova konvertálodjanak
-#define TOUCHMINPRESSRC    8192
-#define TOUCHMAXPRESSRC    4096
-#define TOUCHMINPRESTRG       0
-#define TOUCHMAXPRESTRG     255
-#define TOUCH_FILTER         16
-
-// fixpontos Z indexek (16bit egész, 16bit tört)
-#define ZINDEXA  ((65536 * (TOUCHMAXPRESTRG - TOUCHMINPRESTRG)) / (TOUCHMAXPRESSRC - TOUCHMINPRESSRC))
-#define ZINDEXB  (-ZINDEXA * TOUCHMINPRESSRC)
-
-#define ABS(N)   (((N)<0) ? (-(N)) : (N))
-
-
-void     hx8347g_ts_Init(uint16_t DeviceAddr);
-uint8_t  hx8347g_ts_DetectTouch(uint16_t DeviceAddr);
-void     hx8347g_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y);
-
-TS_DrvTypeDef   hx8347g_ts_drv =
-{
-  hx8347g_ts_Init,
-  0,
-  0,
-  0,
-  hx8347g_ts_DetectTouch,
-  hx8347g_ts_GetXY,
-  0,
-  0,
-  0,
-  0,
-};
-
-TS_DrvTypeDef  *ts_drv = &hx8347g_ts_drv;
-
-#if (HX8347G_ORIENTATION == 0)
-int32_t  ts_cindex[] = TS_CINDEX_0;
-#elif (HX8347G_ORIENTATION == 1)
-int32_t  ts_cindex[] = TS_CINDEX_1;
-#elif (HX8347G_ORIENTATION == 2)
-int32_t  ts_cindex[] = TS_CINDEX_2;
-#elif (HX8347G_ORIENTATION == 3)
-int32_t  ts_cindex[] = TS_CINDEX_3;
-#endif
-
-uint16_t  tx, ty;
-
-/* Link function for Touchscreen */
-uint8_t  TS_IO_DetectToch(void);
-uint16_t TS_IO_GetX(void);
-uint16_t TS_IO_GetY(void);
-uint16_t TS_IO_GetZ1(void);
-uint16_t TS_IO_GetZ2(void);
-
-#endif
-
 /* Link function for LCD peripheral */
 void     LCD_Delay (uint32_t delay);
 void     LCD_IO_Init(void);
@@ -713,6 +651,56 @@ void hx8347g_Scroll(int16_t Scroll, uint16_t TopFix, uint16_t BottonFix)
 
 //=============================================================================
 #if  HX8347G_TOUCH == 1
+
+#include "ts.h"
+
+#define TS_MULTITASK_MUTEX    HX8347G_MULTITASK_MUTEX
+#define TOUCH_FILTER          8
+#define TOUCH_MAXREPEAT       8
+
+#define ABS(N)   (((N)<0) ? (-(N)) : (N))
+
+
+void     hx8347g_ts_Init(uint16_t DeviceAddr);
+uint8_t  hx8347g_ts_DetectTouch(uint16_t DeviceAddr);
+void     hx8347g_ts_GetXY(uint16_t DeviceAddr, uint16_t *X, uint16_t *Y);
+
+TS_DrvTypeDef   hx8347g_ts_drv =
+{
+  hx8347g_ts_Init,
+  0,
+  0,
+  0,
+  hx8347g_ts_DetectTouch,
+  hx8347g_ts_GetXY,
+  0,
+  0,
+  0,
+  0,
+};
+
+TS_DrvTypeDef  *ts_drv = &hx8347g_ts_drv;
+
+#if (HX8347G_ORIENTATION == 0)
+int32_t  ts_cindex[] = TS_CINDEX_0;
+#elif (HX8347G_ORIENTATION == 1)
+int32_t  ts_cindex[] = TS_CINDEX_1;
+#elif (HX8347G_ORIENTATION == 2)
+int32_t  ts_cindex[] = TS_CINDEX_2;
+#elif (HX8347G_ORIENTATION == 3)
+int32_t  ts_cindex[] = TS_CINDEX_3;
+#endif
+
+uint16_t  tx, ty;
+
+/* Link function for Touchscreen */
+uint8_t  TS_IO_DetectToch(void);
+uint16_t TS_IO_GetX(void);
+uint16_t TS_IO_GetY(void);
+uint16_t TS_IO_GetZ1(void);
+uint16_t TS_IO_GetZ2(void);
+
+//-----------------------------------------------------------------------------
 void hx8347g_ts_Init(uint16_t DeviceAddr)
 {
   if((Is_hx8347g_Initialized & HX8347G_IO_INITIALIZED) == 0)
@@ -723,74 +711,54 @@ void hx8347g_ts_Init(uint16_t DeviceAddr)
 //-----------------------------------------------------------------------------
 uint8_t hx8347g_ts_DetectTouch(uint16_t DeviceAddr)
 {
-  static uint8_t tp = 0;
-  int32_t x1, x2, y1, y2, z11, z12, z21, z22, i, tpr;
+  static uint8_t ret = 0;
+  int32_t x1, x2, y1, y2, i;
 
-  #if  HX8347G_MULTITASK_MUTEX == 1
+  #if TS_MULTITASK_MUTEX == 1
   io_ts_busy = 1;
 
   if(io_lcd_busy)
   {
     io_ts_busy = 0;
-    return tp;
+    return ret;
   }
   #endif
 
+  ret = 0;
   if(TS_IO_DetectToch())
   {
     x1 = TS_IO_GetX();
     y1 = TS_IO_GetY();
-    z11 = TS_IO_GetZ1();
-    z21 = TS_IO_GetZ2();
-    i = 32;
+    i = TOUCH_MAXREPEAT;
     while(i--)
     {
       x2 = TS_IO_GetX();
       y2 = TS_IO_GetY();
-      z12 = TS_IO_GetZ1();
-      z22 = TS_IO_GetZ2();
-
-      if((ABS(x1 - x2) < TOUCH_FILTER) && (ABS(y1 - y2) < TOUCH_FILTER) &&
-         (ABS(z11 - z12) < TOUCH_FILTER) && (ABS(z21 - z22) < TOUCH_FILTER))
+      if((ABS(x1 - x2) < TOUCH_FILTER) && (ABS(y1 - y2) < TOUCH_FILTER))
       {
         x1 = (x1 + x2) >> 1;
-        y1 = (x1 + y2) >> 1;
-        z11 = (z11 + z12) >> 1;
-        z21 = (z21 + z22) >> 1;
-
-        tpr = (((4096 - x1) * ((z21 << 10) / z11 - 1024)) >> 10);
-        tpr = (tpr * ZINDEXA + ZINDEXB) >> 16;
-        if(tpr > TOUCHMAXPRESTRG)
-          tpr = TOUCHMAXPRESTRG;
-        if(tpr < TOUCHMINPRESTRG)
-          tpr = TOUCHMINPRESTRG;
-        tx = x1;
-        ty = y1;
-        tp = tpr;
-        #if  HX8347G_MULTITASK_MUTEX == 1
-        io_ts_busy = 0;
-        #endif
-        return tp;
+        y1 = (y1 + y2) >> 1;
+        i = 0;
+        if(TS_IO_DetectToch())
+        {
+          tx = x1;
+          ty = y1;
+          ret = 1;
+        }
       }
       else
       {
         x1 = x2;
         y1 = y2;
-        z11 = z12;
-        z21 = z22;
       }
     }
-    // sokadik probára sem sikerült stabil koordinátát kiolvasni -> nincs lenyomva
-    tp = 0;
   }
-  else
-    tp = 0;
 
-  #if  HX8347G_MULTITASK_MUTEX == 1
+  #if TS_MULTITASK_MUTEX == 1
   io_ts_busy = 0;
   #endif
 
-  return tp;
+  return ret;
 }
 
 //-----------------------------------------------------------------------------

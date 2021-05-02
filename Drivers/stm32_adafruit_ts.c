@@ -58,7 +58,7 @@ void BSP_TS_GetState(TS_StateTypeDef* TsState)
     if(y2 < 0)
       y2 = 0;
     else if(y2 >= TsYBoundary)
-      y2 = TsYBoundary;
+      y2 = TsYBoundary - 1;
     
     TsState->X = x2;
     TsState->Y = y2;
