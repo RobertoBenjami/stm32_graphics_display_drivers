@@ -3,7 +3,7 @@
 ## Layer chart, examples circuits and settings:
 - Lcd_drv.pdf ( https://github.com/RobertoBenjami/stm32_graphics_display_drivers/blob/master/Lcd_drv.pdf )
 
-## LCD I/O driver:
+## LCD I/O and touchscreen I/O driver:
 - spi: software SPI, hardware SPI, hardware SPI with DMA
 - gpio8: 8 bit paralell without analog resistive touchscreen
 - gpio16: 16 bit paralell without analog resistive touchscreen
@@ -11,22 +11,23 @@
 - fsmc16: 16 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA
 - ts_gpio8: 8 bit paralell with analog resistive touchscreen
 - ts_fsmc8: 8 bit paralell with analog resistive touchscreen + FSMC or FSMC with DMA
+- ts_xpt2046: XPT2046 touchscreen driver, software and hardware SPI, 4 or 5 wires
 
-|stm family|spi|gpio8|gpio16|fsmc8|fsmc16|ts_gpio8|ts_fsmc8|note|
-|--|--|--|--|--|--|--|--|--|
-|STM32F0|+|+|+||||||
-|STM32F1|+|+|+|||+|||
-|STM32F2|+|+|+|+|+|+|+||
-|STM32F3|+|+|+||||||
-|STM32F4|+|+|+|+|+|+|+||
-|STM32F7|+|+|+||||||
-|STM32G0||+|+|||||not tested|
-|STM32G4||+|+|||||not tested|
-|STM32L0|+|+|+|||||not tested|
-|STM32L1|+|+|+|||||not tested|
-|STM32L4|+|+|+|||||not tested|
-|STM32L5||+|+|||||not tested|
-|STM32H7||+|+||||||
+|stm family|spi|gpio8|gpio16|fsmc8|fsmc16|ts_gpio8|ts_fsmc8|ts_xpt2046|note|
+|--|--|--|--|--|--|--|--|--|--|
+|STM32F0|+|+|+|||||||
+|STM32F1|+|+|+|||+||||
+|STM32F2|+|+|+|+|+|+|+|||
+|STM32F3|+|+|+|||||||
+|STM32F4|+|+|+|+|+|+|+|+||
+|STM32F7|+|+|+|||||||
+|STM32G0||+|+||||||not tested|
+|STM32G4||+|+||||||not tested|
+|STM32L0|+|+|+||||||not tested|
+|STM32L1|+|+|+|||||||
+|STM32L4|+|+|+||||||not tested|
+|STM32L5||+|+||||||not tested|
+|STM32H7||+|+|||||||
 
 ## LCD driver:
 - st7735  (SPI mode tested)
@@ -54,7 +55,7 @@
 - stm32f407zet - fsmc16, sdcard, jpg: https://www.youtube.com/watch?v=hfeKMZXt2L8
 - stm32f429zi discovery - spi-dma, usbhost pendrive, jpg: https://www.youtube.com/watch?v=Qi8CtNJGWFw
 
-1. Create project for Cubemx
+1. Create project for Cubemx or CubeIDE
 - setting the RCC (Crystal/ceramic resonator)
 - setting the debug (SYS / serial wire or trace assyn sw)
 - setting the timebase source (i like the basic timer for this)
@@ -65,8 +66,8 @@
 - setting the clock configuration
 - project settings: project name, toolchain = truestudio, stack size = 0x800
 - generate source code
-2. Truestudio
-- open projects from file system
+2. Truestudio or CubeIDE
+- open projects from file system (only Truestudio)
 - open main.c
 - add USER CODE BEGIN PFP: void mainApp(void);
 - add USER CODE BEGIN WHILE: mainApp();
