@@ -294,9 +294,9 @@ uint16_t TS_IO_GetX(void)
   uint16_t ret;
   TS_CS_ON;
   TsWrite8(0x90);
-  ret = TsRead16() >> 3;
+  ret = TsRead16();
   TS_CS_OFF;
-  return ret;
+  return ret >> 3;
 }
 
 //-----------------------------------------------------------------------------
@@ -306,9 +306,9 @@ uint16_t TS_IO_GetY(void)
   uint16_t ret;
   TS_CS_ON;
   TsWrite8(0xD0);
-  ret = TsRead16() >> 3;
+  ret = TsRead16();
   TS_CS_OFF;
-  return ret;
+  return ret >> 3;
 }
 
 //-----------------------------------------------------------------------------
@@ -318,9 +318,9 @@ uint16_t TS_IO_GetZ1(void)
   uint16_t ret;
   TS_CS_ON;
   TsWrite8(0xB0);
-  ret = TsRead16() >> 3;
+  ret = TsRead16();
   TS_CS_OFF;
-  return ret;
+  return ret >> 3;
 }
 
 //-----------------------------------------------------------------------------
@@ -330,9 +330,9 @@ uint16_t TS_IO_GetZ2(void)
   uint16_t ret;
   TS_CS_ON;
   TsWrite8(0xC0);
-  ret = TsRead16() >> 3;
+  ret = TsRead16();
   TS_CS_OFF;
-  return ret;
+  return ret >> 3;
 }
 
 //-----------------------------------------------------------------------------
