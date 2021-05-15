@@ -15,7 +15,7 @@
 - lcdts_io_spi_xpt2046: LCD and XPT2046 in common SPI, software and hardware SPI with DMA (DMA only in LCD)
 
 |stm family|spi|gpio8|gpio16|fsmc8|fsmc16|ts_gpio8|ts_fsmc8|ts_xpt2046|spi_xpt2046|note|
-|--|--|--|--|--|--|--|--|--|--|
+|--|--|--|--|--|--|--|--|--|--|--|
 |STM32F0|+|+|+||||||||
 |STM32F1|+|+|+|||+|||||
 |STM32F2|+|+|+|+|+|+|+||||
