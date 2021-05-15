@@ -4,30 +4,31 @@
 - Lcd_drv.pdf ( https://github.com/RobertoBenjami/stm32_graphics_display_drivers/blob/master/Lcd_drv.pdf )
 
 ## LCD I/O and touchscreen I/O driver:
-- spi: software SPI, hardware SPI, hardware SPI with DMA
-- gpio8: 8 bit paralell without analog resistive touchscreen
-- gpio16: 16 bit paralell without analog resistive touchscreen
-- fsmc8: 8 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA
-- fsmc16: 16 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA
-- ts_gpio8: 8 bit paralell with analog resistive touchscreen
-- ts_fsmc8: 8 bit paralell with analog resistive touchscreen + FSMC or FSMC with DMA
+- lcd_io_spi: software SPI, hardware SPI, hardware SPI with DMA
+- lcd_io_gpio8: 8 bit paralell without analog resistive touchscreen
+- lcd_io_gpio16: 16 bit paralell without analog resistive touchscreen
+- lcd_io_fsmc8: 8 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA
+- lcd_io_fsmc16: 16 bit paralell without analog resistive touchscreen + FSMC or FSMC with DMA
+- lcdts_io_gpio8: 8 bit paralell with analog resistive touchscreen
+- lcdts_io_fsmc8: 8 bit paralell with analog resistive touchscreen + FSMC or FSMC with DMA
 - ts_xpt2046: XPT2046 touchscreen driver, software and hardware SPI, 4 or 5 wires
+- lcdts_io_spi_xpt2046: LCD and XPT2046 in common SPI, software and hardware SPI with DMA (DMA only in LCD)
 
-|stm family|spi|gpio8|gpio16|fsmc8|fsmc16|ts_gpio8|ts_fsmc8|ts_xpt2046|note|
+|stm family|spi|gpio8|gpio16|fsmc8|fsmc16|ts_gpio8|ts_fsmc8|ts_xpt2046|spi_xpt2046|note|
 |--|--|--|--|--|--|--|--|--|--|
-|STM32F0|+|+|+|||||||
-|STM32F1|+|+|+|||+||||
-|STM32F2|+|+|+|+|+|+|+|||
-|STM32F3|+|+|+|||||||
-|STM32F4|+|+|+|+|+|+|+|+||
-|STM32F7|+|+|+|||||||
-|STM32G0||+|+||||||not tested|
-|STM32G4||+|+||||||not tested|
-|STM32L0|+|+|+||||||not tested|
-|STM32L1|+|+|+|||||||
-|STM32L4|+|+|+||||||not tested|
-|STM32L5||+|+||||||not tested|
-|STM32H7||+|+|||||||
+|STM32F0|+|+|+||||||||
+|STM32F1|+|+|+|||+|||||
+|STM32F2|+|+|+|+|+|+|+||||
+|STM32F3|+|+|+||||||||
+|STM32F4|+|+|+|+|+|+|+|+|+||
+|STM32F7|+|+|+||||||||
+|STM32G0||+|+|||||||not tested|
+|STM32G4||+|+|||||||not tested|
+|STM32L0|+|+|+|||||||not tested|
+|STM32L1|+|+|+||||||||
+|STM32L4|+|+|+|||||||not tested|
+|STM32L5||+|+|||||||not tested|
+|STM32H7||+|+||||||||
 
 ## LCD driver:
 - st7735  (SPI mode tested)
