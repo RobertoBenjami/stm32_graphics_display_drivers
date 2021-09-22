@@ -14,11 +14,20 @@
 /* SPI write and read speed
    - software SPI: 0=none delay, 1=nop, 2=CLK pin double write, 3.. = TS_IO_Delay(TS_SPI_SPD - 3)
    - hardware SPI clock div fPCLK: 0=/2, 1=/4, 2=/8, 3=/16, 4=/32, 5=/64, 6=/128, 7=/256 */
-#define TS_SPI_SPD        5
+#define TS_SPI_SPD        4
 
-/* If hardware SPI pins don't are on default pins -> please setting and this macro
-   (will be set at LCD_IO_Init, and set the RCC_APB2ENR_AFIOEN) */
-// #define TS_SPI_ALTERSET  AFIO->MAPR |= 1 << AFIO_MAPR_SPI1_REMAP_Pos
+/* SPI pins without remap and with remap (only hardvare SPI, SPI3 not on all types)
+      TS_SPI_REMAP :   0            1
+      SCK 1 :         A, 5         B, 3
+      MOSI 1 :        A, 7         B, 5
+      MISO 1 :        A, 6         B, 4
+      SCK 2 :         B, 13         -
+      MOSI 2 :        B, 15         -
+      MISO 2 :        B, 14         -
+      SCK 3 :         B, 3         C, 10
+      MOSI 3 :        B, 5         C, 12
+      MISO 3 :        B, 4         C, 11 */
+#define TS_SPI_REMAP      0
 
 /* Lcd control pins assign (A..K, 0..15)
    - if hardware SPI: SCK, MOSI, MISO pins assign is lock to hardware */

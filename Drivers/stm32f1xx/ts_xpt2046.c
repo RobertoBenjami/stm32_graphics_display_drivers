@@ -230,8 +230,15 @@ void TS_IO_Init(void)
   #define GPIOX_CLOCK_TS_IRQ   0
   #endif
 
-  #ifdef  TS_SPI_ALTERSET
+  #if TS_SPI_REMAP == 1
   #define AFIO_CLOCK            RCC_APB2ENR_AFIOEN
+  #if TS_SPI == 1
+  #define TS_SPI_ALTERSET       AFIO->MAPR |= AFIO_MAPR_SPI1_REMAP
+  #elif TS_SPI == 2
+  #error SPI2 : not possible remap
+  #elif TS_SPI == 3
+  #define TS_SPI_ALTERSET       AFIO->MAPR |= AFIO_MAPR_SPI3_REMAP
+  #endif
   #else
   #define AFIO_CLOCK            0
   #define TS_SPI_ALTERSET
