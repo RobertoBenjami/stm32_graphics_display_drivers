@@ -2,10 +2,6 @@
 #include "lcd.h"
 #include "ili9488.h"
 
-#if ILI9488_INTERFACE == 0
-#include "lcd_io_spi.h"
-#endif
-
 // Lcd
 void     ili9488_Init(void);
 uint16_t ili9488_ReadID(void);

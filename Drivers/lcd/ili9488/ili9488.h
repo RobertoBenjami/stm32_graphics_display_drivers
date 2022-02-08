@@ -17,7 +17,7 @@
 */
 #define  ILI9488_COLORMODE         0
 
-/* Analog touchscreen (only paralell mode)
+/* Touchscreen
    - 0: touchscreen disabled (default)
    - 1: touchscreen enabled
 */
