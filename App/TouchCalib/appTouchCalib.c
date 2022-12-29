@@ -152,27 +152,30 @@ void mainApp(void)
   ts_drv->GetXY(0, &x, &y);
   tx0 = x; ty0 = y;
   while(ts_drv->DetectTouch(0))
+    Delay(TOUCHDELAY);
 
   touchcalib_drawBox(dx0, dy0, LCD_COLOR_GRAY);
   touchcalib_drawBox(dx1, dy1, LCD_COLOR_YELLOW);
-
   Delay(CALIBDELAY);
+
   while(!ts_drv->DetectTouch(0))
     Delay(TOUCHDELAY);
   ts_drv->GetXY(0, &x, &y);
   tx1 = x; ty1 = y;
   while(ts_drv->DetectTouch(0))
-  HAL_Delay(CALIBDELAY);
+    Delay(TOUCHDELAY);
+  Delay(CALIBDELAY);
 
   touchcalib_drawBox(dx1, dy1, LCD_COLOR_GRAY);
   touchcalib_drawBox(dx2, dy2, LCD_COLOR_YELLOW);
-
   Delay(CALIBDELAY);
+
   while(!ts_drv->DetectTouch(0))
     Delay(TOUCHDELAY);
   ts_drv->GetXY(0, &x, &y);
   tx2 = x; ty2 = y;
   while(ts_drv->DetectTouch(0))
+    Delay(TOUCHDELAY);
 
   Delay(PRINTDELAY);
   /*printf("%d %d, %d %d, %d %d : %d %d, %d %d, %d %d\r\n", (int)dx0, (int)dy0, (int)dx1, (int)dy1, (int)dx2, (int)dy2,
