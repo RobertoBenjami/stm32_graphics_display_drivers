@@ -389,7 +389,7 @@ void ili9486_SetDisplayWindow(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint
 
 //-----------------------------------------------------------------------------
 /**
-  * @brief  Draw vertical line.
+  * @brief  Draw horizontal line.
   * @param  RGBCode: Specifies the RGB color
   * @param  Xpos:     specifies the X position.
   * @param  Ypos:     specifies the Y position.
